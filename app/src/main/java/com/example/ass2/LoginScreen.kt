@@ -58,7 +58,8 @@ fun RememberMeCheckbox() {
 }
 @Composable
 fun LoginScreen(
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onLoginSuccess: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -205,7 +206,7 @@ fun LoginScreen(
 
             // Sign In button
             Button(
-                onClick = { /* TODO */ },
+                onClick = { onLoginSuccess() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

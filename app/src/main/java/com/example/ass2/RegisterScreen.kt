@@ -27,7 +27,8 @@ import com.example.ass2.ui.theme.*
 
 @Composable
 fun RegisterScreen(
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onRegisterSuccess: () -> Unit = {}
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -176,7 +177,7 @@ fun RegisterScreen(
 
             // Create Account button
             Button(
-                onClick = { /* TODO */ },
+                onClick = { onRegisterSuccess() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
