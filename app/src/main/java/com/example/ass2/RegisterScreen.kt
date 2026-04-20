@@ -60,7 +60,7 @@ fun RegisterScreen(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "SmartFit Fuel",
+                    text = "Sit and Fit",
                     color = BrandTeal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -219,7 +219,8 @@ fun RegisterScreen(
             Spacer(Modifier.height(24.dp))
 
             // Already have account
-            Row(horizontalArrangement = Arrangement.Center) {
+            Row(horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically) {
                 Text("Already have an account? ", color = Color(0xFF6B6B6B), fontSize = 14.sp)
                 TextButton(
                     onClick = onNavigateToLogin,

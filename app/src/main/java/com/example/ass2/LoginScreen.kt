@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,6 +30,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.*
 
+@Composable
+fun RememberMeCheckbox() {
+    // State to keep track of the checkbox status
+    var isChecked by remember { mutableStateOf(false) }
+
+    // Layout for the checkbox and text
+    Row(
+        horizontalArrangement = Arrangement.Start,  // Align to the start (left) of the Row
+        verticalAlignment = Alignment.CenterVertically,  // Vertically center the items
+        modifier = Modifier.fillMaxWidth().padding(10.dp)
+    ) {
+        // Checkbox
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = { isChecked = it },
+            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))  // Custom color if desired
+        )
+
+        // Label Text
+        Text(
+            text = "Remember me",
+            style = TextStyle(fontSize = 14.sp, color = Color(0xFF6B6B6B)),  // Color matching your design
+            modifier = Modifier.padding(start = 8.dp)  // Adds spacing between checkbox and text
+        )
+    }
+}
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit
@@ -66,15 +95,10 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "SmartFit Fuel",
+                text = "Sit and Fit",
                 color = BrandTeal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
-            )
-            Text(
-                text = "Optimize your student energy.",
-                fontSize = 13.sp,
-                color = Color(0xFF6B6B6B)
             )
 
             Spacer(Modifier.height(36.dp))
@@ -126,7 +150,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Password row label with "Forgot Password?"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -138,12 +161,6 @@ fun LoginScreen(
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF3A3A3A)
                 )
-                TextButton(
-                    onClick = { /* TODO */ },
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text("Forgot Password?", color = BrandTeal, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                }
             }
 
             Spacer(Modifier.height(6.dp))
@@ -161,16 +178,6 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(end = 4.dp)
                     ) {
-                        // Avatar circle (initial)
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE53935)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("L", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
                         Spacer(Modifier.width(4.dp))
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
@@ -194,7 +201,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(28.dp))
+            RememberMeCheckbox()
 
             // Sign In button
             Button(
@@ -205,7 +212,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
-                Text("Sign In  \u2192", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -241,14 +248,27 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
 
             // Sign up link
-            Row(horizontalArrangement = Arrangement.Center) {
-                Text("Don't have an account? ", color = Color(0xFF6B6B6B), fontSize = 14.sp)
-                TextButton(
-                    onClick = onNavigateToRegister,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text("Sign up", color = BrandTeal, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                }
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Regular text
+                Text(
+                    text = "Don't have an account? ",
+                    color = Color(0xFF6B6B6B),
+                    fontSize = 14.sp,
+                )
+
+                // Clickable link-style text
+                ClickableText(
+                    text = AnnotatedString("Sign up"),
+                    onClick = { onNavigateToRegister() },
+                    style = TextStyle(
+                        color = BrandTeal,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                )
             }
         }
     }
