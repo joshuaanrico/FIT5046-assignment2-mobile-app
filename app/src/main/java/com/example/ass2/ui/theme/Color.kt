@@ -12,7 +12,9 @@ val Pink40 = Color(0xFF7D5260)
 
 // SmartFit Fuel brand colours
 val BrandTeal = Color(0xFF0D7377)
-val BrandTealDark = Color(0xFF0A5F63)
+//val BrandTealDark = Color(0xFF0A5F63)
+
+val BrandTealDark = Color(0xFF0D3D40)
 val BrandBackground = Color(0xFFF5F5F5)
 val FieldBackground = Color(0xFFF0F0F0)
 val StrengthWeak = Color(0xFFE53935)
