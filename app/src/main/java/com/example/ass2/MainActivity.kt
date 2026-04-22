@@ -83,8 +83,6 @@ fun AppNavGraph() {
             ExerciseDetailScreen(
                 exerciseName = name,
                 onBack = { navController.popBackStack() },
-//                onStartSession = { navController.popBackStack() }
-                // route change to pre-session check-in page (delete comment after PR).
                 onStartSession = { navController.navigate("pre_session_check_in")}
             )
         }
@@ -124,6 +122,14 @@ fun AppNavGraph() {
                 onEndSession = { navController.navigate("home") }
             )
         }
+        composable("pause_alert") {
+            AlertScreen(
+                onRest = { navController.popBackStack() },
+                onContinueLowerIntensity = { navController.popBackStack() },
+                onEndSession = { navController.navigate("home") }
+            )
+        }
+
 
     }
 }
