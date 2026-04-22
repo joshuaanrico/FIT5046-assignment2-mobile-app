@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -30,7 +29,7 @@ data class Exercise(
     val placeholderColor: Color
 )
 
-val sampleExercises = listOf(
+private val sampleExercises = listOf(
     Exercise(
         name = "Gentle Torso Twists",
         description = "Build upper back strength and improve posture safely from a seated position.",
@@ -68,7 +67,7 @@ val sampleExercises = listOf(
     ),
 )
 
-val filterCategories = listOf("All", "Seated", "Recommended", "Lower Body")
+private val filterCategories = listOf("All", "Seated", "Recommended", "Lower Body")
 
 @Composable
 fun ExercisesScreen(
@@ -88,12 +87,7 @@ fun ExercisesScreen(
     }
 
     Scaffold(
-        bottomBar = {
-            Column {
-                HorizontalDivider(color = Color(0xFFE0E0E0))
-                BottomNavBar(selected = NavTab.EXERCISES, onTabSelected = onTabSelected)
-            }
-        },
+        bottomBar = { BottomNavBar(selected = NavTab.EXERCISES, onTabSelected = onTabSelected) },
         containerColor = BrandBackground
     ) { innerPadding ->
         Column(
@@ -101,7 +95,6 @@ fun ExercisesScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Top bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,59 +110,28 @@ fun ExercisesScreen(
                 )
             }
 
-            // Search bar
-            Box(
+            SearchField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF9E9E9E), modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
-                    BasicTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        decorationBox = { inner ->
-                            if (searchQuery.isEmpty()) {
-                                Text("Search exercises...", fontSize = 14.sp, color = Color(0xFFBBBBBB))
-                            }
-                            inner()
-                        }
-                    )
-                }
-            }
+            )
 
-            // Filter chips
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(bottom = 12.dp)
             ) {
                 items(filterCategories) { category ->
-                    val isSelected = category == selectedFilter
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (isSelected) BrandTeal else Color.White)
-                            .clickable { selectedFilter = category }
-                            .padding(horizontal = 18.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = category,
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) Color.White else Color(0xFF4A4A4A)
-                        )
-                    }
+                    FilterChipItem(
+                        label = category,
+                        selected = category == selectedFilter,
+                        onClick = { selectedFilter = category }
+                    )
                 }
             }
 
-            // Exercise list
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -184,7 +146,50 @@ fun ExercisesScreen(
 }
 
 @Composable
-fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
+private fun SearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text("Search exercises...", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF9E9E9E))
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = Color.White,
+            focusedContainerColor = Color.White,
+            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = BrandTeal
+        ),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (selected) BrandTeal else Color.White)
+            .clickable { onClick() }
+            .padding(horizontal = 18.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) Color.White else Color(0xFF4A4A4A)
+        )
+    }
+}
+
+@Composable
+private fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -194,7 +199,6 @@ fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
-            // Image placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +215,6 @@ fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
-                // Category badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))

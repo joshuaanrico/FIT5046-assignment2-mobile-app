@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
@@ -20,42 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ass2.ui.theme.*
+import com.example.ass2.ui.theme.BrandBackground
+import com.example.ass2.ui.theme.BrandTeal
+import com.example.ass2.ui.theme.FieldBackground
 
-@Composable
-fun RememberMeCheckbox() {
-    // State to keep track of the checkbox status
-    var isChecked by remember { mutableStateOf(false) }
-
-    // Layout for the checkbox and text
-    Row(
-        horizontalArrangement = Arrangement.Start,  // Align to the start (left) of the Row
-        verticalAlignment = Alignment.CenterVertically,  // Vertically center the items
-        modifier = Modifier.fillMaxWidth().padding(10.dp)
-    ) {
-        // Checkbox
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = { isChecked = it },
-            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))  // Custom color if desired
-        )
-
-        // Label Text
-        Text(
-            text = "Remember me",
-            style = TextStyle(fontSize = 14.sp, color = Color(0xFF6B6B6B)),  // Color matching your design
-            modifier = Modifier.padding(start = 8.dp)  // Adds spacing between checkbox and text
-        )
-    }
-}
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
@@ -64,6 +36,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -120,91 +93,61 @@ fun LoginScreen(
                     .padding(top = 4.dp, bottom = 28.dp)
             )
 
-            // Email
-            Text(
-                text = "Email",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF3A3A3A),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 6.dp)
-            )
-            OutlinedTextField(
+            LoginFieldLabel("Email")
+            LoginTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("student@university.edu", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                placeholder = "student@university.edu",
+                keyboardType = KeyboardType.Email,
                 leadingIcon = {
                     Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9E9E9E))
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = FieldBackground,
-                    focusedContainerColor = Color.White,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = BrandTeal
-                ),
-                modifier = Modifier.fillMaxWidth()
+                }
             )
 
             Spacer(Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Password",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF3A3A3A)
-                )
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            // Password field with avatar trailing icon (as seen in reference)
-            OutlinedTextField(
+            LoginFieldLabel("Password")
+            LoginTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("••••••••", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                placeholder = "••••••••",
+                keyboardType = KeyboardType.Password,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF9E9E9E))
                 },
                 trailingIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Spacer(Modifier.width(4.dp))
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null,
-                                tint = Color(0xFF9E9E9E)
-                            )
-                        }
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null,
+                            tint = Color(0xFF9E9E9E)
+                        )
                     }
-                },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = FieldBackground,
-                    focusedContainerColor = Color.White,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = BrandTeal
-                ),
-                modifier = Modifier.fillMaxWidth()
+                }
             )
 
-            RememberMeCheckbox()
+            Spacer(Modifier.height(8.dp))
 
-            // Sign In button
+            // Remember me — aligned flush with the form fields above
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = rememberMe,
+                    onCheckedChange = { rememberMe = it },
+                    colors = CheckboxDefaults.colors(checkedColor = BrandTeal)
+                )
+                Text(
+                    text = "Remember me",
+                    fontSize = 14.sp,
+                    color = Color(0xFF6B6B6B)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
             Button(
                 onClick = { onLoginSuccess() },
                 modifier = Modifier
@@ -218,7 +161,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Divider
             Row(verticalAlignment = Alignment.CenterVertically) {
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFDDDDDD))
                 Text(
@@ -232,9 +174,8 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Google button
             OutlinedButton(
-                onClick = { /* TODO */ },
+                onClick = { /* TODO: Google Sign-in */ },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -248,29 +189,61 @@ fun LoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Sign up link
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Regular text
-                Text(
-                    text = "Don't have an account? ",
-                    color = Color(0xFF6B6B6B),
-                    fontSize = 14.sp,
-                )
-
-                // Clickable link-style text
-                ClickableText(
-                    text = AnnotatedString("Sign up"),
-                    onClick = { onNavigateToRegister() },
-                    style = TextStyle(
-                        color = BrandTeal,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                )
+                Text("Don't have an account? ", color = Color(0xFF6B6B6B), fontSize = 14.sp)
+                TextButton(
+                    onClick = onNavigateToRegister,
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Sign up", color = BrandTeal, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun LoginFieldLabel(text: String) {
+    Text(
+        text = text,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        color = Color(0xFF3A3A3A),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp)
+    )
+}
+
+@Composable
+private fun LoginTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        visualTransformation = visualTransformation,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+        singleLine = true,
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = FieldBackground,
+            focusedContainerColor = Color.White,
+            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = BrandTeal
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
 }
