@@ -102,8 +102,20 @@ fun AppNavGraph() {
         composable("pre_session_check_in") {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack()},
-                onResumeToSession = { navController.popBackStack()},
+                onResumeToSession = { navController.navigate("live_session")},
                 onCancel = { navController.popBackStack()}
+            )
+        }
+        composable("live_session") {
+            LiveSessionScreen(
+                onBack = { navController.popBackStack() },
+                onHelp = { },
+                onPause = { },
+                onEndSession = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = false }
+                    }
+                }
             )
         }
 
