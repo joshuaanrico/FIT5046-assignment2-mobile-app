@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTealDark
+import com.example.ass2.ui.theme.CardBackground
+import com.example.ass2.ui.theme.IconBackground
 
 @Composable
 fun PreSessionCheckInScreen(
@@ -119,7 +121,7 @@ fun PreSessionCheckInScreen(
                         fontSize = 30.sp,
                         lineHeight = 36.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0A5F63)
+                        color = BrandTealDark
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -324,7 +326,7 @@ private fun CheckInCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F1F1))
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -333,7 +335,7 @@ private fun CheckInCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(50.dp).clip(CircleShape).background(Color(0xFFDCECEC)),
+                    modifier = Modifier.size(50.dp).clip(CircleShape).background(IconBackground),
                     contentAlignment = Alignment.Center
                 ) {
                     icon()
