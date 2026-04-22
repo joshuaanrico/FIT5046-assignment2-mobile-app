@@ -1,5 +1,6 @@
 package com.example.ass2
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -157,7 +160,7 @@ fun ExerciseDetailScreen(
                     }
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        text = "Move slowly and coordinate with your breathing. Never force a twist past your point of comfort. If you feel any sharp pain, gently return to the center position.\n\nEnsure your chair is sturdy and your feet are flat on the floor before beginning the sequence.",
+                        text = "Move slowly and coordinate with your breathing. Never force a twist past your point of comfort. If you feel any sharp pain, gently return to the centre position.\n\nEnsure your chair is sturdy and your feet are flat on the floor before beginning the sequence.",
                         fontSize = 14.sp,
                         color = Color(0xFF4A4A4A),
                         lineHeight = 20.sp
@@ -176,8 +179,13 @@ private fun HeaderImage(exerciseName: String, onBack: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(240.dp)
-            .background(Color(0xFFB2DFDB))
     ) {
+        Image(
+            painter = painterResource(exerciseImageForName(exerciseName)),
+            contentDescription = exerciseName,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
         IconButton(
             onClick = onBack,
             modifier = Modifier
@@ -188,14 +196,6 @@ private fun HeaderImage(exerciseName: String, onBack: () -> Unit) {
         ) {
             Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
         }
-
-        Text(
-            text = exerciseName.take(1),
-            fontSize = 80.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White.copy(alpha = 0.3f),
-            modifier = Modifier.align(Alignment.Center)
-        )
     }
 }
 

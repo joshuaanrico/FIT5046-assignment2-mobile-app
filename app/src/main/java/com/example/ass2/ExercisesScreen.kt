@@ -1,5 +1,6 @@
 package com.example.ass2
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,44 +29,62 @@ data class Exercise(
     val description: String,
     val category: String,
     val tags: List<String>,
-    val placeholderColor: Color
+    val imageRes: Int
 )
 
+/** Maps an exercise name to a drawable resource — used by both list and detail screens. */
+fun exerciseImageForName(name: String): Int = when {
+    name.contains("Morning", ignoreCase = true) -> R.drawable.exercise1
+    name.contains("Torso", ignoreCase = true) -> R.drawable.exercise1
+    name.contains("Leg", ignoreCase = true) -> R.drawable.exercise2
+    name.contains("Push", ignoreCase = true) -> R.drawable.exercise3
+    name.contains("Shoulder", ignoreCase = true) -> R.drawable.exercise1
+    name.contains("Ankle", ignoreCase = true) -> R.drawable.exercise2
+    else -> R.drawable.exercise1
+}
+
 private val sampleExercises = listOf(
+    Exercise(
+        name = "Morning Mobility: Seated Flow",
+        description = "A gentle sequence to wake up your joints and improve circulation before starting the day.",
+        category = "MOBILITY",
+        tags = listOf("Recommended", "Seated", "Beginner"),
+        imageRes = R.drawable.exercise1
+    ),
     Exercise(
         name = "Gentle Torso Twists",
         description = "Build upper back strength and improve posture safely from a seated position.",
         category = "STRENGTH",
         tags = listOf("Seated", "Beginner"),
-        placeholderColor = Color(0xFFB2DFDB)
+        imageRes = R.drawable.exercise1
     ),
     Exercise(
         name = "Leg Extensions",
-        description = "Gentle knee mobilization to maintain joint fluid and strengthen the quadriceps.",
+        description = "Gentle knee mobilisation to maintain joint fluid and strengthen the quadriceps.",
         category = "MOBILITY",
         tags = listOf("Lower Body", "Intermediate"),
-        placeholderColor = Color(0xFFA5D6D2)
+        imageRes = R.drawable.exercise2
     ),
     Exercise(
         name = "Wall Push-ups",
-        description = "A low-impact variation of the classic push-up, excellent for chest and arm strength without...",
+        description = "A low-impact variation of the classic push-up, excellent for chest and arm strength without floor work.",
         category = "STRENGTH",
         tags = listOf("Standing", "Beginner"),
-        placeholderColor = Color(0xFF80CBC4)
+        imageRes = R.drawable.exercise3
     ),
     Exercise(
         name = "Seated Shoulder Rolls",
         description = "Relieve upper body tension and improve shoulder mobility from a comfortable seated position.",
         category = "MOBILITY",
         tags = listOf("Seated", "Beginner"),
-        placeholderColor = Color(0xFF4DB6AC)
+        imageRes = R.drawable.exercise1
     ),
     Exercise(
         name = "Ankle Circles",
         description = "Simple ankle rotations to improve circulation and maintain lower limb flexibility.",
         category = "FLEXIBILITY",
         tags = listOf("Seated", "Beginner"),
-        placeholderColor = Color(0xFF26A69A)
+        imageRes = R.drawable.exercise2
     ),
 )
 
@@ -72,10 +93,11 @@ private val filterCategories = listOf("All", "Seated", "Recommended", "Lower Bod
 @Composable
 fun ExercisesScreen(
     onExerciseClick: (String) -> Unit,
-    onTabSelected: (NavTab) -> Unit
+    onTabSelected: (NavTab) -> Unit,
+    initialFilter: String = "All"
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All") }
+    var selectedFilter by remember { mutableStateOf(initialFilter) }
 
     val filteredExercises = sampleExercises.filter { exercise ->
         val matchesSearch = searchQuery.isEmpty() ||
@@ -199,20 +221,15 @@ private fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
-            Box(
+            Image(
+                painter = painterResource(exercise.imageRes),
+                contentDescription = exercise.name,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .background(exercise.placeholderColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = exercise.name.take(1),
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.5f)
-                )
-            }
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            )
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Box(

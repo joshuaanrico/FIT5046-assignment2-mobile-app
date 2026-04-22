@@ -37,7 +37,7 @@ fun AppNavGraph() {
     fun handleTabSelected(tab: NavTab) {
         val route = when (tab) {
             NavTab.HOME -> "home"
-            NavTab.EXERCISES -> "exercises"
+            NavTab.EXERCISES -> "exercises?filter=All"
             NavTab.SESSIONS -> "home"   // placeholder — no sessions screen yet
             NavTab.PROGRESS -> "home"   // placeholder
             NavTab.PROFILE -> "profile_setup"
@@ -64,16 +64,21 @@ fun AppNavGraph() {
         }
         composable("home") {
             HomeScreen(
-                onGoToExercises = { navController.navigate("exercises") },
+                onGoToExercises = { navController.navigate("exercises?filter=Recommended") },
                 onTabSelected = ::handleTabSelected
             )
         }
-        composable("exercises") {
+        composable(
+            route = "exercises?filter={filter}",
+            arguments = listOf(navArgument("filter") { defaultValue = "All" })
+        ) { backStackEntry ->
+            val filter = backStackEntry.arguments?.getString("filter") ?: "All"
             ExercisesScreen(
                 onExerciseClick = { name ->
                     navController.navigate("exercise_detail/${name}")
                 },
-                onTabSelected = ::handleTabSelected
+                onTabSelected = ::handleTabSelected,
+                initialFilter = filter
             )
         }
         composable(

@@ -14,7 +14,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,7 +56,7 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "SmartFit Fuel",
+                    text = "Sit&Fit",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = BrandTeal
@@ -86,7 +86,7 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                SectionCard(icon = Icons.Default.Shield, title = "Daily Check-in") {
+                SectionCard(icon = Icons.Default.Mood, title = "Daily Check-in") {
                     Text(
                         text = "How is your body feeling right now?",
                         fontSize = 13.sp,
@@ -187,17 +187,17 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onGoToExercises() },
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.FitnessCenter, contentDescription = null, tint = BrandTeal, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Go to Exercises", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BrandTeal)
-                }
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .clickable { onGoToExercises() },
+//                    horizontalArrangement = Arrangement.Center,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Icon(Icons.Default.FitnessCenter, contentDescription = null, tint = BrandTeal, modifier = Modifier.size(18.dp))
+//                    Spacer(Modifier.width(6.dp))
+//                    Text("Go to Exercises", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BrandTeal)
+//                }
 
                 Spacer(Modifier.height(16.dp))
             }

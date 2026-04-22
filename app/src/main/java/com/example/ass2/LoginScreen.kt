@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -18,7 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -50,7 +52,7 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp, vertical = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Brand icon
+            // Brand icon — accessibility symbol on teal circle
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -59,23 +61,28 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Bolt,
+                    painter = painterResource(R.drawable.accessibility),
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(40.dp)
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Sit and Fit",
+                text = "Sit&Fit",
                 color = BrandTeal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
+            Text(
+                text = "Accessible fitness for everyone.",
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B)
+            )
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(32.dp))
 
             Text(
                 text = "Welcome back",
@@ -99,6 +106,7 @@ fun LoginScreen(
                 onValueChange = { email = it },
                 placeholder = "student@university.edu",
                 keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next,
                 leadingIcon = {
                     Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9E9E9E))
                 }
@@ -106,12 +114,38 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            LoginFieldLabel("Password")
+            // Password label row with Forgot Password link on the right
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Password",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF3A3A3A)
+                )
+                TextButton(
+                    onClick = { /* TODO: forgot password */ },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        text = "Forgot Password?",
+                        fontSize = 12.sp,
+                        color = BrandTeal,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
             LoginTextField(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = "••••••••",
                 keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF9E9E9E))
@@ -120,7 +154,7 @@ fun LoginScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
                             tint = Color(0xFF9E9E9E)
                         )
                     }
@@ -129,7 +163,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Remember me — aligned flush with the form fields above
+            // Remember me — offset to compensate for checkbox's internal touch-target padding
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -137,7 +171,8 @@ fun LoginScreen(
                 Checkbox(
                     checked = rememberMe,
                     onCheckedChange = { rememberMe = it },
-                    colors = CheckboxDefaults.colors(checkedColor = BrandTeal)
+                    colors = CheckboxDefaults.colors(checkedColor = BrandTeal),
+                    modifier = Modifier.offset(x = (-12).dp)
                 )
                 Text(
                     text = "Remember me",
@@ -182,7 +217,12 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1A1A1A))
             ) {
-                Text("G", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF4285F4))
+                Icon(
+                    painter = painterResource(R.drawable.google_icon),
+                    contentDescription = "Google",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
                 Text("Continue with Google", fontSize = 15.sp)
             }
@@ -224,6 +264,7 @@ private fun LoginTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null
@@ -235,7 +276,7 @@ private fun LoginTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         visualTransformation = visualTransformation,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         singleLine = true,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
