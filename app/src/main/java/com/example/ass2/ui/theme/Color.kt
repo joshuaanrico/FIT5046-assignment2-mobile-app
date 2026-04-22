@@ -17,6 +17,10 @@ val BrandTeal = Color(0xFF0D7377)
 val BrandTealDark = Color(0xFF0D3D40)
 val BrandBackground = Color(0xFFF5F5F5)
 val FieldBackground = Color(0xFFF0F0F0)
+
+val CardBackground = Color(0xFFECECEC)
+
+val IconBackground = Color(0xFFFFFFFF)
 val StrengthWeak = Color(0xFFE53935)
 val StrengthFair = Color(0xFFFB8C00)
 val StrengthGood = Color(0xFF43A047)
