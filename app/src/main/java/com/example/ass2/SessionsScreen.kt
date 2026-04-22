@@ -370,13 +370,14 @@ fun BottomBar(teal: Color) {
             .background(Color.White)
             .navigationBarsPadding()
             .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        BottomBarItem("Home", Icons.Outlined.Home, teal)
-        BottomBarItem("Exercises", Icons.Outlined.FitnessCenter, teal)
-        BottomBarItem("Sessions", Icons.Outlined.AccessTime, teal)
-        BottomBarItem("Progress", Icons.Outlined.ShowChart, teal)
-        BottomBarItem("Profile", Icons.Outlined.Person, teal)
+        BottomBarItem("Home", Icons.Outlined.Home, teal, false)
+        BottomBarItem("Exercises", Icons.Outlined.FitnessCenter, teal, false)
+        BottomBarItem("Sessions", Icons.Outlined.AccessTime, teal, true)
+        BottomBarItem("Progress", Icons.Outlined.ShowChart, teal, false)
+        BottomBarItem("Profile", Icons.Outlined.Person, teal, false)
     }
 }
 
@@ -384,18 +385,42 @@ fun BottomBar(teal: Color) {
 fun BottomBarItem(
     label: String,
     icon: ImageVector,
-    color: Color
+    color: Color,
+    selected: Boolean
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = color
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = color
-        )
+    if (selected) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .background(color)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = Color.White
+                )
+                Text(
+                    text = label,
+                    fontSize = 11.sp,
+                    color = Color.White
+                )
+            }
+        }
+    } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color
+            )
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = color
+            )
+        }
     }
 }

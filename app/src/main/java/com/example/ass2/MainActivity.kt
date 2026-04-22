@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "sessionDetails") {
         composable("login") {
             LoginScreen(onNavigateToRegister = { navController.navigate("register") })
         }
@@ -40,5 +40,22 @@ fun AppNavGraph() {
         composable("sessions") {
             SessionsScreen()
         }
+        composable("sessionDetails") {
+            SessionDetailScreen()
+        }
+        composable("profile") {
+            ProfileScreen()
+        }
+        composable("progress") {
+            ProgressScreen()
+        }
+        composable("reminderList") {
+            ReminderListScreen()
+        }
+        composable("reminderSetting") {
+            ReminderSettingScreen()
+        }
+
+
     }
 }
