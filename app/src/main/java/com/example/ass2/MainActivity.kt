@@ -84,7 +84,9 @@ fun AppNavGraph() {
             ExerciseDetailScreen(
                 exerciseName = name,
                 onBack = { navController.popBackStack() },
-                onStartSession = { navController.popBackStack() }
+//                onStartSession = { navController.popBackStack() }
+                // route change to pre-session check-in page (delete comment after PR).
+                onStartSession = { navController.navigate("pre_session_check_in")}
             )
         }
         composable("profile_setup") {
@@ -97,5 +99,13 @@ fun AppNavGraph() {
                 }
             )
         }
+        composable("pre_session_check_in") {
+            PreSessionCheckInScreen(
+                onClose = { navController.popBackStack()},
+                onResumeToSession = { navController.popBackStack()},
+                onCancel = { navController.popBackStack()}
+            )
+        }
+
     }
 }
