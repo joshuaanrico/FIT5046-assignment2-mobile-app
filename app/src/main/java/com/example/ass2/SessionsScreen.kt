@@ -29,10 +29,10 @@ import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -62,7 +62,6 @@ fun SessionsScreen(
 ) {
     val darkText = Color(0xFF222222)
     val lightText = Color(0xFF777777)
-    val searchBg = Color(0xFFF0F0F0)
 
     val thisWeek = remember {
         listOf(
@@ -110,9 +109,10 @@ fun SessionsScreen(
         bottomBar = { BottomNavBar(selected = NavTab.SESSIONS, onTabSelected = onTabSelected) },
         containerColor = BrandBackground
     ) { innerPadding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
 
             Text(
@@ -131,31 +131,34 @@ fun SessionsScreen(
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
                 item {
-                    TextField(
+                    OutlinedTextField(
                         value = "",
                         onValueChange = {},
                         placeholder = {
-                            Text("Search sessions...", color = lightText)
+                            Text(
+                                text = "Search sessions...",
+                                color = Color(0xFFBBBBBB),
+                                fontSize = 14.sp
+                            )
                         },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Search,
                                 contentDescription = "Search",
-                                tint = lightText
+                                tint = Color(0xFF9E9E9E)
                             )
                         },
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = BrandTeal
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                            .clip(RoundedCornerShape(20.dp)),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = searchBg,
-                            unfocusedContainerColor = searchBg,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        )
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     )
 
                     Row(
@@ -164,9 +167,9 @@ fun SessionsScreen(
                             .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilterChip("Type", true, Icons.Outlined.FilterList)
-                        FilterChip("Date", false, null)
-                        FilterChip("Duration", false, null)
+                        SessionFilterChip("Type", true, Icons.Outlined.FilterList)
+                        SessionFilterChip("Date", false, null)
+                        SessionFilterChip("Duration", false, null)
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -224,18 +227,16 @@ fun SessionsScreen(
 }
 
 @Composable
-private fun FilterChip(
+private fun SessionFilterChip(
     text: String,
     selected: Boolean,
     icon: ImageVector?
 ) {
-    val bg = if (selected) Color(0xFFDCEFED) else Color(0xFFF1F1F1)
-
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(bg)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (selected) BrandTeal else Color.White)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -243,15 +244,16 @@ private fun FilterChip(
                 imageVector = icon,
                 contentDescription = text,
                 modifier = Modifier.size(16.dp),
-                tint = Color.Gray
+                tint = if (selected) Color.White else Color(0xFF4A4A4A)
             )
             Spacer(modifier = Modifier.width(4.dp))
         }
 
         Text(
             text = text,
-            fontSize = 14.sp,
-            color = Color.DarkGray
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) Color.White else Color(0xFF4A4A4A)
         )
     }
 }
