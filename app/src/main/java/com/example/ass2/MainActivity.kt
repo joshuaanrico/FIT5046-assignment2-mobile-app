@@ -107,26 +107,23 @@ fun AppNavGraph() {
             LiveSessionScreen(
                 onBack = { navController.popBackStack() },
                 onHelp = { },
-                onPause = { navController.navigate("pause_alert") },
-                onEndSession = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = false }
-                    }
-                }
+                onPause = { navController.navigate("pause_alert")},
+                onEndSession = { navController.navigate("session_result")}
             )
         }
         composable("pause_alert") {
             AlertScreen(
                 onRest = { navController.popBackStack() },
                 onContinueLowerIntensity = { navController.popBackStack() },
-                onEndSession = { navController.navigate("home") }
+                onEndSession = { navController.navigate("session_result") }
             )
         }
-        composable("pause_alert") {
-            AlertScreen(
-                onRest = { navController.popBackStack() },
-                onContinueLowerIntensity = { navController.popBackStack() },
-                onEndSession = { navController.navigate("home") }
+        composable("session_result") {
+            SessionResultScreen(
+                onCancel = {navController.navigate("live_session")},
+                onSaveSession = {}, // to the list of sessions
+                onRepeatLater = {},
+                onHome = {navController.navigate("home")}
             )
         }
 
