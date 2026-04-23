@@ -1,6 +1,7 @@
 package com.example.ass2
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +26,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +55,9 @@ fun ProgressScreen(onTabSelected: (NavTab) -> Unit) {
     val softGray = Color(0xFFE7E7E7)
 
     val scrollState = rememberScrollState()
+    var selectedPeriod by remember { mutableStateOf("This Week") }
+    var showPeriodMenu by remember { mutableStateOf(false) }
+    val periods = listOf("This Week", "Last Week", "This Month", "Last Month")
 
     Scaffold(
         bottomBar = { BottomNavBar(selected = NavTab.PROGRESS, onTabSelected = onTabSelected) },
@@ -73,27 +83,42 @@ fun ProgressScreen(onTabSelected: (NavTab) -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFFF0F0F0))
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "This Week",
-                    fontSize = 16.sp,
-                    color = darkText
-                )
+            Box {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFFF0F0F0))
+                        .clickable { showPeriodMenu = true }
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedPeriod,
+                        fontSize = 16.sp,
+                        color = darkText
+                    )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = "Dropdown",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
-                )
+                    Icon(
+                        imageVector = Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = "Dropdown",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showPeriodMenu,
+                    onDismissRequest = { showPeriodMenu = false }
+                ) {
+                    periods.forEach { period ->
+                        DropdownMenuItem(
+                            text = { Text(period) },
+                            onClick = { selectedPeriod = period; showPeriodMenu = false }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))

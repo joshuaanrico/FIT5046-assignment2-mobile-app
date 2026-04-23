@@ -28,23 +28,38 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 data class SessionItem(
     val title: String,
@@ -52,9 +67,28 @@ data class SessionItem(
     val date: String,
     val status: String,
     val accentColor: Color,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val week: String = "This Week"
 )
 
+private fun parseDurationMins(dur: String): Int =
+    dur.filter { it.isDigit() }.toIntOrNull() ?: 0
+
+private fun parseDateMillis(dateStr: String): Long? = try {
+    SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH).parse(dateStr)?.time
+} catch (e: Exception) { null }
+
+private fun isSameDay(a: Long, b: Long): Boolean {
+    val calA = Calendar.getInstance().apply { timeInMillis = a }
+    val calB = Calendar.getInstance().apply { timeInMillis = b }
+    return calA.get(Calendar.YEAR) == calB.get(Calendar.YEAR) &&
+            calA.get(Calendar.DAY_OF_YEAR) == calB.get(Calendar.DAY_OF_YEAR)
+}
+
+private fun formatDateShort(millis: Long): String =
+    SimpleDateFormat("MMM d", Locale.ENGLISH).format(Date(millis))
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionsScreen(
     onTabSelected: (NavTab) -> Unit,
@@ -63,7 +97,17 @@ fun SessionsScreen(
     val darkText = Color(0xFF222222)
     val lightText = Color(0xFF777777)
 
-    val thisWeek = remember {
+    var searchQuery by remember { mutableStateOf("") }
+    var typeFilter by remember { mutableStateOf("All") }
+    var durationFilter by remember { mutableStateOf("All") }
+    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
+    var showTypePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showDurationPicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState()
+
+    val allSessions = remember {
         listOf(
             SessionItem(
                 "Seated Torso Twist",
@@ -71,7 +115,8 @@ fun SessionsScreen(
                 "Oct 24, 2023",
                 "Completed",
                 BrandTeal,
-                Icons.Outlined.Spa
+                Icons.Outlined.Spa,
+                "This Week"
             ),
             SessionItem(
                 "Neck Rotation",
@@ -79,20 +124,17 @@ fun SessionsScreen(
                 "Oct 22, 2023",
                 "Completed",
                 Color(0xFF315C7C),
-                Icons.Outlined.Person
-            )
-        )
-    }
-
-    val lastWeek = remember {
-        listOf(
+                Icons.Outlined.Person,
+                "This Week"
+            ),
             SessionItem(
                 "Arm Raises",
                 "8 mins",
                 "Oct 18, 2023",
                 "Partial",
                 Color.LightGray,
-                Icons.Outlined.FitnessCenter
+                Icons.Outlined.FitnessCenter,
+                "Last Week"
             ),
             SessionItem(
                 "Guided Breathing",
@@ -100,9 +142,33 @@ fun SessionsScreen(
                 "Oct 15, 2023",
                 "Completed",
                 BrandTeal,
-                Icons.Outlined.Spa
+                Icons.Outlined.Spa,
+                "Last Week"
             )
         )
+    }
+
+    val hasActiveFilter = searchQuery.isNotEmpty() || typeFilter != "All" ||
+            selectedDateMillis != null || durationFilter != "All"
+
+    val filteredSessions = remember(searchQuery, typeFilter, selectedDateMillis, durationFilter) {
+        allSessions.filter { item ->
+            val matchesSearch = searchQuery.isEmpty() ||
+                    item.title.contains(searchQuery, ignoreCase = true)
+            val matchesType = typeFilter == "All" || item.status == typeFilter
+            val matchesDate = selectedDateMillis == null || run {
+                val itemMillis = parseDateMillis(item.date)
+                itemMillis != null && isSameDay(selectedDateMillis!!, itemMillis)
+            }
+            val mins = parseDurationMins(item.duration)
+            val matchesDuration = when (durationFilter) {
+                "≤5 min" -> mins <= 5
+                "6-10 min" -> mins in 6..10
+                ">10 min" -> mins > 10
+                else -> true
+            }
+            matchesSearch && matchesType && matchesDate && matchesDuration
+        }
     }
 
     Scaffold(
@@ -114,7 +180,6 @@ fun SessionsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
             Text(
                 text = "Sessions History",
                 modifier = Modifier
@@ -123,7 +188,7 @@ fun SessionsScreen(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = BrandTeal,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             LazyColumn(
@@ -132,8 +197,8 @@ fun SessionsScreen(
             ) {
                 item {
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
                         placeholder = {
                             Text(
                                 text = "Search sessions...",
@@ -167,38 +232,105 @@ fun SessionsScreen(
                             .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        SessionFilterChip("Type", true, Icons.Outlined.FilterList)
-                        SessionFilterChip("Date", false, null)
-                        SessionFilterChip("Duration", false, null)
+                        // Type: dropdown (All / Completed / Partial)
+                        Box {
+                            SessionFilterChip(
+                                text = if (typeFilter == "All") "Type" else typeFilter,
+                                selected = typeFilter != "All",
+                                icon = Icons.Outlined.FilterList,
+                                onClick = { showTypePicker = true }
+                            )
+                            DropdownMenu(
+                                expanded = showTypePicker,
+                                onDismissRequest = { showTypePicker = false }
+                            ) {
+                                listOf("All", "Completed", "Partial").forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            typeFilter = option
+                                            showTypePicker = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Date: date picker dialog
+                        SessionFilterChip(
+                            text = if (selectedDateMillis == null) "Date"
+                                   else formatDateShort(selectedDateMillis!!),
+                            selected = selectedDateMillis != null,
+                            icon = null,
+                            onClick = { showDatePicker = true }
+                        )
+
+                        // Duration: dropdown (All / ≤5 min / 6-10 min / >10 min)
+                        Box {
+                            SessionFilterChip(
+                                text = if (durationFilter == "All") "Duration" else durationFilter,
+                                selected = durationFilter != "All",
+                                icon = null,
+                                onClick = { showDurationPicker = true }
+                            )
+                            DropdownMenu(
+                                expanded = showDurationPicker,
+                                onDismissRequest = { showDurationPicker = false }
+                            ) {
+                                listOf("All", "≤5 min", "6-10 min", ">10 min").forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            durationFilter = option
+                                            showDurationPicker = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
-
-                    Text(
-                        text = "This Week",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = darkText
-                    )
                 }
 
-                items(thisWeek) { item ->
-                    SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
-                }
-
-                item {
-                    Text(
-                        text = "Last Week",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = darkText
-                    )
-                }
-
-                items(lastWeek) { item ->
-                    SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                if (hasActiveFilter) {
+                    item {
+                        Text(
+                            text = if (filteredSessions.isEmpty()) "No results" else "Results",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = darkText
+                        )
+                    }
+                    items(filteredSessions) { item ->
+                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    }
+                } else {
+                    item {
+                        Text(
+                            text = "This Week",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = darkText
+                        )
+                    }
+                    items(allSessions.filter { it.week == "This Week" }) { item ->
+                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    }
+                    item {
+                        Text(
+                            text = "Last Week",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = darkText
+                        )
+                    }
+                    items(allSessions.filter { it.week == "Last Week" }) { item ->
+                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    }
                 }
 
                 item {
@@ -223,6 +355,30 @@ fun SessionsScreen(
                 }
             }
         }
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        selectedDateMillis = datePickerState.selectedDateMillis
+                        showDatePicker = false
+                    }) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        selectedDateMillis = null
+                        showDatePicker = false
+                    }) {
+                        Text("Clear")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
     }
 }
 
@@ -230,12 +386,14 @@ fun SessionsScreen(
 private fun SessionFilterChip(
     text: String,
     selected: Boolean,
-    icon: ImageVector?
+    icon: ImageVector?,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(if (selected) BrandTeal else Color.White)
+            .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
