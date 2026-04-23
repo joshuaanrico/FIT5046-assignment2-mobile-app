@@ -228,7 +228,7 @@ fun PreSessionCheckInScreen(
                         onClick = { isSpaceClear = false },
                         selectedColor = Color(0xFFE9F2F2),
                         selectedTextColor = Color(0xFF4A4A4A),
-                        showCheck = false,
+                        showCheck = true,
                         modifier = Modifier.weight(1f)
                     )
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -115,12 +114,19 @@ fun AppNavGraph() {
             LiveSessionScreen(
                 onBack = { navController.popBackStack() },
                 onHelp = { },
-                onPause = { },
+                onPause = { navController.navigate("pause_alert") },
                 onEndSession = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = false }
                     }
                 }
+            )
+        }
+        composable("pause_alert") {
+            AlertScreen(
+                onRest = { navController.popBackStack() },
+                onContinueLowerIntensity = { navController.popBackStack() },
+                onEndSession = { navController.navigate("home") }
             )
         }
 
