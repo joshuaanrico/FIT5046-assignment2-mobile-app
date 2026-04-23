@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "sessionDetails") {
 
     fun handleTabSelected(tab: NavTab) {
         val route = when (tab) {
@@ -93,6 +94,25 @@ fun AppNavGraph() {
                 onStartSession = { navController.navigate("pre_session_check_in")}
             )
         }
+        composable("sessions") {
+            SessionsScreen()
+        }
+        composable("sessionDetails") {
+            SessionDetailScreen()
+        }
+        composable("profile") {
+            ProfileScreen()
+        }
+        composable("progress") {
+            ProgressScreen()
+        }
+        composable("reminderList") {
+            ReminderListScreen()
+        }
+        composable("reminderSetting") {
+            ReminderSettingScreen()
+        }
+
         composable("profile_setup") {
             ProfileSetupScreen(
                 onBack = { navController.popBackStack() },
