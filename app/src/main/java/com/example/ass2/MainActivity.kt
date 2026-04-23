@@ -52,13 +52,21 @@ fun AppNavGraph() {
         composable("login") {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate("register") },
-                onLoginSuccess = { navController.navigate("home") { popUpTo("login") { inclusive = true } } }
+                onLoginSuccess = { navController.navigate("home") { popUpTo("login") { inclusive = true } } },
+                onNavigateToForgotPassword = { navController.navigate("forgot_password") }
+            )
+        }
+        composable("forgot_password") {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() },
+                onBackToLogin = { navController.popBackStack() }
             )
         }
         composable("register") {
             RegisterScreen(
                 onNavigateToLogin = { navController.popBackStack() },
-                onRegisterSuccess = { navController.navigate("profile_setup") }
+                onRegisterSuccess = { navController.navigate("profile_setup") },
+                onNavigateToLegal = { tab -> navController.navigate("legal?tab=$tab") }
             )
         }
         composable("home") {
@@ -167,6 +175,16 @@ fun AppNavGraph() {
                 onSaveSession = {},
                 onRepeatLater = { navController.navigate("live_session") },
                 onHome = { navController.navigate("home") { popUpTo("home") { inclusive = false } } }
+            )
+        }
+        composable(
+            route = "legal?tab={tab}",
+            arguments = listOf(navArgument("tab") { defaultValue = "terms" })
+        ) { backStackEntry ->
+            val tab = backStackEntry.arguments?.getString("tab") ?: "terms"
+            LegalScreen(
+                initialTab = tab,
+                onBack = { navController.popBackStack() }
             )
         }
     }

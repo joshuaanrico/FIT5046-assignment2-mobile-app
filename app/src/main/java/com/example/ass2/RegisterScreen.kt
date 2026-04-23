@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,11 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.*
@@ -30,7 +37,8 @@ import com.example.ass2.ui.theme.*
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit = {}
+    onRegisterSuccess: () -> Unit = {},
+    onNavigateToLegal: (String) -> Unit = {}
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -246,6 +254,37 @@ fun RegisterScreen(
                     Text("Sign in", color = BrandTeal, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
             }
+
+            Spacer(Modifier.height(20.dp))
+
+            val legalText = buildAnnotatedString {
+                append("By joining, you agree to our ")
+                pushStringAnnotation(tag = "terms", annotation = "terms")
+                withStyle(SpanStyle(color = BrandTeal, textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Medium)) {
+                    append("Terms of Service")
+                }
+                pop()
+                append(" and ")
+                pushStringAnnotation(tag = "privacy", annotation = "privacy")
+                withStyle(SpanStyle(color = BrandTeal, textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Medium)) {
+                    append("Privacy Policy")
+                }
+                pop()
+                append(". Wellness is a commitment to yourself.")
+            }
+
+            ClickableText(
+                text = legalText,
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B),
+                    textAlign = TextAlign.Center
+                ),
+                onClick = { offset ->
+                    legalText.getStringAnnotations("terms", offset, offset).firstOrNull()?.let { onNavigateToLegal("terms") }
+                    legalText.getStringAnnotations("privacy", offset, offset).firstOrNull()?.let { onNavigateToLegal("privacy") }
+                }
+            )
         }
     }
 }

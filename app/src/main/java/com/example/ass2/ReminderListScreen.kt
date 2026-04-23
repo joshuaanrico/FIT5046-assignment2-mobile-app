@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,10 +14,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -110,32 +111,28 @@ fun ReminderListScreen(
                     Spacer(modifier = Modifier.size(48.dp))
                 }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp)
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 24.dp, bottom = 80.dp)
                 ) {
-                    Text(
-                        text = "Daily\nRoutine",
-                        color = teal,
-                        fontSize = 34.sp,
-                        lineHeight = 38.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Manage your wellness check-ins and guided routines to stay consistent.",
-                        color = grayText,
-                        fontSize = 15.sp,
-                        lineHeight = 24.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(26.dp))
-
-                    reminders.forEach { item ->
+                    item {
+                        Text(
+                            text = "Daily\nRoutine",
+                            color = teal,
+                            fontSize = 34.sp,
+                            lineHeight = 38.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Manage your wellness check-ins and guided routines to stay consistent.",
+                            color = grayText,
+                            fontSize = 15.sp,
+                            lineHeight = 24.sp
+                        )
+                        Spacer(modifier = Modifier.height(26.dp))
+                    }
+                    items(reminders, key = { it.title }) { item ->
                         ReminderCard(
                             item = item,
                             teal = teal,
@@ -146,8 +143,6 @@ fun ReminderListScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-
-                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
 

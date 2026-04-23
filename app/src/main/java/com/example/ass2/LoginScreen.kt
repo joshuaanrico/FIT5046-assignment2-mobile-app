@@ -33,7 +33,8 @@ import com.example.ass2.ui.theme.FieldBackground
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onNavigateToForgotPassword: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -129,7 +130,7 @@ fun LoginScreen(
                     color = Color(0xFF3A3A3A)
                 )
                 TextButton(
-                    onClick = { /* TODO: forgot password */ },
+                    onClick = onNavigateToForgotPassword,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
