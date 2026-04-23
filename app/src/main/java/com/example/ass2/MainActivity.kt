@@ -32,15 +32,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "sessionDetails") {
 
     fun handleTabSelected(tab: NavTab) {
         val route = when (tab) {
             NavTab.HOME -> "home"
             NavTab.EXERCISES -> "exercises?filter=All"
-            NavTab.SESSIONS -> "home"   // placeholder — no sessions screen yet
-            NavTab.PROGRESS -> "home"   // placeholder
-            NavTab.PROFILE -> "profile_setup"
+            NavTab.SESSIONS -> "sessions"
+            NavTab.PROGRESS -> "progress"
+            NavTab.PROFILE -> "profile"
         }
         navController.navigate(route) {
             popUpTo("home") { saveState = true }
@@ -89,30 +88,15 @@ fun AppNavGraph() {
             ExerciseDetailScreen(
                 exerciseName = name,
                 onBack = { navController.popBackStack() },
-//                onStartSession = { navController.popBackStack() }
-                // route change to pre-session check-in page (delete comment after PR).
-                onStartSession = { navController.navigate("pre_session_check_in")}
+                onStartSession = { navController.navigate("pre_session_check_in") }
             )
         }
-        composable("sessions") {
-            SessionsScreen()
-        }
-        composable("sessionDetails") {
-            SessionDetailScreen()
-        }
-        composable("profile") {
-            ProfileScreen()
-        }
-        composable("progress") {
-            ProgressScreen()
-        }
-        composable("reminderList") {
-            ReminderListScreen()
-        }
-        composable("reminderSetting") {
-            ReminderSettingScreen()
-        }
-
+        composable("sessions") { SessionsScreen() }
+        composable("sessionDetails") { SessionDetailScreen() }
+        composable("profile") { ProfileScreen() }
+        composable("progress") { ProgressScreen() }
+        composable("reminderList") { ReminderListScreen() }
+        composable("reminderSetting") { ReminderSettingScreen() }
         composable("profile_setup") {
             ProfileSetupScreen(
                 onBack = { navController.popBackStack() },
@@ -125,9 +109,9 @@ fun AppNavGraph() {
         }
         composable("pre_session_check_in") {
             PreSessionCheckInScreen(
-                onClose = { navController.popBackStack()},
-                onResumeToSession = { navController.navigate("live_session")},
-                onCancel = { navController.popBackStack()}
+                onClose = { navController.popBackStack() },
+                onResumeToSession = { navController.navigate("live_session") },
+                onCancel = { navController.popBackStack() }
             )
         }
         composable("live_session") {
@@ -149,6 +133,5 @@ fun AppNavGraph() {
                 onEndSession = { navController.navigate("home") }
             )
         }
-
     }
 }
