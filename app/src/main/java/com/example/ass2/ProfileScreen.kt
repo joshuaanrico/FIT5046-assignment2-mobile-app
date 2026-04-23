@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -47,6 +48,8 @@ fun ProfileScreen(
     onTabSelected: (NavTab) -> Unit,
     onReminderListClick: () -> Unit,
     onProfileSetupClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onHelpClick: () -> Unit = {},
     onSignOut: () -> Unit,
 ) {
     val bgColor = Color(0xFFF4F5F4)
@@ -69,16 +72,28 @@ fun ProfileScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Profile",
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp, bottom = 8.dp),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = teal,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Profile",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = teal
+                )
+                Text(
+                    text = "Help",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = teal,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .clickable { onHelpClick() }
+                )
+            }
 
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -184,6 +199,17 @@ fun ProfileScreen(
                 iconBg = Color(0xFFE5F0EE),
                 iconTint = teal,
                 onClick = onReminderListClick
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            MenuCard(
+                icon = Icons.Outlined.Settings,
+                title = "Settings",
+                textDark = textDark,
+                iconBg = Color(0xFFE5F0EE),
+                iconTint = teal,
+                onClick = onSettingsClick
             )
 
             Spacer(modifier = Modifier.height(36.dp))

@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessible
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
@@ -44,10 +43,6 @@ fun ProfileSetupScreen(
     var conditions by remember { mutableStateOf("") }
     var painLevel by remember { mutableFloatStateOf(4f) }
     var restingHeartRate by remember { mutableStateOf("") }
-    var screenReaderOptimized by remember { mutableStateOf(false) }
-    var highContrastText by remember { mutableStateOf(true) }
-    var voiceCommands by remember { mutableStateOf(false) }
-    var dailyReminders by remember { mutableStateOf(true) }
     var mobilityExpanded by remember { mutableStateOf(false) }
     var activityExpanded by remember { mutableStateOf(false) }
 
@@ -254,62 +249,6 @@ fun ProfileSetupScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // ── Experience Settings ───────────────────────────────
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        CardSectionTitle(
-                            icon = { Icon(Icons.Default.Settings, contentDescription = null, tint = grayText) },
-                            title = "Experience Settings",
-                            teal = teal
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("App Accessibility", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, modifier = Modifier.padding(bottom = 10.dp))
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(whiteCard)
-                        ) {
-                            AccessibilityRow(checked = screenReaderOptimized, onCheckedChange = { screenReaderOptimized = it }, title = "Optimize for Screen Reader", subtitle = "Enhances audio descriptions", teal = teal)
-                            HorizontalDivider(color = Color(0xFFEEEEEE), modifier = Modifier.padding(horizontal = 16.dp))
-                            AccessibilityRow(checked = highContrastText, onCheckedChange = { highContrastText = it }, title = "High Contrast Text", subtitle = "Increases visual clarity", teal = teal)
-                            HorizontalDivider(color = Color(0xFFEEEEEE), modifier = Modifier.padding(horizontal = 16.dp))
-                            AccessibilityRow(checked = voiceCommands, onCheckedChange = { voiceCommands = it }, title = "Enable Voice Commands", subtitle = "Navigate hands-free", teal = teal)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Notifications", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, modifier = Modifier.padding(bottom = 10.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(whiteCard)
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Daily Reminders", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = darkText)
-                                Text("Gentle nudges to move", fontSize = 12.sp, color = grayText)
-                            }
-                            Switch(
-                                checked = dailyReminders,
-                                onCheckedChange = { dailyReminders = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = teal,
-                                    uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = Color.LightGray
-                                )
-                            )
-                        }
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Button(
@@ -378,30 +317,3 @@ private fun DropdownRow(
     }
 }
 
-@Composable
-private fun AccessibilityRow(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    title: String,
-    subtitle: String,
-    teal: Color
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(checkedColor = teal)
-        )
-        Spacer(Modifier.width(8.dp))
-        Column {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1F1F1F))
-            Text(subtitle, fontSize = 12.sp, color = Color(0xFF5F6368))
-        }
-    }
-}

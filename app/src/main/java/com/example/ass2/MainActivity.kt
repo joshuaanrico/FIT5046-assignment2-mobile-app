@@ -116,10 +116,18 @@ fun AppNavGraph() {
                 onTabSelected = ::handleTabSelected,
                 onReminderListClick = { navController.navigate("reminderList") },
                 onProfileSetupClick = { navController.navigate("profile_setup") },
+                onSettingsClick = { navController.navigate("settings") },
+                onHelpClick = { navController.navigate("help") },
                 onSignOut = {
                     navController.navigate("login") { popUpTo("home") { inclusive = true } }
                 }
             )
+        }
+        composable("settings") {
+            SettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable("help") {
+            HelpScreen(onBack = { navController.popBackStack() })
         }
         composable("progress") {
             ProgressScreen(onTabSelected = ::handleTabSelected)
@@ -158,7 +166,7 @@ fun AppNavGraph() {
         composable("live_session") {
             LiveSessionScreen(
                 onBack = { navController.popBackStack() },
-                onHelp = { },
+                onHelp = { navController.navigate("help") },
                 onPause = { navController.navigate("pause_alert") },
                 onEndSession = { navController.navigate("session_result") }
             )

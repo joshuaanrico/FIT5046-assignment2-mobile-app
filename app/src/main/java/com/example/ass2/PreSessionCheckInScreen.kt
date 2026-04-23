@@ -32,6 +32,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -367,21 +369,23 @@ private fun NumberSelectorRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         (1..5).forEach { value ->
-            val isSelected = value == selected
-
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) BrandTealDark else Color(0xFFF8F8F8))
-                    .clickable { onSelected(value) },
-                contentAlignment = Alignment.Center
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable { onSelected(value) }
             ) {
+                RadioButton(
+                    selected = value == selected,
+                    onClick = { onSelected(value) },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = BrandTealDark,
+                        unselectedColor = Color(0xFF9E9E9E)
+                    )
+                )
                 Text(
                     text = value.toString(),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSelected) Color.White else Color(0xFF4A4A4A)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (value == selected) BrandTealDark else Color(0xFF4A4A4A)
                 )
             }
         }
