@@ -1,7 +1,7 @@
 package com.example.ass2
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,23 +12,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -41,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,7 +48,11 @@ data class ReminderItem(
 )
 
 @Composable
-fun ReminderListScreen() {
+fun ReminderListScreen(
+    onBack: () -> Unit,
+    onReminderClick: () -> Unit,
+    onAdd: () -> Unit,
+) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val darkText = Color(0xFF202124)
@@ -76,6 +75,7 @@ fun ReminderListScreen() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
             Column(
@@ -84,14 +84,16 @@ fun ReminderListScreen() {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowBack,
-                        contentDescription = "Back",
-                        tint = teal
-                    )
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                            tint = teal
+                        )
+                    }
 
                     Box(
                         modifier = Modifier.weight(1f),
@@ -105,7 +107,7 @@ fun ReminderListScreen() {
                         )
                     }
 
-                    Spacer(modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.size(48.dp))
                 }
 
                 Column(
@@ -139,24 +141,24 @@ fun ReminderListScreen() {
                             teal = teal,
                             darkText = darkText,
                             grayText = grayText,
-                            cardColor = cardColor
+                            cardColor = cardColor,
+                            onClick = onReminderClick
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
-
-                ReminderBottomBar(teal = teal)
             }
 
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 95.dp)
+                    .padding(end = 24.dp, bottom = 24.dp)
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(teal),
+                    .background(teal)
+                    .clickable { onAdd() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -171,12 +173,13 @@ fun ReminderListScreen() {
 }
 
 @Composable
-fun ReminderCard(
+private fun ReminderCard(
     item: ReminderItem,
     teal: Color,
     darkText: Color,
     grayText: Color,
-    cardColor: Color
+    cardColor: Color,
+    onClick: () -> Unit
 ) {
     val checkedState = remember { mutableStateOf(item.enabled) }
     val contentAlpha = if (item.enabled) 1f else 0.45f
@@ -184,7 +187,8 @@ fun ReminderCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(contentAlpha),
+            .alpha(contentAlpha)
+            .clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor)
     ) {
@@ -228,69 +232,6 @@ fun ReminderCard(
                     uncheckedThumbColor = Color(0xFF9E9E9E),
                     uncheckedTrackColor = Color(0xFFE2E2E2)
                 )
-            )
-        }
-    }
-}
-
-@Composable
-fun ReminderBottomBar(teal: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .navigationBarsPadding()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ReminderBottomBarItem("Home", Icons.Outlined.Home, teal, false)
-        ReminderBottomBarItem("Exercises", Icons.Outlined.FitnessCenter, teal, false)
-        ReminderBottomBarItem("Sessions", Icons.Outlined.AccessTime, teal, false)
-        ReminderBottomBarItem("Progress", Icons.Outlined.ShowChart, teal, false)
-        ReminderBottomBarItem("Profile", Icons.Outlined.Person, teal, true)
-    }
-}
-
-@Composable
-fun ReminderBottomBarItem(
-    label: String,
-    icon: ImageVector,
-    color: Color,
-    selected: Boolean
-) {
-    if (selected) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(color)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = Color.White
-                )
-                Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    color = Color.White
-                )
-            }
-        }
-    } else {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color
-            )
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                color = color
             )
         }
     }

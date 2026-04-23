@@ -2,6 +2,7 @@ package com.example.ass2
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,15 +23,13 @@ import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,6 +43,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ass2.ui.theme.BrandBackground
+import com.example.ass2.ui.theme.BrandTeal
 
 data class SessionItem(
     val title: String,
@@ -56,10 +56,10 @@ data class SessionItem(
 )
 
 @Composable
-fun SessionsScreen() {
-    val bgColor = Color(0xFFF5F5F5)
-    val headerColor = Color(0xFFE8F1EC)
-    val teal = Color(0xFF0D7377)
+fun SessionsScreen(
+    onTabSelected: (NavTab) -> Unit,
+    onSessionClick: () -> Unit,
+) {
     val darkText = Color(0xFF222222)
     val lightText = Color(0xFF777777)
     val searchBg = Color(0xFFF0F0F0)
@@ -71,7 +71,7 @@ fun SessionsScreen() {
                 "12 mins",
                 "Oct 24, 2023",
                 "Completed",
-                Color(0xFF0D7377),
+                BrandTeal,
                 Icons.Outlined.Spa
             ),
             SessionItem(
@@ -100,32 +100,31 @@ fun SessionsScreen() {
                 "10 mins",
                 "Oct 15, 2023",
                 "Completed",
-                Color(0xFF0D7377),
+                BrandTeal,
                 Icons.Outlined.Spa
             )
         )
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = bgColor
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        bottomBar = { BottomNavBar(selected = NavTab.SESSIONS, onTabSelected = onTabSelected) },
+        containerColor = BrandBackground
+    ) { innerPadding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+        ) {
 
-            Box(
+            Text(
+                text = "Sessions History",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(headerColor)
-                    .padding(top = 42.dp, bottom = 18.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Sessions History",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF184D4D)
-                )
-            }
+                    .padding(top = 8.dp, bottom = 8.dp),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = BrandTeal,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -182,7 +181,7 @@ fun SessionsScreen() {
                 }
 
                 items(thisWeek) { item ->
-                    SessionCard(item, teal, darkText, lightText)
+                    SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
                 }
 
                 item {
@@ -196,7 +195,7 @@ fun SessionsScreen() {
                 }
 
                 items(lastWeek) { item ->
-                    SessionCard(item, teal, darkText, lightText)
+                    SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
                 }
 
                 item {
@@ -213,21 +212,19 @@ fun SessionsScreen() {
                         ) {
                             Text(
                                 text = "Load More History",
-                                color = teal,
+                                color = BrandTeal,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
             }
-
-            BottomBar(teal)
         }
     }
 }
 
 @Composable
-fun FilterChip(
+private fun FilterChip(
     text: String,
     selected: Boolean,
     icon: ImageVector?
@@ -260,16 +257,18 @@ fun FilterChip(
 }
 
 @Composable
-fun SessionCard(
+private fun SessionCard(
     item: SessionItem,
     teal: Color,
     darkText: Color,
-    lightText: Color
+    lightText: Color,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -358,69 +357,6 @@ fun SessionCard(
                     Text(item.date, fontSize = 13.sp, color = lightText)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun BottomBar(teal: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .navigationBarsPadding()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        BottomBarItem("Home", Icons.Outlined.Home, teal, false)
-        BottomBarItem("Exercises", Icons.Outlined.FitnessCenter, teal, false)
-        BottomBarItem("Sessions", Icons.Outlined.AccessTime, teal, true)
-        BottomBarItem("Progress", Icons.Outlined.ShowChart, teal, false)
-        BottomBarItem("Profile", Icons.Outlined.Person, teal, false)
-    }
-}
-
-@Composable
-fun BottomBarItem(
-    label: String,
-    icon: ImageVector,
-    color: Color,
-    selected: Boolean
-) {
-    if (selected) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(color)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = Color.White
-                )
-                Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    color = Color.White
-                )
-            }
-        }
-    } else {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color
-            )
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                color = color
-            )
         }
     }
 }

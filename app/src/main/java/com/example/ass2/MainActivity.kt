@@ -91,12 +91,44 @@ fun AppNavGraph() {
                 onStartSession = { navController.navigate("pre_session_check_in") }
             )
         }
-        composable("sessions") { SessionsScreen() }
-        composable("sessionDetails") { SessionDetailScreen() }
-        composable("profile") { ProfileScreen() }
-        composable("progress") { ProgressScreen() }
-        composable("reminderList") { ReminderListScreen() }
-        composable("reminderSetting") { ReminderSettingScreen() }
+        composable("sessions") {
+            SessionsScreen(
+                onTabSelected = ::handleTabSelected,
+                onSessionClick = { navController.navigate("sessionDetails") }
+            )
+        }
+        composable("sessionDetails") {
+            SessionDetailScreen(
+                onBack = { navController.popBackStack() },
+                onDelete = { navController.popBackStack() }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                onTabSelected = ::handleTabSelected,
+                onReminderListClick = { navController.navigate("reminderList") },
+                onSignOut = {
+                    navController.navigate("login") { popUpTo("home") { inclusive = true } }
+                }
+            )
+        }
+        composable("progress") {
+            ProgressScreen(onTabSelected = ::handleTabSelected)
+        }
+        composable("reminderList") {
+            ReminderListScreen(
+                onBack = { navController.popBackStack() },
+                onReminderClick = { navController.navigate("reminderSetting") },
+                onAdd = { navController.navigate("reminderSetting") }
+            )
+        }
+        composable("reminderSetting") {
+            ReminderSettingScreen(
+                onBack = { navController.popBackStack() },
+                onSave = { navController.popBackStack() },
+                onDelete = { navController.popBackStack() }
+            )
+        }
         composable("profile_setup") {
             ProfileSetupScreen(
                 onBack = { navController.popBackStack() },

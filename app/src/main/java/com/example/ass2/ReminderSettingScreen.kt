@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,34 +48,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ReminderSettingScreen() {
+fun ReminderSettingScreen(
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val bgColor = Color(0xFFF4F5F4)
-    val headerColor = Color(0xFFE5F0EC)
     val teal = Color(0xFF0D7377)
     val darkText = Color(0xFF1F1F1F)
     val grayText = Color(0xFF5F6368)
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
 
-    val selectedDays = remember {
-        mutableStateListOf("M", "T", "W", "T2", "F")
-    }
+    val selectedDays = remember { mutableStateListOf("M", "T", "W", "T2", "F") }
     val reminderEnabled = remember { mutableStateOf(true) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = bgColor
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(headerColor)
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowBack,
                         contentDescription = "Back",
@@ -87,12 +94,12 @@ fun ReminderSettingScreen() {
                     text = "Set Reminder",
                     color = teal,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(onClick = { }) {
+                IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
                         contentDescription = "Delete",
@@ -210,7 +217,7 @@ fun ReminderSettingScreen() {
                                     Text("07", color = Color.LightGray, fontSize = 16.sp)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        "08",
+                                        text = "08",
                                         color = teal,
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.Bold
@@ -220,7 +227,7 @@ fun ReminderSettingScreen() {
                                 }
 
                                 Text(
-                                    ":",
+                                    text = ":",
                                     color = teal,
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold
@@ -230,7 +237,7 @@ fun ReminderSettingScreen() {
                                     Text("25", color = Color.LightGray, fontSize = 16.sp)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        "30",
+                                        text = "30",
                                         color = teal,
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.Bold
@@ -239,9 +246,7 @@ fun ReminderSettingScreen() {
                                     Text("35", color = Color.Gray, fontSize = 16.sp)
                                 }
 
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10.dp))
@@ -355,7 +360,7 @@ fun ReminderSettingScreen() {
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Button(
-                    onClick = { },
+                    onClick = onSave,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -390,11 +395,7 @@ fun ReminderSettingScreen() {
 }
 
 @Composable
-fun DayChip(
-    label: String,
-    selected: Boolean,
-    teal: Color
-) {
+private fun DayChip(label: String, selected: Boolean, teal: Color) {
     val bg = if (selected) teal else Color(0xFFE3E5E4)
     val textColor = if (selected) Color.White else Color(0xFF4E5556)
 

@@ -48,20 +48,16 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            Box(
+            Text(
+                text = "Sit&Fit",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Sit&Fit",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandTeal
-                )
-            }
+                    .padding(top = 8.dp, bottom = 8.dp),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = BrandTeal,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
 
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Spacer(Modifier.height(24.dp))

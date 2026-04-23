@@ -42,7 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SessionDetailScreen() {
+fun SessionDetailScreen(
+    onBack: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val lightTeal = Color(0xFFD6E9E7)
@@ -63,7 +66,7 @@ fun SessionDetailScreen() {
                 .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
 
-            TopDetailBar(teal)
+            TopDetailBar(teal, onBack, onDelete)
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -248,14 +251,14 @@ fun SessionDetailScreen() {
 }
 
 @Composable
-fun TopDetailBar(teal: Color) {
+private fun TopDetailBar(teal: Color, onBack: () -> Unit, onDelete: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { }) {
+        IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.Outlined.ArrowBack,
                 contentDescription = "Back",
@@ -274,7 +277,7 @@ fun TopDetailBar(teal: Color) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        IconButton(onClick = { }) {
+        IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete",
@@ -285,7 +288,7 @@ fun TopDetailBar(teal: Color) {
 }
 
 @Composable
-fun InfoChip(
+private fun InfoChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,
     background: Color,
@@ -313,7 +316,7 @@ fun InfoChip(
 }
 
 @Composable
-fun CircleIcon(
+private fun CircleIcon(
     bgColor: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: Color

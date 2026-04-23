@@ -1,6 +1,7 @@
 package com.example.ass2
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,25 +18,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.ShowChart
-import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material.icons.outlined.TrendingDown
-import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,12 +35,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onTabSelected: (NavTab) -> Unit,
+    onReminderListClick: () -> Unit,
+    onSignOut: () -> Unit,
+) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val lightTeal = Color(0xFFD5ECE8)
@@ -59,158 +52,156 @@ fun ProfileScreen() {
     val textGray = Color(0xFF666666)
     val cardColor = Color(0xFFF8F8F8)
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = bgColor
-    ) {
+    Scaffold(
+        bottomBar = { BottomNavBar(selected = NavTab.PROFILE, onTabSelected = onTabSelected) },
+        containerColor = bgColor
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            Text(
+                text = "Profile",
                 modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 8.dp),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = teal,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF18333C)),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Profile",
-                    color = teal,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
+                    text = "A",
+                    color = Color.White,
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Bold
                 )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF18333C)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "A",
-                        color = Color.White,
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Alex Johnson",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textDark
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "alex@example.com",
-                    fontSize = 16.sp,
-                    color = textGray
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = "Accessibility Profile",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textDark
-                            )
-
-                            Icon(
-                                imageVector = Icons.Outlined.Accessibility,
-                                contentDescription = null,
-                                tint = teal
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        ProfileChip(
-                            text = "Seated Mobility",
-                            background = lightTeal,
-                            textColor = textGray,
-                            icon = Icons.Outlined.Accessibility
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        ProfileChip(
-                            text = "Primary Goal: Flexibility",
-                            background = lightGray,
-                            textColor = textDark,
-                            icon = Icons.Outlined.FitnessCenter
-                        )
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        Text(
-                            text = "Your workouts are automatically adapted to prioritize seated exercises and upper-body range of motion.",
-                            fontSize = 15.sp,
-                            lineHeight = 25.sp,
-                            color = textGray
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                MenuCard(
-                    icon = Icons.Outlined.Notifications,
-                    title = "Reminder List",
-                    textDark = textDark,
-                    iconBg = Color(0xFFE5F0EE),
-                    iconTint = teal
-                )
-
-                Spacer(modifier = Modifier.height(36.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ExitToApp,
-                        contentDescription = "Sign Out",
-                        tint = teal
-                    )
-                    Text(
-                        text = " Sign Out",
-                        color = teal,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            ProfileBottomBar(teal)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Alex Johnson",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = textDark
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "alex@example.com",
+                fontSize = 16.sp,
+                color = textGray
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cardColor)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = "Accessibility Profile",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textDark
+                        )
+
+                        Icon(
+                            imageVector = Icons.Outlined.Accessibility,
+                            contentDescription = null,
+                            tint = teal
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    ProfileChip(
+                        text = "Seated Mobility",
+                        background = lightTeal,
+                        textColor = textGray,
+                        icon = Icons.Outlined.Accessibility
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    ProfileChip(
+                        text = "Primary Goal: Flexibility",
+                        background = lightGray,
+                        textColor = textDark,
+                        icon = Icons.Outlined.FitnessCenter
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Text(
+                        text = "Your workouts are automatically adapted to prioritize seated exercises and upper-body range of motion.",
+                        fontSize = 15.sp,
+                        lineHeight = 25.sp,
+                        color = textGray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            MenuCard(
+                icon = Icons.Outlined.Notifications,
+                title = "Reminder List",
+                textDark = textDark,
+                iconBg = Color(0xFFE5F0EE),
+                iconTint = teal,
+                onClick = onReminderListClick
+            )
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            Row(
+                modifier = Modifier.clickable { onSignOut() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ExitToApp,
+                    contentDescription = "Sign Out",
+                    tint = teal
+                )
+                Text(
+                    text = " Sign Out",
+                    color = teal,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-fun ProfileChip(
+private fun ProfileChip(
     text: String,
     background: Color,
     textColor: Color,
@@ -238,15 +229,18 @@ fun ProfileChip(
 }
 
 @Composable
-fun MenuCard(
+private fun MenuCard(
     icon: ImageVector,
     title: String,
     textDark: Color,
     iconBg: Color,
-    iconTint: Color
+    iconTint: Color,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8))
     ) {
@@ -283,69 +277,6 @@ fun MenuCard(
                 imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,
                 tint = Color.Gray
-            )
-        }
-    }
-}
-
-@Composable
-fun ProfileBottomBar(teal: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .navigationBarsPadding()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ProfileBottomBarItem("Home", Icons.Outlined.Home, teal, false)
-        ProfileBottomBarItem("Exercises", Icons.Outlined.FitnessCenter, teal, false)
-        ProfileBottomBarItem("Sessions", Icons.Outlined.AccessTime, teal, false)
-        ProfileBottomBarItem("Progress", Icons.Outlined.ShowChart, teal, false)
-        ProfileBottomBarItem("Profile", Icons.Outlined.Person, teal, true)
-    }
-}
-
-@Composable
-fun ProfileBottomBarItem(
-    label: String,
-    icon: ImageVector,
-    color: Color,
-    selected: Boolean
-) {
-    if (selected) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(color)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = Color.White
-                )
-                Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    color = Color.White
-                )
-            }
-        }
-    } else {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color
-            )
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                color = color
             )
         }
     }
