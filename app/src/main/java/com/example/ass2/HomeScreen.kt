@@ -15,6 +15,9 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Mood
+import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.SentimentSatisfied
+import androidx.compose.material.icons.filled.SentimentVerySatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +32,11 @@ import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 
-private val moods = listOf("😊" to "Great", "😐" to "Okay", "😣" to "Sore")
+private val moods = listOf(
+    Icons.Default.SentimentVerySatisfied to "Great",
+    Icons.Default.SentimentSatisfied to "Okay",
+    Icons.Default.SentimentDissatisfied to "Sore"
+)
 
 @Composable
 fun HomeScreen(
@@ -93,9 +100,9 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        moods.forEach { (emoji, label) ->
+                        moods.forEach { (icon, label) ->
                             MoodChip(
-                                emoji = emoji,
+                                icon = icon,
                                 label = label,
                                 selected = selectedMood == label,
                                 onClick = { selectedMood = label }
@@ -300,7 +307,7 @@ private fun SectionCard(
 }
 
 @Composable
-private fun MoodChip(emoji: String, label: String, selected: Boolean, onClick: () -> Unit) {
+private fun MoodChip(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -314,7 +321,12 @@ private fun MoodChip(emoji: String, label: String, selected: Boolean, onClick: (
             .clickable { onClick() }
             .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
-        Text(emoji, fontSize = 22.sp)
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(28.dp),
+            tint = if (selected) BrandTeal else Color(0xFF4A4A4A)
+        )
         Text(label, fontSize = 12.sp, color = Color(0xFF4A4A4A), modifier = Modifier.padding(top = 4.dp))
     }
 }

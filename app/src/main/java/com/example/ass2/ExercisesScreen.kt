@@ -34,7 +34,7 @@ data class Exercise(
 
 /** Maps an exercise name to a drawable resource — used by both list and detail screens. */
 fun exerciseImageForName(name: String): Int = when {
-    name.contains("Morning", ignoreCase = true) -> R.drawable.exercise1
+    name.contains("Morning", ignoreCase = true) -> R.drawable.exercise4
     name.contains("Torso", ignoreCase = true) -> R.drawable.exercise1
     name.contains("Leg", ignoreCase = true) -> R.drawable.exercise2
     name.contains("Push", ignoreCase = true) -> R.drawable.exercise3
@@ -49,7 +49,7 @@ private val sampleExercises = listOf(
         description = "A gentle sequence to wake up your joints and improve circulation before starting the day.",
         category = "MOBILITY",
         tags = listOf("Recommended", "Seated", "Beginner"),
-        imageRes = R.drawable.exercise1
+        imageRes = R.drawable.exercise4
     ),
     Exercise(
         name = "Gentle Torso Twists",
