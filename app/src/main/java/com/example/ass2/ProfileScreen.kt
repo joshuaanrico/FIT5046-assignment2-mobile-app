@@ -18,7 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FitnessCenter
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.sp
 fun ProfileScreen(
     onTabSelected: (NavTab) -> Unit,
     onReminderListClick: () -> Unit,
+    onProfileSetupClick: () -> Unit = {},
     onSignOut: () -> Unit,
 ) {
     val bgColor = Color(0xFFF4F5F4)
@@ -77,20 +82,14 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            Box(
+            Image(
+                painter = painterResource(R.drawable.exercise4),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF18333C)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "A",
-                    color = Color.White,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -166,6 +165,17 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            MenuCard(
+                icon = Icons.Outlined.AccountCircle,
+                title = "Profile Setup",
+                textDark = textDark,
+                iconBg = Color(0xFFE5F0EE),
+                iconTint = teal,
+                onClick = onProfileSetupClick
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             MenuCard(
                 icon = Icons.Outlined.Notifications,

@@ -115,6 +115,7 @@ fun AppNavGraph() {
             ProfileScreen(
                 onTabSelected = ::handleTabSelected,
                 onReminderListClick = { navController.navigate("reminderList") },
+                onProfileSetupClick = { navController.navigate("profile_setup") },
                 onSignOut = {
                     navController.navigate("login") { popUpTo("home") { inclusive = true } }
                 }

@@ -1,7 +1,6 @@
 package com.example.ass2
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,11 +8,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Accessible
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,15 +24,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
-import com.example.ass2.ui.theme.FieldBackground
 
 @Composable
 fun ProfileSetupScreen(
     onBack: () -> Unit,
     onSaveAndContinue: () -> Unit
 ) {
+    val bgColor = Color(0xFFF4F5F4)
+    val teal = BrandTeal
+    val darkText = Color(0xFF1F1F1F)
+    val grayText = Color(0xFF5F6368)
+    val cardColor = Color(0xFFF0F2F1)
+    val whiteCard = Color(0xFFFCFCFC)
+
     var age by remember { mutableStateOf("") }
     var mobilitySupport by remember { mutableStateOf("") }
     var activityLevel by remember { mutableStateOf("") }
@@ -43,360 +48,326 @@ fun ProfileSetupScreen(
     var highContrastText by remember { mutableStateOf(true) }
     var voiceCommands by remember { mutableStateOf(false) }
     var dailyReminders by remember { mutableStateOf(true) }
-
     var mobilityExpanded by remember { mutableStateOf(false) }
     var activityExpanded by remember { mutableStateOf(false) }
 
     val mobilityOptions = listOf("Wheelchair", "Cane / Walker", "Independent", "Other")
     val activityOptions = listOf("Sedentary", "Lightly Active", "Moderately Active", "Very Active")
 
-    Scaffold(
-        bottomBar = {
-            Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+    Surface(modifier = Modifier.fillMaxSize(), color = bgColor) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text("Sit&Fit", color = teal, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.size(48.dp))
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 18.dp)
+            ) {
+                Text(
+                    text = "Let's set up\nyour profile",
+                    color = teal,
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 36.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "We'll use this information to safely customize your wellness journey.",
+                    color = grayText,
+                    fontSize = 15.sp,
+                    lineHeight = 24.sp
+                )
+                Spacer(modifier = Modifier.height(26.dp))
+
+                // ── Personal Profile ──────────────────────────────────
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        CardSectionTitle(
+                            icon = { Icon(Icons.Default.Person, contentDescription = null, tint = grayText) },
+                            title = "Personal Profile",
+                            teal = teal
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Age", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                        OutlinedTextField(
+                            value = age,
+                            onValueChange = { age = it.filter { c -> c.isDigit() } },
+                            placeholder = { Text("Enter your age", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = whiteCard,
+                                focusedContainerColor = whiteCard,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = teal
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Mobility & Exercise ───────────────────────────────
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        CardSectionTitle(
+                            icon = { Icon(Icons.Default.Accessible, contentDescription = null, tint = grayText) },
+                            title = "Mobility & Exercise",
+                            teal = teal
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Primary Mobility Support", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                        DropdownRow(
+                            value = mobilitySupport,
+                            placeholder = "Select an option",
+                            expanded = mobilityExpanded,
+                            options = mobilityOptions,
+                            whiteCard = whiteCard,
+                            teal = teal,
+                            onExpandChange = { mobilityExpanded = it },
+                            onOptionSelected = { mobilitySupport = it; mobilityExpanded = false }
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text("Current Activity Level", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                        DropdownRow(
+                            value = activityLevel,
+                            placeholder = "Select an option",
+                            expanded = activityExpanded,
+                            options = activityOptions,
+                            whiteCard = whiteCard,
+                            teal = teal,
+                            onExpandChange = { activityExpanded = it },
+                            onOptionSelected = { activityLevel = it; activityExpanded = false }
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text("Related Conditions (Optional)", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                        OutlinedTextField(
+                            value = conditions,
+                            onValueChange = { conditions = it },
+                            placeholder = { Text("e.g., Arthritis, MS, post-surgery", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = whiteCard,
+                                focusedContainerColor = whiteCard,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = teal
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            "Helps us suggest appropriate modifications.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF9E9E9E),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Baseline Vitals ───────────────────────────────────
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        CardSectionTitle(
+                            icon = { Icon(Icons.Default.MonitorHeart, contentDescription = null, tint = grayText) },
+                            title = "Baseline Vitals",
+                            teal = teal
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Typical Daily Pain Level", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = darkText)
+                            Text("${painLevel.toInt()} / 10", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = teal)
+                        }
+                        Slider(
+                            value = painLevel,
+                            onValueChange = { painLevel = it },
+                            valueRange = 0f..10f,
+                            steps = 9,
+                            colors = SliderDefaults.colors(
+                                thumbColor = teal,
+                                activeTrackColor = teal,
+                                inactiveTrackColor = teal.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("0 (None)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
+                            Text("5 (Moderate)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
+                            Text("10 (Severe)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Resting Heart Rate (bpm)", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                        OutlinedTextField(
+                            value = restingHeartRate,
+                            onValueChange = { restingHeartRate = it.filter { c -> c.isDigit() } },
+                            placeholder = { Text("e.g., 72", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = whiteCard,
+                                focusedContainerColor = whiteCard,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = teal
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text("Leave blank if unknown.", fontSize = 12.sp, color = Color(0xFF9E9E9E), modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Experience Settings ───────────────────────────────
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        CardSectionTitle(
+                            icon = { Icon(Icons.Default.Settings, contentDescription = null, tint = grayText) },
+                            title = "Experience Settings",
+                            teal = teal
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("App Accessibility", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, modifier = Modifier.padding(bottom = 10.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(whiteCard)
+                        ) {
+                            AccessibilityRow(checked = screenReaderOptimized, onCheckedChange = { screenReaderOptimized = it }, title = "Optimize for Screen Reader", subtitle = "Enhances audio descriptions", teal = teal)
+                            HorizontalDivider(color = Color(0xFFEEEEEE), modifier = Modifier.padding(horizontal = 16.dp))
+                            AccessibilityRow(checked = highContrastText, onCheckedChange = { highContrastText = it }, title = "High Contrast Text", subtitle = "Increases visual clarity", teal = teal)
+                            HorizontalDivider(color = Color(0xFFEEEEEE), modifier = Modifier.padding(horizontal = 16.dp))
+                            AccessibilityRow(checked = voiceCommands, onCheckedChange = { voiceCommands = it }, title = "Enable Voice Commands", subtitle = "Navigate hands-free", teal = teal)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Notifications", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, modifier = Modifier.padding(bottom = 10.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(whiteCard)
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Daily Reminders", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = darkText)
+                                Text("Gentle nudges to move", fontSize = 12.sp, color = grayText)
+                            }
+                            Switch(
+                                checked = dailyReminders,
+                                onCheckedChange = { dailyReminders = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = teal,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = Color.LightGray
+                                )
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(34.dp))
+
                 Button(
                     onClick = onSaveAndContinue,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0D3D40))
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = teal)
                 ) {
-                    Text("Save and Continue", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                }
-            }
-        },
-        containerColor = BrandBackground
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Top bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-            ) {
-                IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
-                }
-                Text(
-                    text = "SmartFit Fuel",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandTeal,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Spacer(Modifier.height(24.dp))
-
-                Text(
-                    text = "Let's set up your profile",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A),
-                    lineHeight = 32.sp
-                )
-                Text(
-                    text = "We'll use this information to safely customize your wellness journey.",
-                    fontSize = 14.sp,
-                    color = Color(0xFF6B6B6B),
-                    modifier = Modifier.padding(top = 6.dp, bottom = 24.dp),
-                    lineHeight = 20.sp
-                )
-
-                // ── Personal Profile ──────────────────────────────────
-                SectionHeader(icon = { Icon(Icons.Default.Person, contentDescription = null, tint = BrandTeal, modifier = Modifier.size(20.dp)) }, title = "Personal Profile")
-
-                Spacer(Modifier.height(12.dp))
-
-                FieldLabel("Age")
-                OutlinedTextField(
-                    value = age,
-                    onValueChange = { age = it.filter { c -> c.isDigit() } },
-                    placeholder = { Text("Enter your age", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color(0xFFE0E0E0),
-                        focusedBorderColor = BrandTeal
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                // ── Mobility & Exercise ───────────────────────────────
-                Text(
-                    text = "Mobility & Exercise",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandTeal,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                FieldLabel("Primary Mobility Support")
-                DropdownField(
-                    value = mobilitySupport,
-                    placeholder = "Select an option",
-                    expanded = mobilityExpanded,
-                    options = mobilityOptions,
-                    onExpandChange = { mobilityExpanded = it },
-                    onOptionSelected = {
-                        mobilitySupport = it
-                        mobilityExpanded = false
-                    }
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                FieldLabel("Current Activity Level")
-                DropdownField(
-                    value = activityLevel,
-                    placeholder = "Select an option",
-                    expanded = activityExpanded,
-                    options = activityOptions,
-                    onExpandChange = { activityExpanded = it },
-                    onOptionSelected = {
-                        activityLevel = it
-                        activityExpanded = false
-                    }
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                FieldLabel("Related Conditions (Optional)")
-                OutlinedTextField(
-                    value = conditions,
-                    onValueChange = { conditions = it },
-                    placeholder = { Text("e.g., Arthritis, MS, post-surgery", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color(0xFFE0E0E0),
-                        focusedBorderColor = BrandTeal
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    "Helps us suggest appropriate modifications.",
-                    fontSize = 12.sp,
-                    color = Color(0xFF9E9E9E),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                // ── Baseline Vitals ───────────────────────────────────
-                SectionHeader(
-                    icon = { Icon(Icons.Default.MonitorHeart, contentDescription = null, tint = BrandTeal, modifier = Modifier.size(20.dp)) },
-                    title = "Baseline Vitals"
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Typical Daily Pain Level", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF3A3A3A))
-                    Text("${painLevel.toInt()} / 10", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandTeal)
+                    Text("Save and Continue", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
 
-                Slider(
-                    value = painLevel,
-                    onValueChange = { painLevel = it },
-                    valueRange = 0f..10f,
-                    steps = 9,
-                    colors = SliderDefaults.colors(
-                        thumbColor = BrandTeal,
-                        activeTrackColor = BrandTeal,
-                        inactiveTrackColor = BrandTeal.copy(alpha = 0.2f)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("0 (None)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
-                    Text("5 (Moderate)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
-                    Text("10 (Severe)", fontSize = 11.sp, color = Color(0xFF9E9E9E))
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                FieldLabel("Resting Heart Rate (bpm)")
-                OutlinedTextField(
-                    value = restingHeartRate,
-                    onValueChange = { restingHeartRate = it.filter { c -> c.isDigit() } },
-                    placeholder = { Text("e.g., 72", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color(0xFFE0E0E0),
-                        focusedBorderColor = BrandTeal
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text("Leave blank if unknown.", fontSize = 12.sp, color = Color(0xFF9E9E9E), modifier = Modifier.padding(top = 4.dp))
-
-                Spacer(Modifier.height(24.dp))
-
-                // ── Experience Settings ───────────────────────────────
-                SectionHeader(
-                    icon = {
-                        Text("T", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BrandTeal)
-                    },
-                    title = "Experience Settings"
-                )
-
-                Spacer(Modifier.height(14.dp))
-
-                Text("App Accessibility", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
-                Spacer(Modifier.height(8.dp))
-
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(0.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column {
-                        AccessibilityCheckbox(
-                            checked = screenReaderOptimized,
-                            onCheckedChange = { screenReaderOptimized = it },
-                            title = "Optimize for Screen Reader",
-                            subtitle = "Enhances audio descriptions"
-                        )
-                        HorizontalDivider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 16.dp))
-                        AccessibilityCheckbox(
-                            checked = highContrastText,
-                            onCheckedChange = { highContrastText = it },
-                            title = "High Contrast Text",
-                            subtitle = "Increases visual clarity"
-                        )
-                        HorizontalDivider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 16.dp))
-                        AccessibilityCheckbox(
-                            checked = voiceCommands,
-                            onCheckedChange = { voiceCommands = it },
-                            title = "Enable Voice Commands",
-                            subtitle = "Navigate hands-free"
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                Text("Notifications", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
-                Spacer(Modifier.height(8.dp))
-
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(0.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Daily Reminders", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1A1A1A))
-                            Text("Gentle nudges to move", fontSize = 12.sp, color = Color(0xFF9E9E9E))
-                        }
-                        Switch(
-                            checked = dailyReminders,
-                            onCheckedChange = { dailyReminders = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandTeal)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(22.dp))
             }
         }
     }
 }
 
 @Composable
-private fun SectionHeader(icon: @Composable () -> Unit, title: String) {
+private fun CardSectionTitle(icon: @Composable () -> Unit, title: String, teal: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         icon()
-        Spacer(Modifier.width(8.dp))
-        Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BrandTeal)
+        Text(" $title", color = teal, fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
-}
-
-@Composable
-private fun FieldLabel(text: String) {
-    Text(
-        text = text,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium,
-        color = Color(0xFF3A3A3A),
-        modifier = Modifier.padding(bottom = 6.dp)
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DropdownField(
+private fun DropdownRow(
     value: String,
     placeholder: String,
     expanded: Boolean,
     options: List<String>,
+    whiteCard: Color,
+    teal: Color,
     onExpandChange: (Boolean) -> Unit,
     onOptionSelected: (String) -> Unit
 ) {
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = onExpandChange
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            placeholder = { Text(placeholder, color = Color(0xFFBBBBBB), fontSize = 14.sp) },
-            trailingIcon = {
-                Icon(Icons.Default.ExpandMore, contentDescription = null, tint = Color(0xFF9E9E9E))
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                unfocusedBorderColor = Color(0xFFE0E0E0),
-                focusedBorderColor = BrandTeal
-            ),
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = onExpandChange) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandChange(false) }
+                .clip(RoundedCornerShape(12.dp))
+                .background(whiteCard)
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(
+                text = if (value.isEmpty()) placeholder else value,
+                color = if (value.isEmpty()) Color(0xFFBBBBBB) else Color(0xFF1F1F1F),
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF5F6368))
+        }
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { onExpandChange(false) }) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option, fontSize = 14.sp) },
@@ -408,11 +379,12 @@ private fun DropdownField(
 }
 
 @Composable
-private fun AccessibilityCheckbox(
+private fun AccessibilityRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     title: String,
-    subtitle: String
+    subtitle: String,
+    teal: Color
 ) {
     Row(
         modifier = Modifier
@@ -424,12 +396,12 @@ private fun AccessibilityCheckbox(
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(checkedColor = BrandTeal)
+            colors = CheckboxDefaults.colors(checkedColor = teal)
         )
         Spacer(Modifier.width(8.dp))
         Column {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1A1A1A))
-            Text(subtitle, fontSize = 12.sp, color = Color(0xFF9E9E9E))
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1F1F1F))
+            Text(subtitle, fontSize = 12.sp, color = Color(0xFF5F6368))
         }
     }
 }

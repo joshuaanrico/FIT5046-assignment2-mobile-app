@@ -113,7 +113,7 @@ fun ReminderListScreen(
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 24.dp, bottom = 80.dp)
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 80.dp)
                 ) {
                     item {
                         Text(

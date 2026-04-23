@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Shield
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandTeal
-import com.example.ass2.ui.theme.BrandTealDark
 
 private data class Benefit(val icon: ImageVector, val title: String, val description: String)
 
@@ -56,34 +54,23 @@ fun ExerciseDetailScreen(
     onBack: () -> Unit,
     onStartSession: () -> Unit
 ) {
-    Scaffold(
-        bottomBar = {
-            Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-                Button(
-                    onClick = onStartSession,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandTealDark)
-                ) {
-                    Text("Start Session", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                }
-            }
-        },
-        containerColor = Color.White
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             HeaderImage(exerciseName = exerciseName, onBack = onBack)
 
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .navigationBarsPadding()
+            ) {
                 Spacer(Modifier.height(16.dp))
 
                 Row(
@@ -167,7 +154,20 @@ fun ExerciseDetailScreen(
                     )
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(24.dp))
+
+                Button(
+                    onClick = onStartSession,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
+                ) {
+                    Text("Start Session", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(Modifier.height(22.dp))
             }
         }
     }
