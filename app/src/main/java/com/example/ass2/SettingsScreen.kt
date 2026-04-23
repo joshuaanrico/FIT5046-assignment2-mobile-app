@@ -172,14 +172,19 @@ fun SettingsScreen(onBack: () -> Unit) {
                             lineHeight = 22.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        androidx.compose.material3.OutlinedButton(
-                            onClick = {},
-                            shape = RoundedCornerShape(24.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White)
-                        ) {
-                            Text("Contact Support", fontWeight = FontWeight.SemiBold)
-                        }
+                        Text(
+                            text = "Email: support@sitandfit.app",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Phone: +61 3 9000 1234",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
                     }
                 }
 

@@ -203,6 +203,13 @@ fun ForgotPasswordScreen(
                             color = Color(0xFF6B6B6B),
                             lineHeight = 18.sp
                         )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "support@sitandfit.app  •  +61 3 9000 1234",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A1A1A)
+                        )
                     }
                 }
             }
