@@ -17,7 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -27,7 +29,8 @@ import com.example.ass2.ui.theme.*
 
 @Composable
 fun RegisterScreen(
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onRegisterSuccess: () -> Unit = {}
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -47,20 +50,23 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 40.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 60.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Brand header
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Brand header — accessibility icon + app name, left-aligned
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
+                    painter = painterResource(R.drawable.accessibility),
                     contentDescription = null,
                     tint = BrandTeal,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "SmartFit Fuel",
+                    text = "Sit&Fit",
                     color = BrandTeal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -77,7 +83,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = "Elevate your wellness experience today.",
+                text = "Start your accessible fitness journey today.",
                 fontSize = 14.sp,
                 color = Color(0xFF6B6B6B),
                 modifier = Modifier
@@ -91,6 +97,7 @@ fun RegisterScreen(
                 value = fullName,
                 onValueChange = { fullName = it },
                 placeholder = "John Doe",
+                imeAction = ImeAction.Next,
                 leadingIcon = {
                     Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF9E9E9E))
                 }
@@ -105,6 +112,7 @@ fun RegisterScreen(
                 onValueChange = { email = it },
                 placeholder = "student@university.edu",
                 keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next,
                 leadingIcon = {
                     Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9E9E9E))
                 }
@@ -119,6 +127,7 @@ fun RegisterScreen(
                 onValueChange = { password = it },
                 placeholder = "••••••••",
                 keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF9E9E9E))
@@ -127,7 +136,7 @@ fun RegisterScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
                             tint = Color(0xFF9E9E9E)
                         )
                     }
@@ -143,6 +152,7 @@ fun RegisterScreen(
                 onValueChange = { confirmPassword = it },
                 placeholder = "••••••••",
                 keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done,
                 visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF9E9E9E))
@@ -151,7 +161,7 @@ fun RegisterScreen(
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
                             imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
+                            contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
                             tint = Color(0xFF9E9E9E)
                         )
                     }
@@ -166,7 +176,7 @@ fun RegisterScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "\u2713 At least 8 characters, 1 uppercase letter, and 1 unique symbol.",
+                text = "✓ At least 8 characters, 1 uppercase letter, and 1 unique symbol.",
                 fontSize = 12.sp,
                 color = if (passwordStrength >= 3) BrandTeal else Color(0xFF9E9E9E),
                 modifier = Modifier.fillMaxWidth()
@@ -176,7 +186,7 @@ fun RegisterScreen(
 
             // Create Account button
             Button(
-                onClick = { /* TODO */ },
+                onClick = { onRegisterSuccess() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -202,7 +212,7 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Google sign-in
+            // Google sign-in with actual Google icon
             OutlinedButton(
                 onClick = { /* TODO */ },
                 modifier = Modifier
@@ -211,7 +221,12 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1A1A1A))
             ) {
-                Text("G", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF4285F4))
+                Icon(
+                    painter = painterResource(R.drawable.google_icon),
+                    contentDescription = "Google",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
                 Text("Continue with Google", fontSize = 15.sp)
             }
@@ -219,7 +234,10 @@ fun RegisterScreen(
             Spacer(Modifier.height(24.dp))
 
             // Already have account
-            Row(horizontalArrangement = Arrangement.Center) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("Already have an account? ", color = Color(0xFF6B6B6B), fontSize = 14.sp)
                 TextButton(
                     onClick = onNavigateToLogin,
@@ -251,6 +269,7 @@ private fun AuthTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null
@@ -262,7 +281,7 @@ private fun AuthTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         visualTransformation = visualTransformation,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         singleLine = true,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
@@ -317,7 +336,7 @@ private fun PasswordStrengthBar(strength: Int) {
     }
 }
 
-/** Returns 0 (empty) .. 4 (strong) */
+/** Returns 0 (empty) . 4 (strong) */
 private fun computePasswordStrength(password: String): Int {
     if (password.isEmpty()) return 0
     var score = 0
