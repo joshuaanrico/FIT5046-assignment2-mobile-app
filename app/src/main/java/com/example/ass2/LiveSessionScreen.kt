@@ -44,7 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTealDark
+import com.example.ass2.ui.theme.FieldBackground
 
 @Composable
 fun LiveSessionScreen(
@@ -56,22 +58,20 @@ fun LiveSessionScreen(
     // the whole screen is housed in a Column.
     Column(modifier = Modifier.fillMaxSize())
     {
-        // top bar itself is a row.
-        Row(
-            modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.90f))
-                .statusBarsPadding().padding(horizontal = 18.dp, vertical = 18.dp),
-            verticalAlignment = Alignment.CenterVertically)
+        Spacer(modifier = Modifier.statusBarsPadding())
+        // top bar itself is a box. - had to be a box to ensure dynamic alignment.
+        Box(modifier = Modifier.fillMaxWidth().background(FieldBackground)
+            .padding(horizontal = 18.dp, vertical = 18.dp))
         {
-            // top bar element structures.
-            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = BrandTealDark,
-                modifier = Modifier.size(28.dp).clickable{onBack()})
-            Spacer(modifier = Modifier.weight(1f))
-            Text(text = "Live Session", color = BrandTealDark, fontSize = 20.sp, fontWeight = Bold)
-            Spacer(modifier = Modifier.weight(1f))
-            Text(text = "Help", color = BrandTealDark, fontSize = 16.sp, fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable{onHelp()}
-            )
+            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",
+                tint = BrandTealDark, modifier = Modifier.size(28.dp).align(Alignment.CenterStart)
+                    .clickable{onBack()})
+            Text(text = "Live Session", color = BrandTealDark, fontSize = 20.sp,
+                fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Help", color = BrandTealDark, fontSize = 16.sp,
+                fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.CenterEnd).clickable{onHelp()})
         }
+
 
         // content below the top bar
         Box(modifier = Modifier.fillMaxSize())
