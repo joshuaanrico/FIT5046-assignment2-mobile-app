@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -30,9 +33,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +63,9 @@ fun SessionDetailScreen(
     val cardColor = Color(0xFFF7F7F7)
     val blueCircle = Color(0xFF496F93)
 
+    var journalText by remember { mutableStateOf("Feeling energized, no pain. The twisting motion felt much smoother today than last week.") }
+    var journalEditing by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = bgColor
@@ -63,6 +75,7 @@ fun SessionDetailScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
 
@@ -221,29 +234,38 @@ fun SessionDetailScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit",
-                            tint = teal
-                        )
+                        IconButton(onClick = { journalEditing = !journalEditing }) {
+                            Icon(
+                                imageVector = if (journalEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
+                                contentDescription = if (journalEditing) "Save" else "Edit",
+                                tint = teal
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFF0F0F0))
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Feeling energized, no pain. The twisting motion felt much smoother today than last week.",
+                    OutlinedTextField(
+                        value = journalText,
+                        onValueChange = { journalText = it },
+                        readOnly = !journalEditing,
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF0F0F0),
+                            unfocusedContainerColor = Color(0xFFF0F0F0),
+                            disabledContainerColor = Color(0xFFF0F0F0),
+                            focusedIndicatorColor = teal,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor = textDark,
+                            unfocusedTextColor = textGray,
+                        ),
+                        textStyle = androidx.compose.ui.text.TextStyle(
                             fontSize = 16.sp,
-                            lineHeight = 26.sp,
-                            color = textGray
+                            lineHeight = 26.sp
                         )
-                    }
+                    )
                 }
             }
         }
