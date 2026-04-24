@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandBackground
+import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.CardBackground
 import com.example.ass2.ui.theme.IconBackground
@@ -284,7 +285,7 @@ fun PreSessionCheckInScreen(
                     .fillMaxWidth()
                     .height(58.dp),
                 shape = RoundedCornerShape(30.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandTealDark)
+                colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
                 Text(
                     text = "Continue to Session",

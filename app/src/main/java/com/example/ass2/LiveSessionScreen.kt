@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.FieldBackground
 
@@ -210,7 +211,7 @@ fun LiveSessionScreen(
 
                     Button(onClick = onEndSession, modifier = Modifier.weight(1f).height(65.dp),
                         shape = RoundedCornerShape(41.dp), colors = ButtonDefaults.buttonColors(
-                            containerColor = BrandTealDark.copy(alpha = 0.94f)
+                            containerColor = BrandTeal
                         )
                     ) {
                         Icon(imageVector = Icons.Default.StopCircle, contentDescription = null,

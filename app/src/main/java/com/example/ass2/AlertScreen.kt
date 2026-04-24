@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandTealDark
+import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.CardBackground
 
 @Composable
@@ -78,7 +79,7 @@ fun AlertScreen(
 
                 Button(onClick = onRest, modifier = Modifier.fillMaxWidth().height(60.dp),
                     shape = RoundedCornerShape(30.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandTealDark)
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
                 ) {
                     Icon(Icons.Default.Pause, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(6.dp))

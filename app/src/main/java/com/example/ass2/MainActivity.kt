@@ -181,7 +181,7 @@ fun AppNavGraph() {
         composable("session_result") {
             SessionResultScreen(
                 onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
-                onSaveSession = {},
+                onSaveSession = { navController.navigate("sessionDetails") },
                 onRepeatLater = { navController.navigate("live_session") },
                 onHome = { navController.navigate("home") { popUpTo("home") { inclusive = false } } }
             )

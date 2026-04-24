@@ -265,7 +265,7 @@ private fun UpNextCard(onStart: () -> Unit) {
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandTealDark)
+                colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
                 Text("Start Recommended Session", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
