@@ -289,11 +289,8 @@ fun PreSessionCheckInScreen(
                 Text(
                     text = "Continue to Session",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp)
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
 

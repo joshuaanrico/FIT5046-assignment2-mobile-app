@@ -63,11 +63,11 @@ fun AlertScreen(
                     )
                 }
                 Text(text = "Safety Alert: Take a\n\nMoment", fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center
+                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = Color.Black
                 )
                 Text(
                     text = "We noticed your heart rate is slightly elevated.", fontSize = 14.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center, color = Color.Black
                 )
                 Text(
                     text = "Let’s pause for a short rest to ensure you stay within your comfort zone.",
@@ -80,9 +80,9 @@ fun AlertScreen(
                     shape = RoundedCornerShape(30.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BrandTealDark)
                 ) {
-                    Icon(Icons.Default.Pause, contentDescription = null)
+                    Icon(Icons.Default.Pause, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Rest")
+                    Text("Rest", color = Color.White)
                 }
 
                 Button(
@@ -91,7 +91,7 @@ fun AlertScreen(
                         containerColor = Color(0xFFD2E8E6)
                     )
                 ) {
-                    Icon(Icons.Default.TrendingDown, contentDescription = null)
+                    Icon(Icons.Default.TrendingDown, contentDescription = null, tint = Color.DarkGray)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Continue at Lower Intensity", color = Color.DarkGray)
                 }

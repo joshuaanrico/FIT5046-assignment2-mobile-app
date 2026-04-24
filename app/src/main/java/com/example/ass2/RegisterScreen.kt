@@ -201,7 +201,7 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
-                Text("Create Account", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("Create Account", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
 
             Spacer(Modifier.height(20.dp))

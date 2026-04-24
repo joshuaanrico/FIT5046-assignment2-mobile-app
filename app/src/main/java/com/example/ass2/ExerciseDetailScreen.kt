@@ -164,7 +164,7 @@ fun ExerciseDetailScreen(
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
                 ) {
-                    Text("Start Session", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Start Session", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
 
                 Spacer(Modifier.height(22.dp))

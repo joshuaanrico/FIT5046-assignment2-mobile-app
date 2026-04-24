@@ -192,7 +192,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
-                Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
 
             Spacer(Modifier.height(20.dp))
