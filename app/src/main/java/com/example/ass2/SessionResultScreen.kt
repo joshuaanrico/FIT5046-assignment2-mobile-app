@@ -429,7 +429,8 @@ fun SessionResultScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 25.dp)
+                        .padding(horizontal = 25.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Button(
                         onClick = onSaveSession,
@@ -453,7 +454,6 @@ fun SessionResultScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.height(14.dp))
                     Button(
                         onClick = onRepeatLater,
                         modifier = Modifier
@@ -476,7 +476,6 @@ fun SessionResultScreen(
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    Spacer(modifier = Modifier.height(14.dp))
                     Button(
                         onClick = onHome,
                         modifier = Modifier
