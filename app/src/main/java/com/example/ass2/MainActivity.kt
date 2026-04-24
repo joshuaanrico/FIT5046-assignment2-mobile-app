@@ -182,7 +182,7 @@ fun AppNavGraph() {
             SessionResultScreen(
                 onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
                 onSaveSession = { navController.navigate("sessionDetails") },
-                onRepeatLater = { navController.navigate("live_session") },
+                onRepeatLater = { navController.navigate("sessionDetails") },
                 onHome = { navController.navigate("home") { popUpTo("home") { inclusive = false } } }
             )
         }
