@@ -1,4 +1,4 @@
-package com.example.ass2
+package com.example.ass2.ui.sessions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
