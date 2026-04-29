@@ -1,4 +1,4 @@
-package com.example.ass2
+package com.example.ass2.ui.session
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
