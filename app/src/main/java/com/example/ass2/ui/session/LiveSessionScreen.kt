@@ -1,4 +1,5 @@
 package com.example.ass2.ui.session
+import com.example.ass2.R
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
