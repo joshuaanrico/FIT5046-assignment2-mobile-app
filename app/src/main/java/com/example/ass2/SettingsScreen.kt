@@ -91,7 +91,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconBg = Color(0xFFE5F0EE),
                         iconTint = teal,
                         title = "Push Notifications",
-                        subtitle = "Stay updated on your daily goals test",
+                        subtitle = "Stay updated on your daily goals",
                         checked = pushNotifications.value,
                         onCheckedChange = { pushNotifications.value = it },
                         teal = teal,
