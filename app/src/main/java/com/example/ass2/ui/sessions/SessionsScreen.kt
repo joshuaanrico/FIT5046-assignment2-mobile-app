@@ -1,4 +1,6 @@
-package com.example.ass2
+package com.example.ass2.ui.sessions
+import com.example.ass2.ui.navigation.BottomNavBar
+import com.example.ass2.ui.navigation.NavTab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

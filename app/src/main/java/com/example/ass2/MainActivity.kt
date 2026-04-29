@@ -14,6 +14,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.ass2.ui.theme.Ass2Theme
+import com.example.ass2.ui.navigation.NavTab
+import com.example.ass2.ui.auth.LoginScreen
+import com.example.ass2.ui.auth.RegisterScreen
+import com.example.ass2.ui.auth.ForgotPasswordScreen
+import com.example.ass2.ui.home.HomeScreen
+import com.example.ass2.ui.exercises.ExercisesScreen
+import com.example.ass2.ui.exercises.ExerciseDetailScreen
+import com.example.ass2.ui.sessions.SessionsScreen
+import com.example.ass2.ui.sessions.SessionDetailScreen
+import com.example.ass2.ui.session.LiveSessionScreen
+import com.example.ass2.ui.session.PreSessionCheckInScreen
+import com.example.ass2.ui.session.AlertScreen
+import com.example.ass2.ui.session.SessionResultScreen
+import com.example.ass2.ui.progress.ProgressScreen
+import com.example.ass2.ui.reminders.ReminderListScreen
+import com.example.ass2.ui.reminders.ReminderSettingScreen
+import com.example.ass2.ui.profile.ProfileScreen
+import com.example.ass2.ui.profile.ProfileSetupScreen
+import com.example.ass2.ui.profile.SettingsScreen
+import com.example.ass2.ui.profile.HelpScreen
+import com.example.ass2.ui.profile.LegalScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
