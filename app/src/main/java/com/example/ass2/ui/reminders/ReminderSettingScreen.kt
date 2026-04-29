@@ -1,4 +1,4 @@
-package com.example.ass2
+package com.example.ass2.ui.reminders
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
