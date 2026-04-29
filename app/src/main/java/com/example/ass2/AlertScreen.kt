@@ -71,7 +71,7 @@ fun AlertScreen(
                     textAlign = TextAlign.Center, color = Color.Black
                 )
                 Text(
-                    text = "Let’s pause for a short rest to ensure you stay within your comfort zone. test",
+                    text = "Let’s pause for a short rest to ensure you stay within your comfort zone.",
                     fontSize = 13.sp, textAlign = TextAlign.Center, color = Color.Gray
                 )
 
