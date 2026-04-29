@@ -1,4 +1,4 @@
-package com.example.ass2
+package com.example.ass2.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
