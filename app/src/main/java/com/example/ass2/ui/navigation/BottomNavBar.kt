@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -24,7 +24,7 @@ private val navItems = listOf(
     NavItem(NavTab.HOME, "Home", Icons.Default.Home),
     NavItem(NavTab.EXERCISES, "Exercises", Icons.Default.FitnessCenter),
     NavItem(NavTab.SESSIONS, "Sessions", Icons.Default.Timer),
-    NavItem(NavTab.PROGRESS, "Progress", Icons.Default.ShowChart),
+    NavItem(NavTab.PROGRESS, "Progress", Icons.AutoMirrored.Filled.ShowChart),
     NavItem(NavTab.PROFILE, "Profile", Icons.Default.Person),
 )
 

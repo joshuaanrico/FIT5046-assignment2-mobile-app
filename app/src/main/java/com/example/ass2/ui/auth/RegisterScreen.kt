@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -274,16 +276,23 @@ fun RegisterScreen(
                 append(". Wellness is a commitment to yourself.")
             }
 
-            ClickableText(
+            val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+            Text(
                 text = legalText,
                 style = TextStyle(
                     fontSize = 12.sp,
                     color = Color(0xFF6B6B6B),
                     textAlign = TextAlign.Center
                 ),
-                onClick = { offset ->
-                    legalText.getStringAnnotations("terms", offset, offset).firstOrNull()?.let { onNavigateToLegal("terms") }
-                    legalText.getStringAnnotations("privacy", offset, offset).firstOrNull()?.let { onNavigateToLegal("privacy") }
+                onTextLayout = { layoutResult.value = it },
+                modifier = Modifier.pointerInput(Unit) {
+                    detectTapGestures { pos ->
+                        layoutResult.value?.let { layout ->
+                            val offset = layout.getOffsetForPosition(pos)
+                            legalText.getStringAnnotations("terms", offset, offset).firstOrNull()?.let { onNavigateToLegal("terms") }
+                            legalText.getStringAnnotations("privacy", offset, offset).firstOrNull()?.let { onNavigateToLegal("privacy") }
+                        }
+                    }
                 }
             )
         }

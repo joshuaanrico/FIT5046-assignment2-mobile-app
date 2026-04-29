@@ -8,10 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Accessible
+import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -63,7 +63,7 @@ fun ProfileSetupScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text("Sit&Fit", color = teal, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -135,7 +135,7 @@ fun ProfileSetupScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         CardSectionTitle(
-                            icon = { Icon(Icons.Default.Accessible, contentDescription = null, tint = grayText) },
+                            icon = { Icon(Icons.AutoMirrored.Filled.Accessible, contentDescription = null, tint = grayText) },
                             title = "Mobility & Exercise",
                             teal = teal
                         )

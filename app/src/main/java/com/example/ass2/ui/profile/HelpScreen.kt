@@ -15,9 +15,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Straighten
@@ -57,7 +57,7 @@ fun HelpScreen(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = BrandTeal)
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = BrandTeal)
             }
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Text("Help", color = BrandTeal, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -218,7 +218,7 @@ private fun FaqRow(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.Outlined.HelpOutline,
+                Icons.AutoMirrored.Outlined.HelpOutline,
                 contentDescription = null,
                 tint = BrandTeal,
                 modifier = Modifier.size(18.dp)

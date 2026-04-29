@@ -21,7 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.TrendingDown
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -312,7 +312,7 @@ fun ProgressScreen(onTabSelected: (NavTab) -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.TrendingDown,
+                            imageVector = Icons.AutoMirrored.Outlined.TrendingDown,
                             contentDescription = null,
                             tint = Color(0xFF5B7574),
                             modifier = Modifier.size(16.dp)

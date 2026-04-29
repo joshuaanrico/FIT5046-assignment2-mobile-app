@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -92,7 +92,7 @@ fun AlertScreen(
                         containerColor = Color(0xFFD2E8E6)
                     )
                 ) {
-                    Icon(Icons.Default.TrendingDown, contentDescription = null, tint = Color.DarkGray)
+                    Icon(Icons.AutoMirrored.Filled.TrendingDown, contentDescription = null, tint = Color.DarkGray)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Continue at Lower Intensity", color = Color.DarkGray)
                 }
