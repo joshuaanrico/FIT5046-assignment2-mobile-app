@@ -18,9 +18,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.ui.theme.Ass2Theme
 import com.example.ass2.ui.navigation.NavTab
 import com.example.ass2.ui.auth.LoginScreen
+import com.example.ass2.viewmodel.AuthViewModel
 import com.example.ass2.ui.auth.RegisterScreen
 import com.example.ass2.ui.auth.ForgotPasswordScreen
 import com.example.ass2.ui.home.HomeScreen
@@ -70,6 +72,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel()
+    val startDestination = if (authViewModel.isUserLoggedIn()) "home" else "login"
 
     fun handleTabSelected(tab: NavTab) {
         val route = when (tab) {
@@ -86,7 +90,7 @@ fun AppNavGraph() {
         }
     }
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate("register") },
@@ -162,6 +166,7 @@ fun AppNavGraph() {
                 onSettingsClick = { navController.navigate("settings") },
                 onHelpClick = { navController.navigate("help") },
                 onSignOut = {
+                    authViewModel.signOut()
                     navController.navigate("login") { popUpTo("home") { inclusive = true } }
                 }
             )
