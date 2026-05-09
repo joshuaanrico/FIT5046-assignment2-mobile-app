@@ -1,9 +1,14 @@
 package com.example.ass2
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -39,9 +44,13 @@ import com.example.ass2.ui.profile.HelpScreen
 import com.example.ass2.ui.profile.LegalScreen
 
 class MainActivity : ComponentActivity() {
+    private val notifPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* result is best-effort */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestPostNotificationsIfNeeded()
         setContent {
             Ass2Theme(dynamicColor = false) {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -49,6 +58,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun requestPostNotificationsIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }
 
@@ -127,11 +144,16 @@ fun AppNavGraph() {
         composable("sessions") {
             SessionsScreen(
                 onTabSelected = ::handleTabSelected,
-                onSessionClick = { navController.navigate("sessionDetails") }
+                onSessionClick = { id -> navController.navigate("sessionDetails/$id") }
             )
         }
-        composable("sessionDetails") {
+        composable(
+            route = "sessionDetails/{sessionId}",
+            arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("sessionId") ?: 0L
             SessionDetailScreen(
+                sessionId = id,
                 onBack = { navController.popBackStack() },
                 onDelete = { navController.popBackStack() }
             )
@@ -161,12 +183,20 @@ fun AppNavGraph() {
         composable("reminderList") {
             ReminderListScreen(
                 onBack = { navController.popBackStack() },
-                onReminderClick = { navController.navigate("reminderSetting") },
-                onAdd = { navController.navigate("reminderSetting") }
+                onReminderClick = { id -> navController.navigate("reminderSetting?id=$id") },
+                onAdd = { navController.navigate("reminderSetting?id=-1") }
             )
         }
-        composable("reminderSetting") {
+        composable(
+            route = "reminderSetting?id={id}",
+            arguments = listOf(navArgument("id") {
+                type = NavType.LongType
+                defaultValue = -1L
+            })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: -1L
             ReminderSettingScreen(
+                reminderId = if (id < 0) null else id,
                 onBack = { navController.popBackStack() },
                 onSave = { navController.popBackStack() },
                 onDelete = { navController.popBackStack() }

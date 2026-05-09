@@ -36,11 +36,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,14 +55,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.TextButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.data.local.Reminder
+import com.example.ass2.viewmodel.ReminderViewModel
+
+private val REMINDER_TYPES = listOf("Exercise Routine", "Meditation", "Water Break", "Stretch Break", "Custom")
+
+private val DAY_KEYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+private val DAY_LABELS = listOf("M", "T", "W", "T", "F", "S", "S")
+
+private fun encodeMask(set: Set<String>): Int {
+    var mask = 0
+    DAY_KEYS.forEachIndexed { i, key -> if (set.contains(key)) mask = mask or (1 shl i) }
+    return mask
+}
+
+private fun decodeMask(mask: Int): Set<String> =
+    DAY_KEYS.filterIndexed { i, _ -> mask and (1 shl i) != 0 }.toSet()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderSettingScreen(
+    reminderId: Long? = null,
     onBack: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
+    vm: ReminderViewModel = viewModel()
 ) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
@@ -69,18 +90,30 @@ fun ReminderSettingScreen(
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
 
-    val reminderTypes = listOf("Exercise Routine", "Meditation", "Water Break", "Stretch Break", "Custom")
-    var reminderTypeExpanded by remember { mutableStateOf(false) }
-    var selectedReminderType by remember { mutableStateOf(reminderTypes[0]) }
+    val existing by (reminderId?.let { vm.byId(it) } ?: kotlinx.coroutines.flow.flowOf<Reminder?>(null))
+        .collectAsStateWithLifecycle(initialValue = null)
 
+    var reminderTypeExpanded by remember { mutableStateOf(false) }
+    var selectedReminderType by remember { mutableStateOf(REMINDER_TYPES[0]) }
     val timePickerState = rememberTimePickerState(initialHour = 8, initialMinute = 0, is24Hour = false)
     var showTimePicker by remember { mutableStateOf(false) }
-
-    val days = listOf("M", "T", "W", "T", "F", "S", "S")
-    val dayKeys = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     val selectedDays = remember { mutableStateOf(setOf("Mon", "Tue", "Wed", "Thu", "Fri")) }
-
     val reminderEnabled = remember { mutableStateOf(true) }
+    var prefilled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(existing) {
+        val e = existing
+        if (e != null && !prefilled) {
+            selectedReminderType = if (REMINDER_TYPES.contains(e.label)) e.label else "Custom"
+            timePickerState.hour = e.hour
+            timePickerState.minute = e.minute
+            selectedDays.value = decodeMask(e.repeatDaysMask)
+            reminderEnabled.value = e.enabled
+            prefilled = true
+        }
+    }
+
+    val isEditing = reminderId != null
 
     if (showTimePicker) {
         Dialog(onDismissRequest = { showTimePicker = false }) {
@@ -155,18 +188,27 @@ fun ReminderSettingScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "Set Reminder",
+                    text = if (isEditing) "Edit Reminder" else "Set Reminder",
                     color = teal,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Delete",
-                        tint = teal
-                    )
+                if (isEditing) {
+                    IconButton(onClick = {
+                        existing?.let {
+                            vm.delete(it)
+                            onDelete()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Delete",
+                            tint = teal
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
 
@@ -191,7 +233,6 @@ fun ReminderSettingScreen(
                 )
                 Spacer(modifier = Modifier.height(26.dp))
 
-                // Reminder Type
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -240,7 +281,7 @@ fun ReminderSettingScreen(
                                 expanded = reminderTypeExpanded,
                                 onDismissRequest = { reminderTypeExpanded = false }
                             ) {
-                                reminderTypes.forEach { type ->
+                                REMINDER_TYPES.forEach { type ->
                                     DropdownMenuItem(
                                         text = { Text(type) },
                                         onClick = {
@@ -256,7 +297,6 @@ fun ReminderSettingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Time
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -318,7 +358,6 @@ fun ReminderSettingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Repeat
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -343,8 +382,8 @@ fun ReminderSettingScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            days.forEachIndexed { index, label ->
-                                val key = dayKeys[index]
+                            DAY_LABELS.forEachIndexed { index, label ->
+                                val key = DAY_KEYS[index]
                                 val checked = selectedDays.value.contains(key)
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
@@ -375,7 +414,6 @@ fun ReminderSettingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Status
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -417,7 +455,18 @@ fun ReminderSettingScreen(
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Button(
-                    onClick = onSave,
+                    onClick = {
+                        val reminder = Reminder(
+                            id = existing?.id ?: 0L,
+                            label = selectedReminderType,
+                            hour = timePickerState.hour,
+                            minute = timePickerState.minute,
+                            repeatDaysMask = encodeMask(selectedDays.value),
+                            enabled = reminderEnabled.value
+                        )
+                        vm.upsert(reminder)
+                        onSave()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -439,13 +488,17 @@ fun ReminderSettingScreen(
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                Text(
-                    text = "Cancel",
-                    color = teal,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
+                TextButton(
+                    onClick = onBack,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = teal,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
