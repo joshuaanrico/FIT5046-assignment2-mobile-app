@@ -31,28 +31,35 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.data.local.Reminder
+import com.example.ass2.viewmodel.ReminderViewModel
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-data class ReminderItem(
-    val title: String,
-    val time: String,
-    val enabled: Boolean
-)
+private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
+
+private fun formatTime(hour: Int, minute: Int): String =
+    LocalTime.of(hour, minute).format(timeFormatter)
 
 @Composable
 fun ReminderListScreen(
     onBack: () -> Unit,
-    onReminderClick: () -> Unit,
+    onReminderClick: (Long) -> Unit,
     onAdd: () -> Unit,
+    vm: ReminderViewModel = viewModel()
 ) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
@@ -60,14 +67,7 @@ fun ReminderListScreen(
     val grayText = Color(0xFF666666)
     val cardColor = Color(0xFFF8F8F8)
 
-    val reminders = listOf(
-        ReminderItem("Morning Stretches", "08:00 AM", true),
-        ReminderItem("Core Stability", "01:30 PM", true),
-        ReminderItem("Evening Wind Down", "08:45 PM", false),
-        ReminderItem("Medication Reminder", "09:00 PM", true),
-        ReminderItem("Breathing Session", "06:30 AM", true),
-        ReminderItem("Night Stretch", "10:00 PM", false)
-    )
+    val reminders by vm.reminders.collectAsStateWithLifecycle()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -132,14 +132,34 @@ fun ReminderListScreen(
                         )
                         Spacer(modifier = Modifier.height(26.dp))
                     }
-                    items(reminders, key = { it.title }) { item ->
+
+                    if (reminders.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No reminders yet — tap + to add one.",
+                                    color = grayText,
+                                    fontSize = 15.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    items(reminders, key = { it.id }) { item ->
                         ReminderCard(
                             item = item,
                             teal = teal,
                             darkText = darkText,
                             grayText = grayText,
                             cardColor = cardColor,
-                            onClick = onReminderClick
+                            onClick = { onReminderClick(item.id) },
+                            onToggle = { enabled -> vm.toggleEnabled(item, enabled) }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -169,14 +189,14 @@ fun ReminderListScreen(
 
 @Composable
 private fun ReminderCard(
-    item: ReminderItem,
+    item: Reminder,
     teal: Color,
     darkText: Color,
     grayText: Color,
     cardColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onToggle: (Boolean) -> Unit
 ) {
-    val checkedState = remember { mutableStateOf(item.enabled) }
     val contentAlpha = if (item.enabled) 1f else 0.45f
 
     Card(
@@ -195,7 +215,7 @@ private fun ReminderCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = item.title,
+                    text = item.label,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = darkText
@@ -211,7 +231,7 @@ private fun ReminderCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = " ${item.time}",
+                        text = " ${formatTime(item.hour, item.minute)}",
                         fontSize = 14.sp,
                         color = grayText
                     )
@@ -219,8 +239,8 @@ private fun ReminderCard(
             }
 
             Switch(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it },
+                checked = item.enabled,
+                onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = teal,

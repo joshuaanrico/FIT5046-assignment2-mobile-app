@@ -56,29 +56,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.data.local.Session
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
+import com.example.ass2.viewmodel.SessionViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-data class SessionItem(
+private data class SessionRow(
+    val id: Long,
     val title: String,
-    val duration: String,
+    val durationMins: Int,
+    val durationLabel: String,
     val date: String,
+    val dateMillis: Long,
     val status: String,
     val accentColor: Color,
     val icon: ImageVector,
-    val week: String = "This Week"
+    val week: String
 )
 
-private fun parseDurationMins(dur: String): Int =
-    dur.filter { it.isDigit() }.toIntOrNull() ?: 0
-
-private fun parseDateMillis(dateStr: String): Long? = try {
-    SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH).parse(dateStr)?.time
-} catch (e: Exception) { null }
+private fun startOfWeekMillis(now: Long = System.currentTimeMillis()): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = now
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        firstDayOfWeek = Calendar.MONDAY
+        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+    }.timeInMillis
 
 private fun isSameDay(a: Long, b: Long): Boolean {
     val calA = Calendar.getInstance().apply { timeInMillis = a }
@@ -90,11 +99,46 @@ private fun isSameDay(a: Long, b: Long): Boolean {
 private fun formatDateShort(millis: Long): String =
     SimpleDateFormat("MMM d", Locale.ENGLISH).format(Date(millis))
 
+private fun iconFor(name: String): ImageVector = when {
+    name.contains("breath", true) || name.contains("medit", true) -> Icons.Outlined.Spa
+    name.contains("twist", true) || name.contains("stretch", true) -> Icons.Outlined.Spa
+    name.contains("neck", true) || name.contains("rotation", true) -> Icons.Outlined.Person
+    else -> Icons.Outlined.FitnessCenter
+}
+
+private fun accentFor(status: String): Color =
+    if (status == "Completed") BrandTeal else Color(0xFF315C7C)
+
+private fun Session.toRow(): SessionRow {
+    val mins = (durationSec / 60).coerceAtLeast(0)
+    val status = if (poseQuality == null || poseQuality < 0.5f) "Partial" else "Completed"
+    val weekStart = startOfWeekMillis()
+    val lastWeekStart = weekStart - 7L * 24 * 60 * 60 * 1000
+    val bucket = when {
+        startTime >= weekStart -> "This Week"
+        startTime >= lastWeekStart -> "Last Week"
+        else -> "Earlier"
+    }
+    return SessionRow(
+        id = id,
+        title = exerciseName,
+        durationMins = mins,
+        durationLabel = "$mins mins",
+        date = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH).format(Date(startTime)),
+        dateMillis = startTime,
+        status = status,
+        accentColor = accentFor(status),
+        icon = iconFor(exerciseName),
+        week = bucket
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionsScreen(
     onTabSelected: (NavTab) -> Unit,
-    onSessionClick: () -> Unit,
+    onSessionClick: (Long) -> Unit,
+    vm: SessionViewModel = viewModel()
 ) {
     val darkText = Color(0xFF222222)
     val lightText = Color(0xFF777777)
@@ -109,64 +153,23 @@ fun SessionsScreen(
 
     val datePickerState = rememberDatePickerState()
 
-    val allSessions = remember {
-        listOf(
-            SessionItem(
-                "Seated Torso Twist",
-                "12 mins",
-                "Oct 24, 2023",
-                "Completed",
-                BrandTeal,
-                Icons.Outlined.Spa,
-                "This Week"
-            ),
-            SessionItem(
-                "Neck Rotation",
-                "5 mins",
-                "Oct 22, 2023",
-                "Completed",
-                Color(0xFF315C7C),
-                Icons.Outlined.Person,
-                "This Week"
-            ),
-            SessionItem(
-                "Arm Raises",
-                "8 mins",
-                "Oct 18, 2023",
-                "Partial",
-                Color.LightGray,
-                Icons.Outlined.FitnessCenter,
-                "Last Week"
-            ),
-            SessionItem(
-                "Guided Breathing",
-                "10 mins",
-                "Oct 15, 2023",
-                "Completed",
-                BrandTeal,
-                Icons.Outlined.Spa,
-                "Last Week"
-            )
-        )
-    }
+    val sessions by vm.sessions.collectAsStateWithLifecycle()
+    val rows = remember(sessions) { sessions.map { it.toRow() } }
 
     val hasActiveFilter = searchQuery.isNotEmpty() || typeFilter != "All" ||
             selectedDateMillis != null || durationFilter != "All"
 
-    val filteredSessions = remember(searchQuery, typeFilter, selectedDateMillis, durationFilter) {
-        allSessions.filter { item ->
+    val filteredRows = remember(rows, searchQuery, typeFilter, selectedDateMillis, durationFilter) {
+        rows.filter { item ->
             val matchesSearch = searchQuery.isEmpty() ||
                     item.title.contains(searchQuery, ignoreCase = true)
             val matchesType = typeFilter == "All" || item.status == typeFilter
-            val matchesDate = selectedDateMillis == null || run {
-                val itemMillis = parseDateMillis(item.date)
-                itemMillis != null && isSameDay(selectedDateMillis!!, itemMillis)
-            }
-            val mins = parseDurationMins(item.duration)
+            val matchesDate = selectedDateMillis == null ||
+                    isSameDay(selectedDateMillis!!, item.dateMillis)
             val matchesDuration = when (durationFilter) {
-                "≤5 min" -> mins <= 5
-                "6-10 min" -> mins in 6..10
-                ">10 min" -> mins > 10
+                "≤5 min" -> item.durationMins <= 5
+                "6-10 min" -> item.durationMins in 6..10
+                ">10 min" -> item.durationMins > 10
                 else -> true
             }
             matchesSearch && matchesType && matchesDate && matchesDuration
@@ -234,7 +237,6 @@ fun SessionsScreen(
                             .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Type: dropdown (All / Completed / Partial)
                         Box {
                             SessionFilterChip(
                                 text = if (typeFilter == "All") "Type" else typeFilter,
@@ -258,7 +260,6 @@ fun SessionsScreen(
                             }
                         }
 
-                        // Date: date picker dialog
                         SessionFilterChip(
                             text = if (selectedDateMillis == null) "Date"
                                    else formatDateShort(selectedDateMillis!!),
@@ -267,7 +268,6 @@ fun SessionsScreen(
                             onClick = { showDatePicker = true }
                         )
 
-                        // Duration: dropdown (All / ≤5 min / 6-10 min / >10 min)
                         Box {
                             SessionFilterChip(
                                 text = if (durationFilter == "All") "Duration" else durationFilter,
@@ -295,63 +295,78 @@ fun SessionsScreen(
                     Spacer(modifier = Modifier.height(18.dp))
                 }
 
-                if (hasActiveFilter) {
+                if (rows.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No sessions yet — start your first one",
+                                color = lightText,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else if (hasActiveFilter) {
                     item {
                         Text(
-                            text = if (filteredSessions.isEmpty()) "No results" else "Results",
+                            text = if (filteredRows.isEmpty()) "No results" else "Results",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = darkText
                         )
                     }
-                    items(filteredSessions) { item ->
-                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    items(filteredRows, key = { it.id }) { item ->
+                        SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
                     }
                 } else {
-                    item {
-                        Text(
-                            text = "This Week",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = darkText
-                        )
+                    val thisWeek = rows.filter { it.week == "This Week" }
+                    val lastWeek = rows.filter { it.week == "Last Week" }
+                    val earlier = rows.filter { it.week == "Earlier" }
+                    if (thisWeek.isNotEmpty()) {
+                        item { SectionHeader("This Week", darkText) }
+                        items(thisWeek, key = { it.id }) { item ->
+                            SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
+                        }
                     }
-                    items(allSessions.filter { it.week == "This Week" }) { item ->
-                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    if (lastWeek.isNotEmpty()) {
+                        item { SectionHeader("Last Week", darkText) }
+                        items(lastWeek, key = { it.id }) { item ->
+                            SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
+                        }
                     }
-                    item {
-                        Text(
-                            text = "Last Week",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = darkText
-                        )
-                    }
-                    items(allSessions.filter { it.week == "Last Week" }) { item ->
-                        SessionCard(item, BrandTeal, darkText, lightText, onSessionClick)
+                    if (earlier.isNotEmpty()) {
+                        item { SectionHeader("Earlier", darkText) }
+                        items(earlier, key = { it.id }) { item ->
+                            SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
+                        }
                     }
                 }
 
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                if (rows.isNotEmpty()) {
+                    item {
                         Box(
                             modifier = Modifier
-                                .border(1.dp, Color.LightGray, RoundedCornerShape(24.dp))
-                                .padding(horizontal = 24.dp, vertical = 12.dp)
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "Load More History",
-                                color = BrandTeal,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(24.dp))
+                                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = "Load More History",
+                                    color = BrandTeal,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
@@ -382,6 +397,17 @@ fun SessionsScreen(
             }
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String, color: Color) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        color = color
+    )
 }
 
 @Composable
@@ -420,7 +446,7 @@ private fun SessionFilterChip(
 
 @Composable
 private fun SessionCard(
-    item: SessionItem,
+    item: SessionRow,
     teal: Color,
     darkText: Color,
     lightText: Color,
@@ -505,7 +531,7 @@ private fun SessionCard(
                         tint = lightText
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(item.duration, fontSize = 13.sp, color = lightText)
+                    Text(item.durationLabel, fontSize = 13.sp, color = lightText)
 
                     Spacer(modifier = Modifier.width(10.dp))
 

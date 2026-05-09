@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,11 +50,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.SessionViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SessionDetailScreen(
+    sessionId: Long,
     onBack: () -> Unit,
     onDelete: () -> Unit,
+    vm: SessionViewModel = viewModel()
 ) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
@@ -63,8 +72,36 @@ fun SessionDetailScreen(
     val cardColor = Color(0xFFF7F7F7)
     val blueCircle = Color(0xFF496F93)
 
-    var journalText by remember { mutableStateOf("Feeling energized, no pain. The twisting motion felt much smoother today than last week.") }
+    val session by vm.byId(sessionId).collectAsStateWithLifecycle(initialValue = null)
+
+    var journalText by remember { mutableStateOf("") }
     var journalEditing by remember { mutableStateOf(false) }
+    var journalLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(session?.id) {
+        val s = session
+        if (s != null && !journalLoaded) {
+            journalText = s.notes.orEmpty()
+            journalLoaded = true
+        }
+    }
+
+    val title = session?.exerciseName ?: "Session"
+    val dateLabel = session?.let {
+        SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.ENGLISH).format(Date(it.startTime))
+    } ?: "—"
+    val durationLabel = session?.let {
+        val total = it.durationSec
+        "%d:%02d".format(total / 60, total % 60)
+    } ?: "—"
+    val poseQ = session?.poseQuality ?: 0f
+    val poseLabel = when {
+        session?.poseQuality == null -> "Not recorded"
+        poseQ >= 0.85f -> "Good Form - ${(poseQ * 100).toInt()}%"
+        poseQ >= 0.6f -> "Fair Form - ${(poseQ * 100).toInt()}%"
+        else -> "Needs Work - ${(poseQ * 100).toInt()}%"
+    }
+    val hrLabel = session?.avgHr?.let { "Avg $it BPM" } ?: "Not recorded"
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -79,12 +116,17 @@ fun SessionDetailScreen(
                 .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
 
-            TopDetailBar(teal, onBack, onDelete)
+            TopDetailBar(teal, onBack) {
+                session?.let {
+                    vm.delete(it)
+                    onDelete()
+                }
+            }
 
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = "Seated\nTorso Twist",
+                text = title,
                 fontSize = 34.sp,
                 lineHeight = 36.sp,
                 fontWeight = FontWeight.Bold,
@@ -101,7 +143,7 @@ fun SessionDetailScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = " Oct 24, 2023 • 9:00 AM",
+                    text = " $dateLabel",
                     color = textGray,
                     fontSize = 16.sp
                 )
@@ -112,7 +154,7 @@ fun SessionDetailScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 InfoChip(
                     icon = Icons.Outlined.Timer,
-                    text = "15:30",
+                    text = durationLabel,
                     background = lightTeal,
                     textColor = textGray
                 )
@@ -149,7 +191,7 @@ fun SessionDetailScreen(
                                 color = teal
                             )
                             Text(
-                                text = "Good Form - 92%",
+                                text = poseLabel,
                                 fontSize = 15.sp,
                                 color = textGray
                             )
@@ -159,7 +201,7 @@ fun SessionDetailScreen(
                     Spacer(modifier = Modifier.height(18.dp))
 
                     LinearProgressIndicator(
-                        progress = { 0.92f },
+                        progress = { poseQ.coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(12.dp)
@@ -197,7 +239,7 @@ fun SessionDetailScreen(
                             color = Color(0xFF20486A)
                         )
                         Text(
-                            text = "Avg 85 BPM",
+                            text = hrLabel,
                             fontSize = 15.sp,
                             color = textGray
                         )
@@ -234,7 +276,12 @@ fun SessionDetailScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        IconButton(onClick = { journalEditing = !journalEditing }) {
+                        IconButton(onClick = {
+                            if (journalEditing) {
+                                session?.let { vm.update(it.copy(notes = journalText)) }
+                            }
+                            journalEditing = !journalEditing
+                        }) {
                             Icon(
                                 imageVector = if (journalEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
                                 contentDescription = if (journalEditing) "Save" else "Edit",
@@ -251,6 +298,7 @@ fun SessionDetailScreen(
                         readOnly = !journalEditing,
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
+                        placeholder = { Text("Add notes about this session...", color = textGray) },
                         shape = RoundedCornerShape(16.dp),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF0F0F0),
