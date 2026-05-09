@@ -199,39 +199,168 @@ class LateralRaiseExercise : UpperBodyExercise("Lateral Raise", isBilateral = tr
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. Push-Up — shoulder-elbow-wrist angle (arm bend at bottom)
-//    States: EXTENDED (>150°) → DESCENDING (70–150°) → DESCENDED (≤70°)
-//    Rep counted on DESCENDING → DESCENDED (arms fully bent at bottom)
+// 6. Side Stretch — elbow-shoulder-hip angle (arm raised to the side overhead)
+//    States: LOWERED (<30°) → RAISING (30–130°) → RAISED (≥130°)
+//    Rep counted on RAISING → RAISED (uses max of both arms — one arm at a time)
 // ─────────────────────────────────────────────────────────────────────────────
-class PushUpExercise : UpperBodyExercise("Push-Up", isBilateral = true) {
-    override fun initialState() = "EXTENDED"
+class SideStretchExercise : UpperBodyExercise("Side Stretch", isBilateral = true) {
+    override fun initialState() = "LOWERED"
 
     override fun computeAngles(landmarks: List<NormalizedLandmark>) = Pair(
-        angleBetween(landmarks, 11, 13, 15),
-        angleBetween(landmarks, 12, 14, 16),
+        angleBetween(landmarks, 13, 11, 23), // left elbow-shoulder-hip
+        angleBetween(landmarks, 14, 12, 24), // right elbow-shoulder-hip
+    )
+
+    override fun step(currentState: String, leftAngle: Float, rightAngle: Float): Triple<String, Boolean, String> {
+        val peak = maxOf(leftAngle, rightAngle)
+        val (next, feedback) = when (currentState) {
+            "LOWERED" -> when {
+                peak >= 130f -> "RAISED"  to "Great stretch! Hold for 5 seconds"
+                peak >= 30f  -> "RAISING" to "Raise your arm higher for a deeper stretch"
+                else         -> "LOWERED" to "Start: raise one arm up and over"
+            }
+            "RAISING" -> when {
+                peak >= 130f -> "RAISED"  to "Full stretch — feel the side body lengthen"
+                peak < 30f   -> "LOWERED" to "Lower fully, then raise the other side"
+                else         -> "RAISING" to "Keep reaching — almost there"
+            }
+            "RAISED" -> when {
+                peak < 30f   -> "LOWERED" to "Rep complete! Switch sides"
+                peak < 130f  -> "RAISING" to "Lower slowly with control"
+                else         -> "RAISED"  to "Hold the stretch, breathe deeply"
+            }
+            else -> "LOWERED" to ""
+        }
+        val counted = currentState == "RAISING" && next == "RAISED"
+        return Triple(next, counted, feedback)
+    }
+
+    override fun estimateQuality(leftAngle: Float, rightAngle: Float): Float {
+        val peak = maxOf(leftAngle, rightAngle)
+        return ((peak - 30f) / (155f - 30f)).coerceIn(0f, 1f) * 100f
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Forward Fold — spine angle: shoulder-hip-knee
+//    States: UPRIGHT (>100°) → FOLDING (70–100°) → FOLDED (≤70°)
+//    Rep counted on FOLDING → FOLDED
+// ─────────────────────────────────────────────────────────────────────────────
+class ForwardFoldExercise : UpperBodyExercise("Forward Fold", isBilateral = true) {
+    override fun initialState() = "UPRIGHT"
+
+    override fun computeAngles(landmarks: List<NormalizedLandmark>) = Pair(
+        angleBetween(landmarks, 11, 23, 25), // left shoulder-hip-knee
+        angleBetween(landmarks, 12, 24, 26), // right shoulder-hip-knee
     )
 
     override fun step(currentState: String, leftAngle: Float, rightAngle: Float): Triple<String, Boolean, String> {
         val avg = (leftAngle + rightAngle) / 2f
         val (next, feedback) = when (currentState) {
-            "EXTENDED" -> when {
-                avg <= 70f  -> "DESCENDED"  to "Full range — push up now"
-                avg <= 150f -> "DESCENDING" to "Lower your chest toward the surface"
-                else        -> "EXTENDED"   to "Start: lower yourself down"
+            "UPRIGHT" -> when {
+                avg <= 70f  -> "FOLDED"  to "Deep fold! Keep breathing"
+                avg <= 100f -> "FOLDING" to "Fold deeper — relax your back"
+                else        -> "UPRIGHT" to "Start: hinge forward at the hips"
             }
-            "DESCENDING" -> when {
-                avg <= 70f  -> "DESCENDED"  to "Bottom reached — press up!"
-                avg > 150f  -> "EXTENDED"   to "Fully extended — go again"
-                else        -> "DESCENDING" to "Lower a bit more for full range"
+            "FOLDING" -> when {
+                avg <= 70f  -> "FOLDED"  to "Perfect fold! Hold and breathe"
+                avg > 100f  -> "UPRIGHT" to "Rise back to upright"
+                else        -> "FOLDING" to "A little deeper — let gravity help"
             }
-            "DESCENDED" -> when {
-                avg > 150f  -> "EXTENDED"   to "Rep complete! Great push"
-                avg > 70f   -> "DESCENDING" to "Push all the way up"
-                else        -> "DESCENDED"  to "Hold and push up"
+            "FOLDED" -> when {
+                avg > 100f  -> "UPRIGHT" to "Rep complete! Rise with a flat back"
+                avg > 70f   -> "FOLDING" to "Rise slowly, keeping your back long"
+                else        -> "FOLDED"  to "Hold the fold, soften your knees"
             }
-            else -> "EXTENDED" to ""
+            else -> "UPRIGHT" to ""
         }
-        val counted = currentState == "DESCENDING" && next == "DESCENDED"
+        val counted = currentState == "FOLDING" && next == "FOLDED"
+        return Triple(next, counted, feedback)
+    }
+
+    override fun estimateQuality(leftAngle: Float, rightAngle: Float): Float {
+        val avg = (leftAngle + rightAngle) / 2f
+        return ((100f - avg) / (100f - 45f)).coerceIn(0f, 1f) * 100f
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Seated Twist — wrist-elbow-shoulder angle difference between sides
+//    States: NEUTRAL (diff <15°) → TWISTING (15–30°) → TWISTED (>30°)
+//    Rep counted on TWISTING → TWISTED
+// ─────────────────────────────────────────────────────────────────────────────
+class SeatedTwistExercise : UpperBodyExercise("Seated Twist", isBilateral = true) {
+    override fun initialState() = "NEUTRAL"
+
+    override fun computeAngles(landmarks: List<NormalizedLandmark>) = Pair(
+        angleBetween(landmarks, 15, 13, 11), // left wrist-elbow-shoulder
+        angleBetween(landmarks, 16, 14, 12), // right wrist-elbow-shoulder
+    )
+
+    override fun step(currentState: String, leftAngle: Float, rightAngle: Float): Triple<String, Boolean, String> {
+        val diff = kotlin.math.abs(leftAngle - rightAngle)
+        val (next, feedback) = when (currentState) {
+            "NEUTRAL" -> when {
+                diff > 30f  -> "TWISTED"  to "Good twist! Keep shoulders level"
+                diff >= 15f -> "TWISTING" to "Rotate further — lead with your chest"
+                else        -> "NEUTRAL"  to "Start: rotate your torso to one side"
+            }
+            "TWISTING" -> when {
+                diff > 30f  -> "TWISTED"  to "Full twist — hold briefly"
+                diff < 15f  -> "NEUTRAL"  to "Return to centre, then twist the other way"
+                else        -> "TWISTING" to "A little more rotation — breathe out"
+            }
+            "TWISTED" -> when {
+                diff < 15f  -> "NEUTRAL"  to "Rep complete! Twist to the other side"
+                diff < 30f  -> "TWISTING" to "Unwind slowly with control"
+                else        -> "TWISTED"  to "Hold the twist, keep your spine tall"
+            }
+            else -> "NEUTRAL" to ""
+        }
+        val counted = currentState == "TWISTING" && next == "TWISTED"
+        return Triple(next, counted, feedback)
+    }
+
+    override fun estimateQuality(leftAngle: Float, rightAngle: Float): Float {
+        val diff = kotlin.math.abs(leftAngle - rightAngle)
+        return (diff / 45f).coerceIn(0f, 1f) * 100f
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. Cat-Cow — spine angle (shoulder-hip-knee) cycling between arch and round
+//    States: NEUTRAL (70–110°) → ARCHING (>110°, cow) → ROUNDING (≤70°, cat)
+//    Rep counted on ARCHING → ROUNDING (one full cat-cow cycle)
+// ─────────────────────────────────────────────────────────────────────────────
+class CatCowExercise : UpperBodyExercise("Cat-Cow", isBilateral = true) {
+    override fun initialState() = "NEUTRAL"
+
+    override fun computeAngles(landmarks: List<NormalizedLandmark>) = Pair(
+        angleBetween(landmarks, 11, 23, 25), // left shoulder-hip-knee
+        angleBetween(landmarks, 12, 24, 26), // right shoulder-hip-knee
+    )
+
+    override fun step(currentState: String, leftAngle: Float, rightAngle: Float): Triple<String, Boolean, String> {
+        val avg = (leftAngle + rightAngle) / 2f
+        val (next, feedback) = when (currentState) {
+            "NEUTRAL" -> when {
+                avg > 110f  -> "ARCHING"  to "Cow pose — lift your head and tailbone"
+                avg <= 70f  -> "ROUNDING" to "Cat pose — round your back, tuck chin"
+                else        -> "NEUTRAL"  to "Start: arch your back (cow), then round it (cat)"
+            }
+            "ARCHING" -> when {
+                avg <= 70f  -> "ROUNDING" to "Cat pose! Round your spine fully"
+                avg in 70f..110f -> "NEUTRAL" to "Flow through neutral to cat"
+                else        -> "ARCHING"  to "Good cow pose — now flow to cat"
+            }
+            "ROUNDING" -> when {
+                avg > 110f  -> "ARCHING"  to "Rep complete! Flow back to cow"
+                avg in 70f..110f -> "NEUTRAL" to "Keep flowing — arch into cow"
+                else        -> "ROUNDING" to "Good cat pose — now flow to cow"
+            }
+            else -> "NEUTRAL" to ""
+        }
+        val counted = currentState == "ARCHING" && next == "ROUNDING"
         return Triple(next, counted, feedback)
     }
 
@@ -248,7 +377,10 @@ object UpperBodyExercises {
         TricepDipExercise(),
         ShoulderPressExercise(),
         LateralRaiseExercise(),
-        PushUpExercise(),
+        SideStretchExercise(),
+        ForwardFoldExercise(),
+        SeatedTwistExercise(),
+        CatCowExercise(),
     )
 
     fun byName(name: String): UpperBodyExercise =

@@ -44,7 +44,7 @@ abstract class UpperBodyExercise(
     protected open fun estimateQuality(leftAngle: Float, rightAngle: Float): Float = 75f
 
     fun process(landmarks: List<NormalizedLandmark>): ExerciseUpdate {
-        if (landmarks.size < 25) {
+        if (landmarks.size < 27) {
             return ExerciseUpdate(repCount, state, "Step back so your upper body is visible", 0f, 0f, 0f)
         }
         val (left, right) = computeAngles(landmarks)
