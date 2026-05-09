@@ -64,7 +64,7 @@ fun RegisterScreen(
                 .padding(start = 24.dp, end = 24.dp, top = 60.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Brand header — accessibility icon + app name, left-aligned
+            // Brand header - accessibility icon + app name, left-aligned
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

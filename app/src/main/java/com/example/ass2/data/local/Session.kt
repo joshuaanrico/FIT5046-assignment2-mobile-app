@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "sessions")
 data class Session(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
-    val startTime: Long,            // epoch millis — sort/filter in SessionsScreen, window in ProgressScreen
+    val startTime: Long,            // epoch millis - sort/filter in SessionsScreen, window in ProgressScreen
     val durationSec: Int,           // shown in SessionDetail, aggregated in ProgressScreen
     val exerciseName: String,       // SessionsScreen list label and filter chip
     val exerciseId: String? = null, // links to Exercise cache (nullable: user may log free session)

@@ -304,7 +304,7 @@ fun SessionsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No sessions yet — start your first one",
+                                text = "No sessions yet - start your first one",
                                 color = lightText,
                                 fontSize = 15.sp,
                                 textAlign = TextAlign.Center

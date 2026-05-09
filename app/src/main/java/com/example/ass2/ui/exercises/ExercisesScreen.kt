@@ -35,7 +35,7 @@ data class Exercise(
     val imageRes: Int
 )
 
-/** Maps an exercise name to a drawable resource — used by both list and detail screens. */
+/** Maps an exercise name to a drawable resource - used by both list and detail screens. */
 fun exerciseImageForName(name: String): Int = when {
     name.contains("Morning", ignoreCase = true) -> R.drawable.exercise4
     name.contains("Torso", ignoreCase = true) -> R.drawable.exercise1

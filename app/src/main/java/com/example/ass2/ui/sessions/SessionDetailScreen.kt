@@ -89,11 +89,11 @@ fun SessionDetailScreen(
     val title = session?.exerciseName ?: "Session"
     val dateLabel = session?.let {
         SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.ENGLISH).format(Date(it.startTime))
-    } ?: "—"
+    } ?: "-"
     val durationLabel = session?.let {
         val total = it.durationSec
         "%d:%02d".format(total / 60, total % 60)
-    } ?: "—"
+    } ?: "-"
     val poseQ = session?.poseQuality ?: 0f
     val poseLabel = when {
         session?.poseQuality == null -> "Not recorded"

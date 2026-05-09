@@ -54,7 +54,7 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp, vertical = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Brand icon — accessibility symbol on teal circle
+            // Brand icon - accessibility symbol on teal circle
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -165,7 +165,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Remember me — offset to compensate for checkbox's internal touch-target padding
+            // Remember me - offset to compensate for checkbox's internal touch-target padding
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

@@ -101,7 +101,7 @@ fun HelpScreen(onBack: () -> Unit) {
                     CameraStepRow(
                         icon = Icons.Outlined.LightMode,
                         title = "2. Ensure good lighting",
-                        body = "Sit facing a window or light source. Avoid strong backlighting — if the camera can't see you clearly, pose detection will be less accurate.",
+                        body = "Sit facing a window or light source. Avoid strong backlighting - if the camera can't see you clearly, pose detection will be less accurate.",
                         showDivider = true
                     )
                     CameraStepRow(
@@ -157,7 +157,7 @@ fun HelpScreen(onBack: () -> Unit) {
                     )
                     FaqRow(
                         question = "How do I pause or end a session?",
-                        answer = "Use the Pause button to rest. If you feel any discomfort, tap End Session — your progress up to that point will still be saved.",
+                        answer = "Use the Pause button to rest. If you feel any discomfort, tap End Session - your progress up to that point will still be saved.",
                         showDivider = true
                     )
                     FaqRow(

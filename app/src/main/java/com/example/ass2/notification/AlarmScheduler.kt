@@ -27,7 +27,7 @@ class AlarmScheduler(private val context: Context) {
     fun schedule(reminder: Reminder) {
         val am = am ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
-            Log.w(TAG, "exact alarm permission missing — skip schedule for ${reminder.id}")
+            Log.w(TAG, "exact alarm permission missing - skip schedule for ${reminder.id}")
             return
         }
         val triggerAt = nextTriggerMillis(reminder) ?: return

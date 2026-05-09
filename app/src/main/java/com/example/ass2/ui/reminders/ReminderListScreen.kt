@@ -142,7 +142,7 @@ fun ReminderListScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "No reminders yet — tap + to add one.",
+                                    text = "No reminders yet - tap + to add one.",
                                     color = grayText,
                                     fontSize = 15.sp,
                                     textAlign = TextAlign.Center

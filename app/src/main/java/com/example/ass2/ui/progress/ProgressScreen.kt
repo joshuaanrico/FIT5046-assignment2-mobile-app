@@ -412,12 +412,12 @@ private fun RecoveryTrendCard(
     }
 
     val message = when (trend) {
-        Trend.IMPROVING -> "$sessionCount session(s) this period vs $prevCount $prevLabel — you're building momentum!"
-        Trend.DECLINING -> "$sessionCount session(s) this period vs $prevCount $prevLabel — try to squeeze a few more in."
+        Trend.IMPROVING -> "$sessionCount session(s) this period vs $prevCount $prevLabel - you're building momentum!"
+        Trend.DECLINING -> "$sessionCount session(s) this period vs $prevCount $prevLabel - try to squeeze a few more in."
         Trend.STABLE -> if (sessionCount == 0)
             "No sessions yet this period or $prevLabel. Start one to track your trend."
         else
-            "$sessionCount session(s) — same as $prevLabel. Consistency is key!"
+            "$sessionCount session(s) - same as $prevLabel. Consistency is key!"
     }
 
     Card(
