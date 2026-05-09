@@ -39,6 +39,11 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
@@ -63,7 +68,12 @@ dependencies {
     implementation(libs.credentials.play.services)
     implementation(libs.google.identity)
     implementation(libs.play.services.auth)
-
+    // CameraX + MediaPipe for pose estimation
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mediapipe.tasks.vision)
 
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
