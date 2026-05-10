@@ -64,7 +64,7 @@ abstract class UpperBodyExercise(
         lastRepMs = 0L
     }
 
-    // ── Shared angle helper ───────────────────────────────────────────────────
+    // Shared angle helper
 
     /** Angle (degrees) at landmark [b] formed by vectors b→a and b→c. */
     protected fun angleBetween(
