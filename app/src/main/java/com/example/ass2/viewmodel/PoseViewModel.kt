@@ -30,7 +30,7 @@ import java.util.concurrent.Executors
 
 class PoseViewModel(application: Application) : AndroidViewModel(application) {
 
-    // ── Public state observed by LiveSessionScreen ────────────────────────────
+    // Public state observed by LiveSessionScreen
     private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
 
@@ -39,7 +39,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
 
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
 
-    // ── Internal — plain holders, not Compose state ───────────────────────────
+    // Internal - plain holders, not Compose state
     // The overlay view is set/cleared by LiveSessionScreen's AndroidView callbacks.
     // @Volatile ensures the MediaPipe callback thread always sees the latest value.
     @Volatile private var overlayView: PoseOverlayView? = null
@@ -48,7 +48,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
-    // ── MediaPipe — initialised once with application context ─────────────────
+    // MediaPipe — initialised once with application context
     private val poseLandmarker: PoseLandmarker? = try {
         val opts = PoseLandmarker.PoseLandmarkerOptions.builder()
             .setBaseOptions(BaseOptions.builder().setModelAssetPath(MODEL).build())
@@ -73,12 +73,12 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         null
     }
 
-    // ── Called by LiveSessionScreen's AndroidView factory + update lambda ─────
+    // Called by LiveSessionScreen's AndroidView factory + update lambda
     fun setOverlayView(view: PoseOverlayView?) {
         overlayView = view
     }
 
-    // ── Called by LiveSessionScreen once the PreviewView is ready ─────────────
+    // Called by LiveSessionScreen once the PreviewView is ready
     fun bindCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
         val future = ProcessCameraProvider.getInstance(getApplication())
         future.addListener({

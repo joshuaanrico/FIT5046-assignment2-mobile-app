@@ -28,11 +28,11 @@ import java.util.concurrent.Executors
 
 class PoseDetector(private val context: Context) : Closeable {
 
-    // ── Exercise FSM feed (ViewModel collects this) ───────────────────────────
+    // Exercise FSM feed (ViewModel collects this)
     private val _result = MutableStateFlow<PoseLandmarkerResult?>(null)
     val result: StateFlow<PoseLandmarkerResult?> = _result.asStateFlow()
 
-    // ── Overlay feed — plain raw ref, same pattern as AIpose ─────────────────
+    // Overlay feed — plain raw ref, same pattern as AIpose
     // Set by LiveSessionScreen AndroidView factory + update lambda.
     @Volatile var overlayView: PoseOverlayView? = null
 
