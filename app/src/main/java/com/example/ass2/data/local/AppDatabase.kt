@@ -17,9 +17,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
 
     companion object {
+        // @Volatile ensures INSTANCE is always read from main memory, not a thread-local cache
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // Singleton pattern - only one DB connection shared across the whole app
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -27,7 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "sitfit-db"
                 )
-                    .fallbackToDestructiveMigration(true)
+                    .fallbackToDestructiveMigration(true) // dev only - wipes DB on schema change instead of crashing
                     .build()
                 INSTANCE = instance
                 instance

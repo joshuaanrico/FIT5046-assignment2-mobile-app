@@ -24,18 +24,22 @@ class AlarmScheduler(private val context: Context) {
 
     private val am: AlarmManager? = context.getSystemService()
 
+    // Registers an exact one-shot alarm with the system for the next matching day/time
     fun schedule(reminder: Reminder) {
         val am = am ?: return
+        // Android 12+ requires exact alarm permission - silently skip if user revoked it
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
-            Log.w(TAG, "exact alarm permission missing — skip schedule for ${reminder.id}")
+            Log.w(TAG, "exact alarm permission missing - skip schedule for ${reminder.id}")
             return
         }
         val triggerAt = nextTriggerMillis(reminder) ?: return
         val pi = pendingIntent(reminder, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        // setExactAndAllowWhileIdle fires even in Doze mode - critical for reliable reminders
         am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         Log.d(TAG, "scheduled id=${reminder.id} at=$triggerAt")
     }
 
+    // Rebuilds the same PendingIntent used during schedule() - AlarmManager matches by request code + intent
     fun cancel(reminderId: Long) {
         val am = am ?: return
         val pi = PendingIntent.getBroadcast(
@@ -47,14 +51,17 @@ class AlarmScheduler(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         am.cancel(pi)
-        pi.cancel()
+        pi.cancel()  // releases the PendingIntent slot in the system
         Log.d(TAG, "cancelled id=$reminderId")
     }
 
+    // Called by BootReceiver after device reboot - system wipes all alarms on power-off
     fun rescheduleAll(list: List<Reminder>) {
         list.filter { it.enabled }.forEach { schedule(it) }
     }
 
+    // PendingIntent: pre-packaged Intent delivered by AlarmManager when alarm fires.
+    // Reminder ID as request code ensures one PendingIntent per reminder (no overwrites).
     private fun pendingIntent(reminder: Reminder, flags: Int): PendingIntent {
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra(EXTRA_REMINDER_ID, reminder.id)
@@ -65,10 +72,12 @@ class AlarmScheduler(private val context: Context) {
     }
 
     companion object {
+        // Calculates the next future epoch millis the reminder should fire.
+        // Searches up to 7 days ahead to find the next matching weekday in the bitmask.
         fun nextTriggerMillis(reminder: Reminder, from: LocalDateTime = LocalDateTime.now()): Long? {
             val time = LocalTime.of(reminder.hour, reminder.minute)
             val mask = reminder.repeatDaysMask
-            // No repeat days set → fire at the next occurrence (today if future, else tomorrow)
+            // No repeat days set -> fire at the next occurrence (today if future, else tomorrow)
             if (mask == 0) {
                 val today = from.toLocalDate().atTime(time)
                 val target = if (today.isAfter(from)) today else today.plusDays(1)
@@ -84,6 +93,7 @@ class AlarmScheduler(private val context: Context) {
             return null
         }
 
+        // Each day = one bit. AND with mask returns non-zero only if that day's bit is set.
         private fun matchesDay(mask: Int, date: LocalDate): Boolean {
             val bit = when (date.dayOfWeek) {
                 DayOfWeek.MONDAY -> 1

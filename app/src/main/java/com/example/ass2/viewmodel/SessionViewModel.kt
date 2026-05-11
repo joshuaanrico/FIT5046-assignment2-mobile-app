@@ -15,10 +15,12 @@ import kotlinx.coroutines.launch
 class SessionViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = SessionRepository(application)
 
+    // Hot StateFlow shared across all collectors - 5s delay keeps DB query alive during screen rotation
     val sessions: StateFlow<List<Session>> = repo.all
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun byId(id: Long): Flow<Session?> = repo.byId(id)
+    // Time-filtered queries used by ProgressScreen to calculate stats per period (week/month)
     fun since(sinceMillis: Long): Flow<List<Session>> = repo.since(sinceMillis)
     fun countSince(sinceMillis: Long): Flow<Int> = repo.countSince(sinceMillis)
     fun totalDurationSince(sinceMillis: Long): Flow<Int> = repo.totalDurationSince(sinceMillis)

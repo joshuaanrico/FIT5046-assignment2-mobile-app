@@ -44,9 +44,11 @@ import com.example.ass2.ui.profile.HelpScreen
 import com.example.ass2.ui.profile.LegalScreen
 
 class MainActivity : ComponentActivity() {
+    // Registers the system permission dialog launcher for POST_NOTIFICATIONS (Android 13+)
     private val notifPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* result is best-effort */ }
 
+    // Entry point: sets up edge-to-edge UI, requests notification permission, and mounts the nav graph
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -60,6 +62,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Skips on Android 12 and below - POST_NOTIFICATIONS didn't exist before Android 13
     private fun requestPostNotificationsIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val granted = ContextCompat.checkSelfPermission(
@@ -75,6 +78,7 @@ fun AppNavGraph() {
     val authViewModel: AuthViewModel = viewModel()
     val startDestination = if (authViewModel.isUserLoggedIn()) "home" else "login"
 
+    // Navigates to the selected bottom tab, preserving back stack state and avoiding duplicate destinations
     fun handleTabSelected(tab: NavTab) {
         val route = when (tab) {
             NavTab.HOME -> "home"
@@ -117,6 +121,7 @@ fun AppNavGraph() {
                 onTabSelected = ::handleTabSelected
             )
         }
+        // Exercises screen accepts an optional filter param (e.g. "Recommended" from Home, "All" from tab bar)
         composable(
             route = "exercises?filter={filter}",
             arguments = listOf(navArgument("filter") { defaultValue = "All" })
@@ -180,6 +185,7 @@ fun AppNavGraph() {
         composable("progress") {
             ProgressScreen(onTabSelected = ::handleTabSelected)
         }
+        // Reminder list screen - id=-1 signals new reminder, positive id opens existing one for editing
         composable("reminderList") {
             ReminderListScreen(
                 onBack = { navController.popBackStack() },
@@ -212,6 +218,7 @@ fun AppNavGraph() {
                 }
             )
         }
+        // Session flow: check-in -> live session -> (optional pause alert) -> result
         composable("pre_session_check_in") {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
@@ -234,6 +241,7 @@ fun AppNavGraph() {
                 onEndSession = { navController.navigate("session_result") }
             )
         }
+        // Session result - all exit paths popUpTo home to prevent back-navigating into the session flow
         composable("session_result") {
             SessionResultScreen(
                 onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },

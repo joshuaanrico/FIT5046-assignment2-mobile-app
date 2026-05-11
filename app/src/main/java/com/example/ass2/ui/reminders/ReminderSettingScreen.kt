@@ -65,6 +65,7 @@ private val REMINDER_TYPES = listOf("Exercise Routine", "Meditation", "Water Bre
 private val DAY_KEYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 private val DAY_LABELS = listOf("M", "T", "W", "T", "F", "S", "S")
 
+// Converts selected day strings (e.g. "Mon", "Wed") into a bitmask - each day is a bit position
 private fun encodeMask(set: Set<String>): Int {
     var mask = 0
     DAY_KEYS.forEachIndexed { i, key -> if (set.contains(key)) mask = mask or (1 shl i) }
@@ -90,6 +91,7 @@ fun ReminderSettingScreen(
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
 
+    // collectAsStateWithLifecycle pauses collection when screen is in background, saving battery vs collectAsState
     val existing by (reminderId?.let { vm.byId(it) } ?: kotlinx.coroutines.flow.flowOf<Reminder?>(null))
         .collectAsStateWithLifecycle(initialValue = null)
 
@@ -101,6 +103,7 @@ fun ReminderSettingScreen(
     val reminderEnabled = remember { mutableStateOf(true) }
     var prefilled by remember { mutableStateOf(false) }
 
+    // Pre-fill form with existing reminder data once loaded - prefilled flag prevents overwriting user edits
     LaunchedEffect(existing) {
         val e = existing
         if (e != null && !prefilled) {
@@ -454,6 +457,7 @@ fun ReminderSettingScreen(
 
                 Spacer(modifier = Modifier.height(34.dp))
 
+                // id=0 triggers insert in upsert; existing id triggers update
                 Button(
                     onClick = {
                         val reminder = Reminder(

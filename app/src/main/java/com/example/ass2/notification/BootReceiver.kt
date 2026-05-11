@@ -9,9 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
+// Restores all enabled reminders after device reboot - Android wipes alarms on power-off.
+// goAsync() extends the receiver lifetime so the DB read + reschedule loop can finish.
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return  // guard against unrelated broadcasts
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

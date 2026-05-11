@@ -141,9 +141,11 @@ fun ProgressScreen(
     val window = remember(selectedPeriod) { periodWindow(selectedPeriod) }
     val prevWindow = remember(selectedPeriod) { previousWindow(selectedPeriod) }
 
+    // collectAsStateWithLifecycle pauses collection when screen is in background, saving battery vs collectAsState
     val sessionsSince by vm.since(window.sinceMs).collectAsStateWithLifecycle(initialValue = emptyList())
     val sessionsPrev by vm.since(prevWindow.sinceMs).collectAsStateWithLifecycle(initialValue = emptyList())
 
+    // Trim the DB results to the exact window boundary (since query only filters start, not end)
     val periodSessions = remember(sessionsSince, window) {
         sessionsSince.filter { it.startTime < window.untilMs }
     }
@@ -157,6 +159,7 @@ fun ProgressScreen(
     val sessTarget = sessionTarget(selectedPeriod)
     val minTarget = minuteTarget(selectedPeriod)
 
+    // Compare current vs previous period session count to determine activity trend
     val trend = when {
         sessionCount > prevCount -> Trend.IMPROVING
         sessionCount < prevCount -> Trend.DECLINING
@@ -412,12 +415,12 @@ private fun RecoveryTrendCard(
     }
 
     val message = when (trend) {
-        Trend.IMPROVING -> "$sessionCount session(s) this period vs $prevCount $prevLabel — you're building momentum!"
-        Trend.DECLINING -> "$sessionCount session(s) this period vs $prevCount $prevLabel — try to squeeze a few more in."
+        Trend.IMPROVING -> "$sessionCount session(s) this period vs $prevCount $prevLabel - you're building momentum!"
+        Trend.DECLINING -> "$sessionCount session(s) this period vs $prevCount $prevLabel - try to squeeze a few more in."
         Trend.STABLE -> if (sessionCount == 0)
             "No sessions yet this period or $prevLabel. Start one to track your trend."
         else
-            "$sessionCount session(s) — same as $prevLabel. Consistency is key!"
+            "$sessionCount session(s) - same as $prevLabel. Consistency is key!"
     }
 
     Card(
@@ -473,6 +476,7 @@ private fun consistencyMessage(count: Int, target: Int): String = when {
     else -> "You're maintaining a steady rhythm.\n${target - count} more session(s) to hit your\ntarget. Keep moving at your own pace."
 }
 
+// Custom Canvas bar chart - draws session count per day of week using proportional bar heights
 @Composable
 private fun FrequencyChart(
     sessions: List<Session>,
@@ -482,6 +486,7 @@ private fun FrequencyChart(
     labelColor: Color
 ) {
     val zone = ZoneId.systemDefault()
+    // Group sessions by day of week - recomputes only when session list changes
     val countsByDow = remember(sessions) {
         val map = HashMap<DayOfWeek, Int>()
         for (s in sessions) {
@@ -490,6 +495,7 @@ private fun FrequencyChart(
         }
         map
     }
+    // coerceAtLeast(1) prevents division by zero when no sessions exist
     val maxCount = (countsByDow.values.maxOrNull() ?: 0).coerceAtLeast(1)
     val days = listOf(
         DayOfWeek.MONDAY to "M",

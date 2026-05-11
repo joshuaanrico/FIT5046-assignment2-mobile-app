@@ -18,12 +18,14 @@ interface ReminderDao {
     @Delete
     suspend fun delete(reminder: Reminder)
 
+    // Sorted by time so the list appears in chronological order
     @Query("SELECT * FROM reminders ORDER BY hour, minute")
     fun getAll(): Flow<List<Reminder>>
 
     @Query("SELECT * FROM reminders WHERE id = :id")
     fun getById(id: Long): Flow<Reminder?>
 
+    // Used by BootReceiver on device reboot to reschedule only active reminders
     @Query("SELECT * FROM reminders WHERE enabled = 1")
     fun getEnabled(): Flow<List<Reminder>>
 }

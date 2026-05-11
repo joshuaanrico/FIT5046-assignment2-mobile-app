@@ -66,7 +66,7 @@ fun ForgotPasswordScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Top bar — back left, title centered, spacer for balance
+            // Top bar - back left, title centered, spacer for balance
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

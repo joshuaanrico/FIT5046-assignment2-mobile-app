@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "profile")
 data class Profile(
-    @PrimaryKey val userId: String,      // Firebase Auth uid — string PK avoids sync issues on reinstall
+    @PrimaryKey val userId: String,      // Firebase Auth uid - string PK avoids sync issues on reinstall
     val displayName: String,
     val dob: Long? = null,               // epoch millis; null until ProfileSetup completed
     val heightCm: Float? = null,

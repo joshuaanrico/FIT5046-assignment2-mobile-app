@@ -5,6 +5,7 @@ import com.example.ass2.data.local.AppDatabase
 import com.example.ass2.data.local.Session
 import kotlinx.coroutines.flow.Flow
 
+// Thin wrapper over SessionDao - separates data access from ViewModel logic
 class SessionRepository(application: Application) {
     private val dao = AppDatabase.getDatabase(application).sessionDao()
 
