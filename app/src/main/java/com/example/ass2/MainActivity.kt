@@ -92,7 +92,6 @@ fun AppNavGraph() {
 
     // Full app nav graph - login is the start destination; home is the back stack root for tab navigation
     NavHost(navController = navController, startDestination = "login") {
-        // Auth flow - login pops itself on success so back button can't return to it
         composable("login") {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate("register") },
