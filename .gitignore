@@ -17,3 +17,5 @@ app/build
 /.idea
 /.vscode
 /.kotlin
+/CONTEXT.md
+app/google-services.json

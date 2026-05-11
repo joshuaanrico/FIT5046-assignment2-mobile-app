@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -35,13 +36,23 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.example.ass2.ui.theme.*
+import com.example.ass2.viewmodel.AuthState
+import com.example.ass2.viewmodel.AuthViewModel
+import com.example.ass2.viewmodel.WEB_CLIENT_ID
 
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onRegisterSuccess: () -> Unit = {},
-    onNavigateToLegal: (String) -> Unit = {}
+    onNavigateToLegal: (String) -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -50,13 +61,49 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val isLoading = authState is AuthState.Loading
     val passwordStrength = computePasswordStrength(password)
+
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(WEB_CLIENT_ID)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+    val googleLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        viewModel.handleGoogleSignInResult(task)
+    }
+
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> {
+                viewModel.resetState()
+                onRegisterSuccess()
+            }
+            is AuthState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BrandBackground)
     ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -197,14 +244,19 @@ fun RegisterScreen(
 
             // Create Account button
             Button(
-                onClick = { onRegisterSuccess() },
+                onClick = { viewModel.registerWithEmail(email, password, confirmPassword) },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
-                Text("Create Account", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text("Create Account", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -225,7 +277,8 @@ fun RegisterScreen(
 
             // Google sign-in with actual Google icon
             OutlinedButton(
-                onClick = { /* TODO */ },
+                onClick = { googleLauncher.launch(googleSignInClient.signInIntent) },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
