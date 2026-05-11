@@ -72,12 +72,14 @@ fun SessionDetailScreen(
     val cardColor = Color(0xFFF7F7F7)
     val blueCircle = Color(0xFF496F93)
 
+    // collectAsStateWithLifecycle pauses collection when screen is in background, saving battery vs collectAsState
     val session by vm.byId(sessionId).collectAsStateWithLifecycle(initialValue = null)
 
     var journalText by remember { mutableStateOf("") }
     var journalEditing by remember { mutableStateOf(false) }
     var journalLoaded by remember { mutableStateOf(false) }
 
+    // Populate journal text once when session loads — journalLoaded flag prevents overwriting user edits on recompose
     LaunchedEffect(session?.id) {
         val s = session
         if (s != null && !journalLoaded) {
@@ -276,6 +278,7 @@ fun SessionDetailScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
+                        // Toggle between view and edit mode — saves to DB when switching from edit → view
                         IconButton(onClick = {
                             if (journalEditing) {
                                 session?.let { vm.update(it.copy(notes = journalText)) }
