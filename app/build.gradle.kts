@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Provides collectAsStateWithLifecycle() — pauses Flow collection when UI is in background
     implementation(libs.androidx.lifecycle.runtime.compose)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)

@@ -2,9 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Required to fire alarms at an exact time on Android 12+ (user can revoke in Settings) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Stronger exact alarm permission for Android 13+ — auto-granted, user cannot revoke -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Required to show notification popups on Android 13+ — prompted at runtime in MainActivity -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Required to reschedule alarms after device reboot, since Android wipes all alarms on power-off -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
@@ -28,9 +32,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Wakes up when a scheduled alarm fires and shows the reminder notification.
+             exported=false: only this app can trigger it — external apps cannot send fake alarm broadcasts -->
         <receiver
             android:name=".notification.ReminderReceiver"
             android:exported="false"/>
+        <!-- Wakes up on device boot to reschedule all reminders.
+             exported=true: must be accessible to the system so it can deliver BOOT_COMPLETED -->
         <receiver
             android:name=".notification.BootReceiver"
             android:exported="true">
