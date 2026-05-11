@@ -113,7 +113,7 @@ fun HelpScreen(onBack: () -> Unit) {
                     CameraStepRow(
                         icon = Icons.Outlined.CameraAlt,
                         title = "4. Grant camera permission",
-                        body = "The app requires camera access to analyse movement. If prompted, tap Allow. You can manage this in your device Settings → Apps → Sit&Fit → Permissions.",
+                        body = "The app requires camera access to analyse movement. If prompted, tap Allow. You can manage this in your device Settings -> Apps -> Sit&Fit -> Permissions.",
                         showDivider = false
                     )
                 }

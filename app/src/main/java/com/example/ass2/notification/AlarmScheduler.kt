@@ -68,7 +68,7 @@ class AlarmScheduler(private val context: Context) {
         fun nextTriggerMillis(reminder: Reminder, from: LocalDateTime = LocalDateTime.now()): Long? {
             val time = LocalTime.of(reminder.hour, reminder.minute)
             val mask = reminder.repeatDaysMask
-            // No repeat days set → fire at the next occurrence (today if future, else tomorrow)
+            // No repeat days set -> fire at the next occurrence (today if future, else tomorrow)
             if (mask == 0) {
                 val today = from.toLocalDate().atTime(time)
                 val target = if (today.isAfter(from)) today else today.plusDays(1)
