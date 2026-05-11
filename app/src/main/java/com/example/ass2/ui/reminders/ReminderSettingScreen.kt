@@ -65,7 +65,7 @@ private val REMINDER_TYPES = listOf("Exercise Routine", "Meditation", "Water Bre
 private val DAY_KEYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 private val DAY_LABELS = listOf("M", "T", "W", "T", "F", "S", "S")
 
-// Converts selected day strings (e.g. "Mon", "Wed") into a bitmask — each day is a bit position
+// Converts selected day strings (e.g. "Mon", "Wed") into a bitmask - each day is a bit position
 private fun encodeMask(set: Set<String>): Int {
     var mask = 0
     DAY_KEYS.forEachIndexed { i, key -> if (set.contains(key)) mask = mask or (1 shl i) }
@@ -103,7 +103,7 @@ fun ReminderSettingScreen(
     val reminderEnabled = remember { mutableStateOf(true) }
     var prefilled by remember { mutableStateOf(false) }
 
-    // Pre-fill form with existing reminder data once loaded — prefilled flag prevents overwriting user edits
+    // Pre-fill form with existing reminder data once loaded - prefilled flag prevents overwriting user edits
     LaunchedEffect(existing) {
         val e = existing
         if (e != null && !prefilled) {

@@ -21,19 +21,22 @@ import kotlinx.coroutines.launch
 
 class ReminderReceiver : BroadcastReceiver() {
 
+    // Triggered by AlarmManager when scheduled alarm fires
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getLongExtra(EXTRA_REMINDER_ID, -1L)
         val label = intent.getStringExtra(EXTRA_REMINDER_LABEL) ?: "Reminder"
         val repeatMask = intent.getIntExtra(EXTRA_REPEAT_MASK, 0)
-        if (id < 0) return
+        if (id < 0) return  // malformed intent - bail out
 
         ensureReminderChannel(context)
         showNotification(context, id, label)
 
+        // Repeating reminders self-rearm - AlarmManager only fires one-shot alarms
         if (repeatMask != 0) rearmNext(context, id, label, repeatMask)
     }
 
     private fun showNotification(context: Context, id: Long, label: String) {
+        // Android 13+ requires runtime permission - silently skip if user denied notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -59,12 +62,16 @@ class ReminderReceiver : BroadcastReceiver() {
         NotificationManagerCompat.from(context).notify(id.toInt(), notif)
     }
 
+    // Reschedules the alarm for the next matching day.
+    // goAsync() extends the receiver's lifetime so coroutine DB call can complete (default 10s).
+    // Reads fresh state from DB in case user disabled or edited the reminder before firing.
     private fun rearmNext(context: Context, id: Long, label: String, repeatMask: Int) {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val dao = AppDatabase.getDatabase(context).reminderDao()
                 val current: Reminder? = dao.getById(id).firstOrNull()
+                // Fallback to intent data if DB row is missing (edge case: user deleted between fire + rearm)
                 val source = current ?: Reminder(
                     id = id,
                     label = label,
@@ -77,7 +84,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     AlarmScheduler(context).schedule(source)
                 }
             } finally {
-                pending.finish()
+                pending.finish()  // tells the system the receiver is done - releases process
             }
         }
     }

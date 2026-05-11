@@ -5,7 +5,7 @@ import com.example.ass2.data.local.AppDatabase
 import com.example.ass2.data.local.Reminder
 import kotlinx.coroutines.flow.Flow
 
-// Thin wrapper over ReminderDao — separates data access from ViewModel logic
+// Thin wrapper over ReminderDao - separates data access from ViewModel logic
 class ReminderRepository(application: Application) {
     private val dao = AppDatabase.getDatabase(application).reminderDao()
 

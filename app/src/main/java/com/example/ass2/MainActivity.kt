@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Skips on Android 12 and below — POST_NOTIFICATIONS didn't exist before Android 13
+    // Skips on Android 12 and below - POST_NOTIFICATIONS didn't exist before Android 13
     private fun requestPostNotificationsIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val granted = ContextCompat.checkSelfPermission(
@@ -90,9 +90,9 @@ fun AppNavGraph() {
         }
     }
 
-    // Full app nav graph — login is the start destination; home is the back stack root for tab navigation
+    // Full app nav graph - login is the start destination; home is the back stack root for tab navigation
     NavHost(navController = navController, startDestination = "login") {
-        // Auth flow — login pops itself on success so back button can't return to it
+        // Auth flow - login pops itself on success so back button can't return to it
         composable("login") {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate("register") },
@@ -182,7 +182,7 @@ fun AppNavGraph() {
         composable("progress") {
             ProgressScreen(onTabSelected = ::handleTabSelected)
         }
-        // Reminder list screen — id=-1 signals new reminder, positive id opens existing one for editing
+        // Reminder list screen - id=-1 signals new reminder, positive id opens existing one for editing
         composable("reminderList") {
             ReminderListScreen(
                 onBack = { navController.popBackStack() },
@@ -215,7 +215,7 @@ fun AppNavGraph() {
                 }
             )
         }
-        // Session flow: check-in → live session → (optional pause alert) → result
+        // Session flow: check-in -> live session -> (optional pause alert) -> result
         composable("pre_session_check_in") {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
@@ -238,7 +238,7 @@ fun AppNavGraph() {
                 onEndSession = { navController.navigate("session_result") }
             )
         }
-        // Session result — all exit paths popUpTo home to prevent back-navigating into the session flow
+        // Session result - all exit paths popUpTo home to prevent back-navigating into the session flow
         composable("session_result") {
             SessionResultScreen(
                 onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },

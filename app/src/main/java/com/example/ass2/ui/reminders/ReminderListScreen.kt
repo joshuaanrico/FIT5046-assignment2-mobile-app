@@ -112,7 +112,7 @@ fun ReminderListScreen(
                     Spacer(modifier = Modifier.size(48.dp))
                 }
 
-                // LazyColumn only renders visible items — efficient for large reminder lists
+                // LazyColumn only renders visible items - efficient for large reminder lists
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 80.dp)
@@ -190,7 +190,7 @@ fun ReminderListScreen(
     }
 }
 
-// Single reminder row — dims to 45% opacity when disabled to signal inactive state
+// Single reminder row - dims to 45% opacity when disabled to signal inactive state
 @Composable
 private fun ReminderCard(
     item: Reminder,

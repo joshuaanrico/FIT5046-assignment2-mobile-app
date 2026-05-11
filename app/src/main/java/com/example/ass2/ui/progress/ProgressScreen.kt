@@ -476,7 +476,7 @@ private fun consistencyMessage(count: Int, target: Int): String = when {
     else -> "You're maintaining a steady rhythm.\n${target - count} more session(s) to hit your\ntarget. Keep moving at your own pace."
 }
 
-// Custom Canvas bar chart — draws session count per day of week using proportional bar heights
+// Custom Canvas bar chart - draws session count per day of week using proportional bar heights
 @Composable
 private fun FrequencyChart(
     sessions: List<Session>,
@@ -486,7 +486,7 @@ private fun FrequencyChart(
     labelColor: Color
 ) {
     val zone = ZoneId.systemDefault()
-    // Group sessions by day of week — recomputes only when session list changes
+    // Group sessions by day of week - recomputes only when session list changes
     val countsByDow = remember(sessions) {
         val map = HashMap<DayOfWeek, Int>()
         for (s in sessions) {

@@ -79,7 +79,7 @@ fun SessionDetailScreen(
     var journalEditing by remember { mutableStateOf(false) }
     var journalLoaded by remember { mutableStateOf(false) }
 
-    // Populate journal text once when session loads — journalLoaded flag prevents overwriting user edits on recompose
+    // Populate journal text once when session loads - journalLoaded flag prevents overwriting user edits on recompose
     LaunchedEffect(session?.id) {
         val s = session
         if (s != null && !journalLoaded) {
@@ -278,7 +278,7 @@ fun SessionDetailScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Toggle between view and edit mode — saves to DB when switching from edit → view
+                        // Toggle between view and edit mode - saves to DB when switching from edit -> view
                         IconButton(onClick = {
                             if (journalEditing) {
                                 session?.let { vm.update(it.copy(notes = journalText)) }

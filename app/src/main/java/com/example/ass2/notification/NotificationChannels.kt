@@ -10,10 +10,11 @@ const val REMINDER_CHANNEL_ID = "sitfit-reminders"
 private const val REMINDER_CHANNEL_NAME = "Reminders"
 private const val REMINDER_CHANNEL_DESC = "Scheduled exercise + wellness reminders"
 
+// Channels are required on Android 8+ for any notification - users can mute the channel in Settings
 fun ensureReminderChannel(context: Context) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return  // pre-O: no channels needed
     val nm = context.getSystemService<NotificationManager>() ?: return
-    if (nm.getNotificationChannel(REMINDER_CHANNEL_ID) != null) return
+    if (nm.getNotificationChannel(REMINDER_CHANNEL_ID) != null) return  // idempotent - skip if already created
     val channel = NotificationChannel(
         REMINDER_CHANNEL_ID,
         REMINDER_CHANNEL_NAME,

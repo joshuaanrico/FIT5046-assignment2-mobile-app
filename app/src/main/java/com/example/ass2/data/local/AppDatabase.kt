@@ -21,7 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // Singleton pattern — only one DB connection shared across the whole app
+        // Singleton pattern - only one DB connection shared across the whole app
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -29,7 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "sitfit-db"
                 )
-                    .fallbackToDestructiveMigration(true) // dev only — wipes DB on schema change instead of crashing
+                    .fallbackToDestructiveMigration(true) // dev only - wipes DB on schema change instead of crashing
                     .build()
                 INSTANCE = instance
                 instance

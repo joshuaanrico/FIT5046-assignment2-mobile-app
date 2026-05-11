@@ -18,7 +18,7 @@ interface SessionDao {
     @Delete
     suspend fun delete(session: Session)
 
-    // Returns Flow — Room emits a new list automatically whenever the sessions table changes
+    // Returns Flow - Room emits a new list automatically whenever the sessions table changes
     @Query("SELECT * FROM sessions ORDER BY startTime DESC")
     fun getAll(): Flow<List<Session>>
 

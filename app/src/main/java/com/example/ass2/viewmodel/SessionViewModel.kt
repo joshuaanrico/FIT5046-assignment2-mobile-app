@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 class SessionViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = SessionRepository(application)
 
-    // Hot StateFlow shared across all collectors — 5s delay keeps DB query alive during screen rotation
+    // Hot StateFlow shared across all collectors - 5s delay keeps DB query alive during screen rotation
     val sessions: StateFlow<List<Session>> = repo.all
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

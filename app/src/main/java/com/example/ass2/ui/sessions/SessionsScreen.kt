@@ -161,7 +161,7 @@ fun SessionsScreen(
     val hasActiveFilter = searchQuery.isNotEmpty() || typeFilter != "All" ||
             selectedDateMillis != null || durationFilter != "All"
 
-    // remember recomputes filteredRows only when one of its keys changes — avoids filtering on every recompose
+    // remember recomputes filteredRows only when one of its keys changes - avoids filtering on every recompose
     val filteredRows = remember(rows, searchQuery, typeFilter, selectedDateMillis, durationFilter) {
         rows.filter { item ->
             val matchesSearch = searchQuery.isEmpty() ||
@@ -328,7 +328,7 @@ fun SessionsScreen(
                         SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
                     }
                 } else {
-                    // No active filter — group sessions into time buckets with section headers
+                    // No active filter - group sessions into time buckets with section headers
                     val thisWeek = rows.filter { it.week == "This Week" }
                     val lastWeek = rows.filter { it.week == "Last Week" }
                     val earlier = rows.filter { it.week == "Earlier" }
@@ -448,7 +448,7 @@ private fun SessionFilterChip(
     }
 }
 
-// Single session row — colored left bar indicates status (teal=Completed, blue=Partial)
+// Single session row - colored left bar indicates status (teal=Completed, blue=Partial)
 @Composable
 private fun SessionCard(
     item: SessionRow,
