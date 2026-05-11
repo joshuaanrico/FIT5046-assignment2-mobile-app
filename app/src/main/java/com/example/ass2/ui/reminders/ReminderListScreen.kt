@@ -67,6 +67,7 @@ fun ReminderListScreen(
     val grayText = Color(0xFF666666)
     val cardColor = Color(0xFFF8F8F8)
 
+    // collectAsStateWithLifecycle pauses collection when screen is in background, saving battery vs collectAsState
     val reminders by vm.reminders.collectAsStateWithLifecycle()
 
     Surface(
@@ -111,6 +112,7 @@ fun ReminderListScreen(
                     Spacer(modifier = Modifier.size(48.dp))
                 }
 
+                // LazyColumn only renders visible items — efficient for large reminder lists
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 80.dp)
@@ -151,6 +153,7 @@ fun ReminderListScreen(
                         }
                     }
 
+                    // key = id ensures Compose reuses existing card views on update instead of recreating them
                     items(reminders, key = { it.id }) { item ->
                         ReminderCard(
                             item = item,
@@ -187,6 +190,7 @@ fun ReminderListScreen(
     }
 }
 
+// Single reminder row — dims to 45% opacity when disabled to signal inactive state
 @Composable
 private fun ReminderCard(
     item: Reminder,

@@ -109,6 +109,7 @@ private fun iconFor(name: String): ImageVector = when {
 private fun accentFor(status: String): Color =
     if (status == "Completed") BrandTeal else Color(0xFF315C7C)
 
+// Maps a raw DB Session into a display-ready SessionRow with formatted strings and bucketed week label
 private fun Session.toRow(): SessionRow {
     val mins = (durationSec / 60).coerceAtLeast(0)
     val status = if (poseQuality == null || poseQuality < 0.5f) "Partial" else "Completed"
@@ -153,12 +154,14 @@ fun SessionsScreen(
 
     val datePickerState = rememberDatePickerState()
 
+    // collectAsStateWithLifecycle pauses collection when screen is in background, saving battery vs collectAsState
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val rows = remember(sessions) { sessions.map { it.toRow() } }
 
     val hasActiveFilter = searchQuery.isNotEmpty() || typeFilter != "All" ||
             selectedDateMillis != null || durationFilter != "All"
 
+    // remember recomputes filteredRows only when one of its keys changes — avoids filtering on every recompose
     val filteredRows = remember(rows, searchQuery, typeFilter, selectedDateMillis, durationFilter) {
         rows.filter { item ->
             val matchesSearch = searchQuery.isEmpty() ||
@@ -325,6 +328,7 @@ fun SessionsScreen(
                         SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
                     }
                 } else {
+                    // No active filter — group sessions into time buckets with section headers
                     val thisWeek = rows.filter { it.week == "This Week" }
                     val lastWeek = rows.filter { it.week == "Last Week" }
                     val earlier = rows.filter { it.week == "Earlier" }
@@ -444,6 +448,7 @@ private fun SessionFilterChip(
     }
 }
 
+// Single session row — colored left bar indicates status (teal=Completed, blue=Partial)
 @Composable
 private fun SessionCard(
     item: SessionRow,
