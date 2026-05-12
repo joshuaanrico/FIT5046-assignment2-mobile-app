@@ -1,4 +1,4 @@
-# FIT5046 Assignment 2
+# FIT5046 Assignment 4
 
 How to run:
 1. Open Android Studio
