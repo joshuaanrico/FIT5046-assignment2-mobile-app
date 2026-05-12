@@ -1,18 +1,25 @@
 # FIT5046 Assignment 4
 
-How to run:
+## How to run
 1. Open Android Studio
-2. Clone the repository in android studio
-3. Run the project on an emulator or physical device
+2. Clone the repository in Android Studio
+3. Complete Firebase setup below (required once per machine)
+4. Run the project on an emulator or physical device
+
+---
 
 ## Firebase Setup (required for new developers)
 
-Firebase requires your machine's SHA-1 fingerprint to be registered before authentication and other Firebase services work.
+Firebase authentication needs your machine's debug SHA-1 fingerprint registered. Do this once per machine.
 
 ### Step 1 — Get your SHA-1 fingerprint
 
-Open a terminal and run:
+**Windows (PowerShell):**
+```powershell
+& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+```
 
+**Mac/Linux (Terminal):**
 ```bash
 keytool -list -v \
   -keystore ~/.android/debug.keystore \
@@ -21,8 +28,7 @@ keytool -list -v \
   -keypass android
 ```
 
-If you get "Unable to locate a Java Runtime", use Android Studio's bundled Java instead:
-
+If you get `keytool: command not found` on Mac, use Android Studio's bundled keytool:
 ```bash
 /Applications/Android\ Studio.app/Contents/jbr/Contents/Home/bin/keytool -list -v \
   -keystore ~/.android/debug.keystore \
@@ -31,20 +37,28 @@ If you get "Unable to locate a Java Runtime", use Android Studio's bundled Java 
   -keypass android
 ```
 
-Copy the value next to `SHA1:` in the output.
+Copy the value next to `SHA1:` in the output (looks like `AB:CD:12:34:...`).
 
-### Step 2 — Add your SHA-1 to Firebase
+### Step 2 — Register your SHA-1 in Firebase
 
-1. Go to [Firebase Console](https://console.firebase.google.com) and open the project
-2. Click the gear icon → **Project Settings**
-3. Scroll to **Your apps** → select the Android app
-4. Click **Add fingerprint**
-5. Paste your SHA-1 value → **Save**
+1. Go to [Firebase Console](https://console.firebase.google.com) → open the **sitandfit** project
+2. Click the gear icon (top-left) → **Project Settings**
+3. Scroll down to **Your apps** → click **com.example.ass2**
+4. Under **SHA certificate fingerprints**, click **Add fingerprint**
+5. Paste your SHA-1 value → click **Save**
 
-### Step 3 — Download your google-services.json
+### Step 3 — Download and place google-services.json
 
-1. On the same page, click **Download google-services.json**
-2. Replace `app/google-services.json` in the project with the downloaded file
+1. On the same Project Settings page, click **Download google-services.json**
+2. Place the file at **`app/google-services.json`** — that is, inside the `app/` folder at the root of this repo, alongside `build.gradle.kts`
+   ```
+   A24-Lab07-G01/
+   ├── app/
+   │   ├── google-services.json   ← goes here
+   │   ├── build.gradle.kts
+   │   └── src/
+   └── build.gradle.kts
+   ```
 3. Do **not** commit this file — it is already in `.gitignore`
 
-Only you need to do this. Existing developers are unaffected — their SHA-1 entries remain registered in Firebase.
+> Other developers are unaffected — their existing SHA-1 entries stay registered.
