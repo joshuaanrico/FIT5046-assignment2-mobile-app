@@ -68,8 +68,10 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
             .setErrorListener { e -> Log.e(TAG, "MediaPipe error: ${e.message}") }
             .build()
         PoseLandmarker.createFromOptions(application, opts)
-    } catch (e: Exception) {
-        Log.e(TAG, "Model load failed: ${e.message}")
+    } catch (e: Throwable) {
+        // We catch Throwable (not just Exception) because UnsatisfiedLinkError (JNI failure)
+        // is an Error. This prevents the app from crashing if the native library fails to load.
+        Log.e(TAG, "Model load failed (likely JNI error): ${e.message}")
         null
     }
 
