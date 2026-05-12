@@ -48,3 +48,31 @@ Copy the value next to `SHA1:` in the output.
 3. Do **not** commit this file — it is already in `.gitignore`
 
 Only you need to do this. Existing developers are unaffected — their SHA-1 entries remain registered in Firebase.
+
+## Emulator Camera Setup (use laptop webcam)
+
+The app requires camera access for pose estimation. By default the emulator uses a virtual camera. Follow these steps to use your laptop's webcam instead.
+
+### Step 1 — Open AVD Manager
+
+In Android Studio, click **Device Manager** in the right sidebar (or go to **View → Tool Windows → Device Manager**).
+
+### Step 2 — Edit your emulator
+
+Find your emulator in the list → click the **three-dot menu (⋮)** next to it → select **Edit**.
+
+### Step 3 — Change the camera setting
+
+1. Click **Show Advanced Settings** at the bottom of the configuration window
+2. Scroll down to the **Camera** section
+3. Set **Front** and/or **Back** to **Webcam0** (your laptop's webcam)
+4. Click **Finish**
+
+### Step 4 — Cold boot the emulator
+
+The camera setting only takes effect on a fresh start:
+
+1. In Device Manager, click the **three-dot menu (⋮)** next to your emulator
+2. Select **Cold Boot Now**
+
+Your laptop webcam will now be used when the app requests camera access.
