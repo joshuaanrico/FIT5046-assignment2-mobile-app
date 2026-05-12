@@ -1,6 +1,5 @@
 package com.example.ass2.ui.profile
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,12 +11,10 @@ import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,9 +40,6 @@ fun ProfileSetupScreen(
     var conditions by remember { mutableStateOf("") }
     var painLevel by remember { mutableFloatStateOf(4f) }
     var restingHeartRate by remember { mutableStateOf("") }
-    var mobilityExpanded by remember { mutableStateOf(false) }
-    var activityExpanded by remember { mutableStateOf(false) }
-
     val mobilityOptions = listOf("Wheelchair", "Cane / Walker", "Independent", "Other")
     val activityOptions = listOf("Sedentary", "Lightly Active", "Moderately Active", "Very Active")
 
@@ -141,27 +135,19 @@ fun ProfileSetupScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Primary Mobility Support", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
-                        DropdownRow(
-                            value = mobilitySupport,
-                            placeholder = "Select an option",
-                            expanded = mobilityExpanded,
+                        RadioGroup(
                             options = mobilityOptions,
-                            whiteCard = whiteCard,
-                            teal = teal,
-                            onExpandChange = { mobilityExpanded = it },
-                            onOptionSelected = { mobilitySupport = it; mobilityExpanded = false }
+                            selected = mobilitySupport,
+                            onSelected = { mobilitySupport = it },
+                            teal = teal
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text("Current Activity Level", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
-                        DropdownRow(
-                            value = activityLevel,
-                            placeholder = "Select an option",
-                            expanded = activityExpanded,
+                        RadioGroup(
                             options = activityOptions,
-                            whiteCard = whiteCard,
-                            teal = teal,
-                            onExpandChange = { activityExpanded = it },
-                            onOptionSelected = { activityLevel = it; activityExpanded = false }
+                            selected = activityLevel,
+                            onSelected = { activityLevel = it },
+                            teal = teal
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text("Related Conditions (Optional)", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
@@ -276,42 +262,27 @@ private fun CardSectionTitle(icon: @Composable () -> Unit, title: String, teal: 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DropdownRow(
-    value: String,
-    placeholder: String,
-    expanded: Boolean,
+private fun RadioGroup(
     options: List<String>,
-    whiteCard: Color,
-    teal: Color,
-    onExpandChange: (Boolean) -> Unit,
-    onOptionSelected: (String) -> Unit
+    selected: String,
+    onSelected: (String) -> Unit,
+    teal: Color
 ) {
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = onExpandChange) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(whiteCard)
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = if (value.isEmpty()) placeholder else value,
-                color = if (value.isEmpty()) Color(0xFFBBBBBB) else Color(0xFF1F1F1F),
-                fontSize = 14.sp,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF5F6368))
-        }
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { onExpandChange(false) }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option, fontSize = 14.sp) },
-                    onClick = { onOptionSelected(option) }
+    Column {
+        options.forEach { option ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelected(option) }
+            ) {
+                RadioButton(
+                    selected = option == selected,
+                    onClick = { onSelected(option) },
+                    colors = RadioButtonDefaults.colors(selectedColor = teal)
                 )
+                Text(option, fontSize = 14.sp, color = Color(0xFF1F1F1F))
             }
         }
     }
