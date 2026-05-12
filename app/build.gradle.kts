@@ -43,10 +43,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        // Force legacy packaging to ensure MediaPipe native libraries are found at runtime
-        jniLibs {
-            useLegacyPackaging = true
-        }
     }
 }
 
