@@ -438,7 +438,7 @@ private fun PasswordStrengthBar(strength: Int) {
     }
 }
 
-/** Returns 0 (empty) . 4 (strong) */
+// Returns 0 (empty) to 4 (strong)
 private fun computePasswordStrength(password: String): Int {
     if (password.isEmpty()) return 0
     var score = 0

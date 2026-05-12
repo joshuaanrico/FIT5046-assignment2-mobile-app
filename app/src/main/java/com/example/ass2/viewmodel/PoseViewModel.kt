@@ -3,10 +3,12 @@ package com.example.ass2.viewmodel
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -57,9 +59,8 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
                 // Exercise FSM (background thread → post state update to main)
                 result.landmarks().firstOrNull()?.let { landmarks ->
                     val u = exerciseHolder.ex.process(landmarks)
-                    _exerciseUpdate.value = u
+                    viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
                 }
-                // Overlay — update on main thread using viewModelScope (lecture: Dispatchers.Main)
                 viewModelScope.launch(Dispatchers.Main) {
                     val ov = overlayView ?: return@launch
                     if (result.landmarks().isNotEmpty()) ov.setResults(result) else ov.clear()

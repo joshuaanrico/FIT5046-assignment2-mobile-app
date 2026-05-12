@@ -93,7 +93,7 @@ fun ProfileSetupScreen(
                 )
                 Spacer(modifier = Modifier.height(26.dp))
 
-                // ── Personal Profile ──────────────────────────────────
+                // Personal Profile
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -127,7 +127,7 @@ fun ProfileSetupScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ── Mobility & Exercise ───────────────────────────────
+                // Mobility & Exercise
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -190,7 +190,7 @@ fun ProfileSetupScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ── Baseline Vitals ───────────────────────────────────
+                // Baseline Vitals
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
