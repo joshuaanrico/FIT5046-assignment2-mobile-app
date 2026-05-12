@@ -5,17 +5,14 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.sqrt
 
-/**
- * Base class for upper-body pose exercises for disabled users.
- * Each subclass implements a 3-state FSM (start → mid → peak) and
- * counts a rep when a specific state transition occurs.
- *
- * Landmark indices follow MediaPipe Pose (33 landmarks):
- *  11 = LEFT_SHOULDER   12 = RIGHT_SHOULDER
- *  13 = LEFT_ELBOW      14 = RIGHT_ELBOW
- *  15 = LEFT_WRIST      16 = RIGHT_WRIST
- *  23 = LEFT_HIP        24 = RIGHT_HIP
- */
+// Base class for upper-body pose exercises.
+// Each subclass implements a 3-state FSM (start -> mid -> peak) and
+// counts a rep when a specific state transition occurs.
+// Landmark indices follow MediaPipe Pose (33 landmarks):
+//   11 = LEFT_SHOULDER   12 = RIGHT_SHOULDER
+//   13 = LEFT_ELBOW      14 = RIGHT_ELBOW
+//   15 = LEFT_WRIST      16 = RIGHT_WRIST
+//   23 = LEFT_HIP        24 = RIGHT_HIP
 abstract class UpperBodyExercise(
     val displayName: String,
     val isBilateral: Boolean = false,
@@ -27,20 +24,18 @@ abstract class UpperBodyExercise(
 
     abstract fun initialState(): String
 
-    /** Returns (leftAngle, rightAngle) in degrees from normalized landmark list. */
+    // Returns (leftAngle, rightAngle) in degrees from normalized landmark list.
     abstract fun computeAngles(landmarks: List<NormalizedLandmark>): Pair<Float, Float>
 
-    /**
-     * Given the current state and angles, returns (nextState, didCount, feedback).
-     * didCount should be true only on the specific transition that signals a completed rep.
-     */
+    // Given the current state and angles, returns (nextState, didCount, feedback).
+    // didCount is true only on the specific transition that signals a completed rep.
     abstract fun step(
         currentState: String,
         leftAngle: Float,
         rightAngle: Float,
     ): Triple<String, Boolean, String>
 
-    /** Override to provide exercise-specific quality scoring (0–100). */
+    // Override to provide exercise-specific quality scoring (0-100).
     protected open fun estimateQuality(leftAngle: Float, rightAngle: Float): Float = 75f
 
     fun process(landmarks: List<NormalizedLandmark>): ExerciseUpdate {
@@ -64,9 +59,7 @@ abstract class UpperBodyExercise(
         lastRepMs = 0L
     }
 
-    // Shared angle helper
-
-    /** Angle (degrees) at landmark [b] formed by vectors b→a and b→c. */
+    // Angle (degrees) at landmark b formed by vectors b->a and b->c.
     protected fun angleBetween(
         landmarks: List<NormalizedLandmark>,
         a: Int, b: Int, c: Int,

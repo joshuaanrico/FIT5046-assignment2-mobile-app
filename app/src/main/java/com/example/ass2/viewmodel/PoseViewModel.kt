@@ -3,8 +3,9 @@ package com.example.ass2.viewmodel
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.os.Handler
-import android.os.Looper
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -45,7 +46,6 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile private var overlayView: PoseOverlayView? = null
 
     private val exerciseHolder = object { var ex: UpperBodyExercise = HammerCurlExercise() }
-    private val mainHandler = Handler(Looper.getMainLooper())
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
     // MediaPipe — initialised once with application context
@@ -57,11 +57,11 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
                 // Exercise FSM (background thread → post state update to main)
                 result.landmarks().firstOrNull()?.let { landmarks ->
                     val u = exerciseHolder.ex.process(landmarks)
-                    mainHandler.post { _exerciseUpdate.value = u }
+                    _exerciseUpdate.value = u
                 }
-                // Overlay (post to main — same as AIpose's runOnUiThread)
-                mainHandler.post {
-                    val ov = overlayView ?: return@post
+                // Overlay — update on main thread using viewModelScope (lecture: Dispatchers.Main)
+                viewModelScope.launch(Dispatchers.Main) {
+                    val ov = overlayView ?: return@launch
                     if (result.landmarks().isNotEmpty()) ov.setResults(result) else ov.clear()
                 }
             }

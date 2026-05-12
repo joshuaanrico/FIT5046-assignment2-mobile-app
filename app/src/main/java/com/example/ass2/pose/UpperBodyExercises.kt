@@ -2,11 +2,9 @@ package com.example.ass2.pose
 
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. Hammer Curl — bilateral, shoulder-elbow-wrist angle
-//    States: EXTENDED (>155°) → RISING (47–155°) → CONTRACTED (≤47°)
-//    Rep counted on RISING → CONTRACTED
-// ─────────────────────────────────────────────────────────────────────────────
+// 1. Hammer Curl - bilateral, shoulder-elbow-wrist angle
+//    States: EXTENDED (>155) -> RISING (47-155) -> CONTRACTED (<=47)
+//    Rep counted on RISING -> CONTRACTED
 class HammerCurlExercise : UpperBodyExercise("Hammer Curl", isBilateral = true) {
     override fun initialState() = "EXTENDED"
 
@@ -41,11 +39,9 @@ class HammerCurlExercise : UpperBodyExercise("Hammer Curl", isBilateral = true) 
     override fun estimateQuality(leftAngle: Float, rightAngle: Float) = symmetryQuality(leftAngle, rightAngle)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Bicep Curl — bilateral, shoulder-elbow-wrist angle
-//    States: EXTENDED (>150°) → CURLING (50–150°) → CONTRACTED (≤50°)
-//    Rep counted on CURLING → CONTRACTED
-// ─────────────────────────────────────────────────────────────────────────────
+// 2. Bicep Curl - bilateral, shoulder-elbow-wrist angle
+//    States: EXTENDED (>150) -> CURLING (50-150) -> CONTRACTED (<=50)
+//    Rep counted on CURLING -> CONTRACTED
 class BicepCurlExercise : UpperBodyExercise("Bicep Curl", isBilateral = true) {
     override fun initialState() = "EXTENDED"
 
@@ -80,11 +76,9 @@ class BicepCurlExercise : UpperBodyExercise("Bicep Curl", isBilateral = true) {
     override fun estimateQuality(leftAngle: Float, rightAngle: Float) = symmetryQuality(leftAngle, rightAngle)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. Tricep Dip — uses left shoulder-elbow-wrist angle (primary)
-//    States: EXTENDED (>160°) → LOWERING (90–160°) → LOWERED (≤90°)
-//    Rep counted on LOWERED → EXTENDED (pressing back up)
-// ─────────────────────────────────────────────────────────────────────────────
+// 3. Tricep Dip - uses left shoulder-elbow-wrist angle (primary)
+//    States: EXTENDED (>160) -> LOWERING (90-160) -> LOWERED (<=90)
+//    Rep counted on LOWERED -> EXTENDED (pressing back up)
 class TricepDipExercise : UpperBodyExercise("Tricep Dip") {
     override fun initialState() = "EXTENDED"
 
@@ -118,11 +112,9 @@ class TricepDipExercise : UpperBodyExercise("Tricep Dip") {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. Shoulder Press — hip-shoulder-elbow angle (arm raised overhead)
-//    States: RESTING (<90°) → PRESSING (90–160°) → PRESSED (≥160°)
-//    Rep counted on PRESSING → PRESSED
-// ─────────────────────────────────────────────────────────────────────────────
+// 4. Shoulder Press - hip-shoulder-elbow angle (arm raised overhead)
+//    States: RESTING (<90) -> PRESSING (90-160) -> PRESSED (>=160)
+//    Rep counted on PRESSING -> PRESSED
 class ShoulderPressExercise : UpperBodyExercise("Shoulder Press", isBilateral = true) {
     override fun initialState() = "RESTING"
 
@@ -158,11 +150,9 @@ class ShoulderPressExercise : UpperBodyExercise("Shoulder Press", isBilateral = 
     override fun estimateQuality(leftAngle: Float, rightAngle: Float) = symmetryQuality(leftAngle, rightAngle)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. Lateral Raise — hip-shoulder-elbow angle (arm raised to the side)
-//    States: LOWERED (<30°) → RAISING (30–80°) → RAISED (≥80°)
-//    Rep counted on RAISING → RAISED
-// ─────────────────────────────────────────────────────────────────────────────
+// 5. Lateral Raise - hip-shoulder-elbow angle (arm raised to the side)
+//    States: LOWERED (<30) -> RAISING (30-80) -> RAISED (>=80)
+//    Rep counted on RAISING -> RAISED
 class LateralRaiseExercise : UpperBodyExercise("Lateral Raise", isBilateral = true) {
     override fun initialState() = "LOWERED"
 
@@ -198,11 +188,9 @@ class LateralRaiseExercise : UpperBodyExercise("Lateral Raise", isBilateral = tr
     override fun estimateQuality(leftAngle: Float, rightAngle: Float) = symmetryQuality(leftAngle, rightAngle)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. Side Stretch — elbow-shoulder-hip angle (arm raised to the side overhead)
-//    States: LOWERED (<30°) → RAISING (30–130°) → RAISED (≥130°)
-//    Rep counted on RAISING → RAISED (uses max of both arms — one arm at a time)
-// ─────────────────────────────────────────────────────────────────────────────
+// 6. Side Stretch - elbow-shoulder-hip angle (arm raised to the side overhead)
+//    States: LOWERED (<30) -> RAISING (30-130) -> RAISED (>=130)
+//    Rep counted on RAISING -> RAISED (uses max of both arms, one arm at a time)
 class SideStretchExercise : UpperBodyExercise("Side Stretch", isBilateral = true) {
     override fun initialState() = "LOWERED"
 
@@ -241,11 +229,9 @@ class SideStretchExercise : UpperBodyExercise("Side Stretch", isBilateral = true
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 7. Forward Fold — spine angle: shoulder-hip-knee
-//    States: UPRIGHT (>100°) → FOLDING (70–100°) → FOLDED (≤70°)
-//    Rep counted on FOLDING → FOLDED
-// ─────────────────────────────────────────────────────────────────────────────
+// 7. Forward Fold - spine angle: shoulder-hip-knee
+//    States: UPRIGHT (>100) -> FOLDING (70-100) -> FOLDED (<=70)
+//    Rep counted on FOLDING -> FOLDED
 class ForwardFoldExercise : UpperBodyExercise("Forward Fold", isBilateral = true) {
     override fun initialState() = "UPRIGHT"
 
@@ -284,11 +270,9 @@ class ForwardFoldExercise : UpperBodyExercise("Forward Fold", isBilateral = true
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 8. Seated Twist — wrist-elbow-shoulder angle difference between sides
-//    States: NEUTRAL (diff <15°) → TWISTING (15–30°) → TWISTED (>30°)
-//    Rep counted on TWISTING → TWISTED
-// ─────────────────────────────────────────────────────────────────────────────
+// 8. Seated Twist - wrist-elbow-shoulder angle difference between sides
+//    States: NEUTRAL (diff <15) -> TWISTING (15-30) -> TWISTED (>30)
+//    Rep counted on TWISTING -> TWISTED
 class SeatedTwistExercise : UpperBodyExercise("Seated Twist", isBilateral = true) {
     override fun initialState() = "NEUTRAL"
 
@@ -327,11 +311,9 @@ class SeatedTwistExercise : UpperBodyExercise("Seated Twist", isBilateral = true
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 9. Cat-Cow — spine angle (shoulder-hip-knee) cycling between arch and round
-//    States: NEUTRAL (70–110°) → ARCHING (>110°, cow) → ROUNDING (≤70°, cat)
-//    Rep counted on ARCHING → ROUNDING (one full cat-cow cycle)
-// ─────────────────────────────────────────────────────────────────────────────
+// 9. Cat-Cow - spine angle (shoulder-hip-knee) cycling between arch and round
+//    States: NEUTRAL (70-110) -> ARCHING (>110, cow) -> ROUNDING (<=70, cat)
+//    Rep counted on ARCHING -> ROUNDING (one full cat-cow cycle)
 class CatCowExercise : UpperBodyExercise("Cat-Cow", isBilateral = true) {
     override fun initialState() = "NEUTRAL"
 
@@ -367,9 +349,7 @@ class CatCowExercise : UpperBodyExercise("Cat-Cow", isBilateral = true) {
     override fun estimateQuality(leftAngle: Float, rightAngle: Float) = symmetryQuality(leftAngle, rightAngle)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Registry of all upper-body exercises available in the app
-// ─────────────────────────────────────────────────────────────────────────────
 object UpperBodyExercises {
     val all: List<UpperBodyExercise> = listOf(
         HammerCurlExercise(),
