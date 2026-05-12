@@ -82,16 +82,16 @@ fun LiveSessionScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val poseViewModel: PoseViewModel = viewModel()
 
-    // ── Observe ViewModel state ───────────────────────────────────────────────
+    // Observe ViewModel state
     val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
     val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
 
-    // ── Release overlay view reference when screen leaves composition ─────────
+    // Release overlay view reference when screen leaves composition
     DisposableEffect(Unit) {
         onDispose { poseViewModel.setOverlayView(null) }
     }
 
-    // ── Camera permission ─────────────────────────────────────────────────────
+    // Camera permission
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
@@ -108,7 +108,6 @@ fun LiveSessionScreen(
         }
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
     val isGoodForm = update.poseQuality >= 70f && update.feedback.isNotEmpty()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -158,7 +157,7 @@ fun LiveSessionScreen(
         Box(modifier = Modifier.fillMaxSize()) {
 
             if (hasCameraPermission) {
-                // Layer 1: Camera preview
+                // Camera preview
                 AndroidView(
                     factory = { ctx ->
                         PreviewView(ctx).also { pv ->
@@ -169,7 +168,7 @@ fun LiveSessionScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Layer 2: Skeleton overlay — set ref in BOTH factory and update (AIpose pattern)
+                // Skeleton overlay drawn on top of camera preview
                 AndroidView(
                     factory = { ctx ->
                         PoseOverlayView(ctx).also { ov ->
@@ -191,7 +190,7 @@ fun LiveSessionScreen(
                 }
             }
 
-            // Layer 3: Info overlays
+            // Info overlays on top
             Column(modifier = Modifier.fillMaxSize()) {
                 Spacer(Modifier.height(18.dp))
 

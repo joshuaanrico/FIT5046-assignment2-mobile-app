@@ -9,11 +9,9 @@ import android.view.View
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
 
-/**
- * Transparent View drawn over the CameraX PreviewView.
- * Renders upper-body skeleton connections and joint dots from MediaPipe results.
- */
-class PoseOverlayView @JvmOverloads constructor(
+// Transparent View drawn over the CameraX PreviewView.
+// Renders upper-body skeleton connections and joint dots from MediaPipe results.
+class PoseOverlayView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
