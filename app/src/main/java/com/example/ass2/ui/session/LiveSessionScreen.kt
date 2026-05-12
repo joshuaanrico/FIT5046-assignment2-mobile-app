@@ -60,8 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.ui.theme.BrandTeal
@@ -79,12 +79,12 @@ fun LiveSessionScreen(
     onEndSession: () -> Unit,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = context as LifecycleOwner
     val poseViewModel: PoseViewModel = viewModel()
 
     // Observe ViewModel state
-    val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
-    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
+    val update by poseViewModel.exerciseUpdate.collectAsState()
+    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsState()
 
     // Release overlay view reference when screen leaves composition
     DisposableEffect(Unit) {
