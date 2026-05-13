@@ -60,6 +60,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _authState.value = AuthState.Error("Password must be at least 8 characters")
             return
         }
+        if (!password.any { it.isUpperCase() }) {
+            _authState.value = AuthState.Error("Password must contain at least 1 uppercase letter")
+            return
+        }
+        if (!password.any { !it.isLetterOrDigit() }) {
+            _authState.value = AuthState.Error("Password must contain at least 1 special character")
+            return
+        }
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
