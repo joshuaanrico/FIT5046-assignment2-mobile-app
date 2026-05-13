@@ -31,36 +31,47 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.Executors
 
+// ViewModel that manages real-time pose estimation using MediaPipe and CameraX.
+// Handles camera binding, landmark detection, exercise FSM updates, and overlay rendering.
 class PoseViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Public state observed by LiveSessionScreen
+    // Latest exercise rep count, state, and feedback — observed by LiveSessionScreen
     private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
 
+    // Name of the currently selected exercise, displayed in the session UI
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
     val currentExerciseName: StateFlow<String> = _currentExerciseName.asStateFlow()
 
+    // Full list of available exercises shown in the exercise picker
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
 
-    // Internal - plain holders, not Compose state
-    // The overlay view is set/cleared by LiveSessionScreen's AndroidView callbacks.
-    // @Volatile ensures the MediaPipe callback thread always sees the latest value.
+    // Reference to the overlay view that draws the skeleton on top of the camera feed.
+    // @Volatile ensures the MediaPipe callback thread always reads the latest value
+    // set by the main thread (avoids stale cache in multi-threaded access).
     @Volatile private var overlayView: PoseOverlayView? = null
 
+    // Holds the active exercise instance — wrapped in an object to allow mutation
+    // from both the main thread (selectExercise) and the camera background thread
     private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
+
+    // Dedicated single-thread executor for camera image analysis,
+    // keeping heavy image processing off the main thread
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
-    // MediaPipe — initialised once with application context
+    // MediaPipe PoseLandmarker initialised once with the lite model for real-time performance.
+    // LIVE_STREAM mode delivers results asynchronously via the result listener callback.
     private val poseLandmarker: PoseLandmarker? = try {
         val opts = PoseLandmarker.PoseLandmarkerOptions.builder()
             .setBaseOptions(BaseOptions.builder().setModelAssetPath(MODEL).build())
             .setRunningMode(RunningMode.LIVE_STREAM)
             .setResultListener { result, _ ->
-                // Exercise FSM (background thread → post state update to main)
+                // Run on the camera background thread — post state updates back to main thread
                 result.landmarks().firstOrNull()?.let { landmarks ->
                     val u = exerciseHolder.ex.process(landmarks)
                     viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
                 }
+                // Update the skeleton overlay — clear it if no person is detected
                 viewModelScope.launch(Dispatchers.Main) {
                     val ov = overlayView ?: return@launch
                     if (result.landmarks().isNotEmpty()) ov.setResults(result) else ov.clear()
@@ -74,19 +85,25 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         null
     }
 
-    // Called by LiveSessionScreen's AndroidView factory + update lambda
+    // Called by LiveSessionScreen's AndroidView factory and update lambda
+    // to keep the overlay reference in sync with the composable lifecycle
     fun setOverlayView(view: PoseOverlayView?) {
         overlayView = view
     }
 
-    // Called by LiveSessionScreen once the PreviewView is ready
+    // Binds CameraX to the lifecycle and starts streaming frames to MediaPipe.
+    // Prefers the front camera for self-facing exercise sessions.
     fun bindCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
         val future = ProcessCameraProvider.getInstance(getApplication())
         future.addListener({
             val provider = future.get()
+
+            // Connect the camera preview stream to the PreviewView surface
             val preview = Preview.Builder().build().apply {
                 setSurfaceProvider(previewView.surfaceProvider)
             }
+
+            // Analyse each frame: rotate to portrait, convert to Bitmap, send to MediaPipe
             val analysis = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -94,14 +111,18 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
                     setAnalyzer(cameraExecutor) { proxy ->
                         val lm = poseLandmarker ?: run { proxy.close(); return@setAnalyzer }
                         val bmp = proxy.toBitmap()
+                        // Rotate the bitmap to match the device's display orientation
                         val mat = Matrix().apply {
                             postRotate(proxy.imageInfo.rotationDegrees.toFloat())
                         }
                         val rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, mat, true)
+                        // Send the frame to MediaPipe asynchronously using the frame timestamp
                         lm.detectAsync(BitmapImageBuilder(rotated).build(), proxy.imageInfo.timestamp)
                         proxy.close()
                     }
                 }
+
+            // Use front camera if available, otherwise fall back to rear camera
             val selector = if (provider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA))
                 CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
             try {
@@ -113,6 +134,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         }, ContextCompat.getMainExecutor(getApplication()))
     }
 
+    // Switches to a different exercise, resetting its rep count and FSM state
     fun selectExercise(exercise: UpperBodyExercise) {
         exercise.reset()
         exerciseHolder.ex = exercise
@@ -120,6 +142,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         _exerciseUpdate.value = ExerciseUpdate()
     }
 
+    // Releases camera and MediaPipe resources when the ViewModel is destroyed
     override fun onCleared() {
         super.onCleared()
         overlayView = null
@@ -129,6 +152,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "PoseViewModel"
+        // Lite model used for real-time inference — balanced accuracy vs. performance
         private const val MODEL = "pose_landmarker_lite.task"
     }
 }
