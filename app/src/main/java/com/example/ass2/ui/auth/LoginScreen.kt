@@ -81,10 +81,11 @@ fun LoginScreen(
         }
     }
 
-    var email by remember { mutableStateOf("") }
+    val savedEmail = remember { viewModel.getSavedEmail() }
+    var email by remember { mutableStateOf(savedEmail) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(savedEmail.isNotEmpty()) }
     val isLoading = authState is AuthState.Loading
 
     Box(
@@ -231,7 +232,7 @@ fun LoginScreen(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = { viewModel.signInWithEmail(email, password) },
+                onClick = { viewModel.signInWithEmail(email, password, rememberMe) },
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()

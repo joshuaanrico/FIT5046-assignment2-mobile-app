@@ -31,7 +31,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    fun signInWithEmail(email: String, password: String) {
+    private val prefs = application.getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+
+    fun getSavedEmail(): String = prefs.getString("saved_email", "") ?: ""
+
+    fun signInWithEmail(email: String, password: String, rememberMe: Boolean) {
         if (email.isBlank() || password.isBlank()) {
             _authState.value = AuthState.Error("Email and password cannot be empty")
             return
@@ -40,6 +44,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _authState.value = AuthState.Loading
             try {
                 auth.signInWithEmailAndPassword(email, password).await()
+                if (rememberMe) prefs.edit().putString("saved_email", email).apply()
+                else prefs.edit().remove("saved_email").apply()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Sign in failed")
