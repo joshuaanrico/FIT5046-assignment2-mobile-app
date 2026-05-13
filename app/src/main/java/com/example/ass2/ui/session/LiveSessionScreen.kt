@@ -43,7 +43,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,8 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.ui.theme.BrandTeal
@@ -79,19 +78,14 @@ fun LiveSessionScreen(
     onEndSession: () -> Unit,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = context as LifecycleOwner
     val poseViewModel: PoseViewModel = viewModel()
 
-    // ── Observe ViewModel state ───────────────────────────────────────────────
-    val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
-    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
+    // Observe ViewModel state
+    val update by poseViewModel.exerciseUpdate.collectAsState()
+    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsState()
 
-    // ── Release overlay view reference when screen leaves composition ─────────
-    DisposableEffect(Unit) {
-        onDispose { poseViewModel.setOverlayView(null) }
-    }
-
-    // ── Camera permission ─────────────────────────────────────────────────────
+    // Camera permission
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
@@ -108,7 +102,6 @@ fun LiveSessionScreen(
         }
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
     val isGoodForm = update.poseQuality >= 70f && update.feedback.isNotEmpty()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -158,7 +151,7 @@ fun LiveSessionScreen(
         Box(modifier = Modifier.fillMaxSize()) {
 
             if (hasCameraPermission) {
-                // Layer 1: Camera preview
+                // Camera preview
                 AndroidView(
                     factory = { ctx ->
                         PreviewView(ctx).also { pv ->
@@ -169,7 +162,7 @@ fun LiveSessionScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Layer 2: Skeleton overlay — set ref in BOTH factory and update (AIpose pattern)
+                // Skeleton overlay drawn on top of camera preview
                 AndroidView(
                     factory = { ctx ->
                         PoseOverlayView(ctx).also { ov ->
@@ -191,7 +184,7 @@ fun LiveSessionScreen(
                 }
             }
 
-            // Layer 3: Info overlays
+            // Info overlays on top
             Column(modifier = Modifier.fillMaxSize()) {
                 Spacer(Modifier.height(18.dp))
 

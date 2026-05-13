@@ -5,9 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,17 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -313,40 +306,31 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            val legalText = buildAnnotatedString {
-                append("By joining, you agree to our ")
-                pushStringAnnotation(tag = "terms", annotation = "terms")
-                withStyle(SpanStyle(color = BrandTeal, textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Medium)) {
-                    append("Terms of Service")
-                }
-                pop()
-                append(" and ")
-                pushStringAnnotation(tag = "privacy", annotation = "privacy")
-                withStyle(SpanStyle(color = BrandTeal, textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Medium)) {
-                    append("Privacy Policy")
-                }
-                pop()
-                append(". Wellness is a commitment to yourself.")
-            }
-
-            val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
             Text(
-                text = legalText,
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    color = Color(0xFF6B6B6B),
-                    textAlign = TextAlign.Center
-                ),
-                onTextLayout = { layoutResult.value = it },
-                modifier = Modifier.pointerInput(Unit) {
-                    detectTapGestures { pos ->
-                        layoutResult.value?.let { layout ->
-                            val offset = layout.getOffsetForPosition(pos)
-                            legalText.getStringAnnotations("terms", offset, offset).firstOrNull()?.let { onNavigateToLegal("terms") }
-                            legalText.getStringAnnotations("privacy", offset, offset).firstOrNull()?.let { onNavigateToLegal("privacy") }
-                        }
-                    }
+                text = "By joining, you agree to our",
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { onNavigateToLegal("terms") }, contentPadding = PaddingValues(0.dp)) {
+                    Text("Terms of Service", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
+                Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
+                TextButton(onClick = { onNavigateToLegal("privacy") }, contentPadding = PaddingValues(0.dp)) {
+                    Text("Privacy Policy", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+            Text(
+                text = "Wellness is a commitment to yourself.",
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -438,7 +422,7 @@ private fun PasswordStrengthBar(strength: Int) {
     }
 }
 
-/** Returns 0 (empty) . 4 (strong) */
+// Returns 0 (empty) to 4 (strong)
 private fun computePasswordStrength(password: String): Int {
     if (password.isEmpty()) return 0
     var score = 0
