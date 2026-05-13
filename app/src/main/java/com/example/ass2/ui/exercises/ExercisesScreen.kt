@@ -33,15 +33,20 @@ import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.viewmodel.ExercisesViewModel
 
 fun exerciseImageForName(name: String): Int = when {
-    name.contains("Morning", ignoreCase = true) -> R.drawable.exercise4
-    name.contains("Torso", ignoreCase = true) -> R.drawable.exercise1
-    name.contains("Leg", ignoreCase = true) -> R.drawable.exercise2
-    name.contains("Push", ignoreCase = true) -> R.drawable.exercise3
-    name.contains("Shoulder", ignoreCase = true) -> R.drawable.exercise1
-    name.contains("Ankle", ignoreCase = true) -> R.drawable.exercise2
+    name.contains("Bicep", ignoreCase = true) ||
+            name.contains("Curl", ignoreCase = true) -> R.drawable.exercise3
+
+    name.contains("Side", ignoreCase = true) ||
+            name.contains("Stretch", ignoreCase = true) -> R.drawable.exercise1
+
+    name.contains("Forward", ignoreCase = true) ||
+            name.contains("Fold", ignoreCase = true) -> R.drawable.exercise2
+
+    name.contains("Seated", ignoreCase = true) ||
+            name.contains("Twist", ignoreCase = true) -> R.drawable.exercise4
+
     else -> R.drawable.exercise1
 }
-
 private val filterCategories = listOf("All", "Mobility", "Strength", "Flexibility")
 
 @Composable

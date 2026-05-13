@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ass2.data.local.Exercise
+import com.example.ass2.data.remote.ApiExerciseInfo
 import com.example.ass2.data.remote.RetrofitClient
 import com.example.ass2.data.repository.ExerciseRepository
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,13 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _uiState = MutableStateFlow(ExercisesUiState())
     val uiState: StateFlow<ExercisesUiState> = _uiState.asStateFlow()
+
+    private val supportedExerciseMap = mapOf(
+        1192 to "Bicep Curl",
+        1650 to "Side Stretch",
+        1652 to "Forward Fold",
+        1089 to "Seated Twist"
+    )
 
     init {
         loadExercises()
@@ -50,34 +58,21 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
                     }
                 }
 
-                val response = RetrofitClient.apiService.getExercises()
+                val response = RetrofitClient.apiService.getExerciseInfoList()
 
-                val apiExercises = response.results
-                    .filter { item ->
-                        val name = item.name.orEmpty()
-                        val description = item.description.orEmpty()
-                        isSupportedPoseExercise(name, description)
-                    }
+                val selectedExercises = response.results
+                    .filter { item -> supportedExerciseMap.containsKey(item.id) }
                     .map { item ->
-                        val name = item.name.orEmpty()
-                        val description = item.description.orEmpty()
-
-                        Exercise(
-                            id = item.id.toString(),
-                            name = normaliseExerciseName(name, description),
-                            category = guessCategory(name, description),
-                            instructions = description
-                                .replace(Regex("<.*?>"), "")
-                                .ifBlank { fallbackInstructions(normaliseExerciseName(name, description)) },
-                            imageUrl = null
+                        item.toRoomExercise(
+                            appDisplayName = supportedExerciseMap[item.id] ?: "Exercise"
                         )
                     }
-                    .distinctBy { it.name }
+                    .sortedBy { exerciseOrder(it.name) }
 
-                val finalExercises = if (apiExercises.isEmpty()) {
-                    fallbackPoseExercises()
+                val finalExercises = if (selectedExercises.size == 4) {
+                    selectedExercises
                 } else {
-                    mergeWithFallback(apiExercises)
+                    mergeWithFallback(selectedExercises)
                 }
 
                 exerciseRepository.clear()
@@ -91,14 +86,14 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
                     )
                 }
             } catch (e: Exception) {
-                val fallbackExercises = fallbackPoseExercises()
+                val fallback = fallbackPoseExercises()
 
                 exerciseRepository.clear()
-                exerciseRepository.insertAll(fallbackExercises)
+                exerciseRepository.insertAll(fallback)
 
                 _uiState.update {
                     it.copy(
-                        exercises = fallbackExercises,
+                        exercises = fallback,
                         isLoading = false,
                         errorMessage = null
                     )
@@ -107,37 +102,51 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private fun isSupportedPoseExercise(name: String, description: String): Boolean {
-        val text = "$name $description".lowercase()
+    private fun ApiExerciseInfo.toRoomExercise(appDisplayName: String): Exercise {
+        val english = translations.firstOrNull { it.language == 2 }
+            ?: translations.firstOrNull()
 
-        return listOf(
-            "bicep",
-            "curl",
-            "side stretch",
-            "forward fold",
-            "seated twist"
-        ).any { keyword -> keyword in text }
+        val apiDescription = english?.description_source
+            ?: english?.description
+            ?: ""
+
+        return Exercise(
+            id = id.toString(),
+            name = appDisplayName,
+            category = category?.name ?: categoryForPose(appDisplayName),
+            instructions = apiDescription
+                .replace(Regex("<.*?>"), "")
+                .ifBlank { fallbackInstructions(appDisplayName) },
+            imageUrl = images.firstOrNull()?.image
+        )
     }
 
-    private fun normaliseExerciseName(name: String, description: String): String {
-        val text = "$name $description".lowercase()
+    private fun mergeWithFallback(apiExercises: List<Exercise>): List<Exercise> {
+        val fallback = fallbackPoseExercises()
+        val existingNames = apiExercises.map { it.name }.toSet()
+        val missing = fallback.filterNot { it.name in existingNames }
 
-        return when {
-            "bicep" in text || "curl" in text -> "Bicep Curl"
-            "side" in text && "stretch" in text -> "Side Stretch"
-            "forward" in text || "fold" in text -> "Forward Fold"
-            "seated" in text && "twist" in text -> "Seated Twist"
-            else -> name.ifBlank { "Supported Exercise" }
+        return (apiExercises + missing)
+            .distinctBy { it.name }
+            .sortedBy { exerciseOrder(it.name) }
+    }
+
+    private fun exerciseOrder(name: String): Int {
+        return when (name) {
+            "Bicep Curl" -> 1
+            "Side Stretch" -> 2
+            "Forward Fold" -> 3
+            "Seated Twist" -> 4
+            else -> 99
         }
     }
 
-    private fun guessCategory(name: String, description: String): String {
-        val text = "$name $description".lowercase()
-
-        return when {
-            "bicep" in text || "curl" in text -> "Strength"
-            "stretch" in text -> "Flexibility"
-            "fold" in text || "twist" in text -> "Mobility"
+    private fun categoryForPose(name: String): String {
+        return when (name) {
+            "Bicep Curl" -> "Arms"
+            "Side Stretch" -> "Core"
+            "Forward Fold" -> "Legs"
+            "Seated Twist" -> "Core"
             else -> "Mobility"
         }
     }
@@ -157,48 +166,40 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
                 "Sit upright. Rotate your torso gently to one side while keeping your hips stable, then repeat on the other side."
 
             else ->
-                "Follow the movement slowly and stop if you feel discomfort."
+                "Move slowly and stop if you feel discomfort."
         }
     }
 
     private fun fallbackPoseExercises(): List<Exercise> {
         return listOf(
             Exercise(
-                id = "pose_bicep_curl",
+                id = "fallback_bicep_curl",
                 name = "Bicep Curl",
-                category = "Strength",
+                category = "Arms",
                 instructions = fallbackInstructions("Bicep Curl"),
                 imageUrl = null
             ),
             Exercise(
-                id = "pose_side_stretch",
+                id = "fallback_side_stretch",
                 name = "Side Stretch",
-                category = "Flexibility",
+                category = "Core",
                 instructions = fallbackInstructions("Side Stretch"),
                 imageUrl = null
             ),
             Exercise(
-                id = "pose_forward_fold",
+                id = "fallback_forward_fold",
                 name = "Forward Fold",
-                category = "Mobility",
+                category = "Legs",
                 instructions = fallbackInstructions("Forward Fold"),
                 imageUrl = null
             ),
             Exercise(
-                id = "pose_seated_twist",
+                id = "fallback_seated_twist",
                 name = "Seated Twist",
-                category = "Mobility",
+                category = "Core",
                 instructions = fallbackInstructions("Seated Twist"),
                 imageUrl = null
             )
         )
-    }
-
-    private fun mergeWithFallback(apiExercises: List<Exercise>): List<Exercise> {
-        val fallback = fallbackPoseExercises()
-        val existingNames = apiExercises.map { it.name }.toSet()
-        val missing = fallback.filterNot { it.name in existingNames }
-
-        return apiExercises + missing
     }
 }
