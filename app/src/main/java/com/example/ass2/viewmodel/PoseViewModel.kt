@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.example.ass2.pose.ExerciseUpdate
-import com.example.ass2.pose.HammerCurlExercise
+import com.example.ass2.pose.BicepCurlExercise
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.pose.UpperBodyExercise
 import com.example.ass2.pose.UpperBodyExercises
@@ -47,7 +47,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
     // @Volatile ensures the MediaPipe callback thread always sees the latest value.
     @Volatile private var overlayView: PoseOverlayView? = null
 
-    private val exerciseHolder = object { var ex: UpperBodyExercise = HammerCurlExercise() }
+    private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
     // MediaPipe — initialised once with application context
