@@ -26,7 +26,7 @@ class HeartRateSimulator(private val context: Context) {
     {
         val avgMaxHR = readMaxHRDataForAgeRng(ageOfUser).average()
         // warning to be given at 75% of the avg maxHR, before It's too late.
-        val threshHold = (avgMaxHR * 0.75).toInt()
+        val threshHold = (avgMaxHR * 0.70).toInt()
         // a min of 85 so that the warning won't happen in a slight warm up.
         // a max of 120 so that it's not too far off to never hit.
         return threshHold.coerceIn(85,120)
@@ -118,7 +118,7 @@ class HeartRateSimulator(private val context: Context) {
         val restingHR: Int = (75 - (ageOfUser - 20) * 0.1f).toInt().coerceIn(60,80)
 
         // moderate HR for the workout (seated) - expected reach.
-        val targetHR: Int = (restingHR + 25).coerceIn(75, 105)
+        val targetHR: Int = (restingHR + 40).coerceIn(90, 120)
 
         // the current HR generated (initially it's the resting HR)
         var currentHR: Double = restingHR.toDouble()
