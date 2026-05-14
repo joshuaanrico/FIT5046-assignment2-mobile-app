@@ -223,7 +223,9 @@ fun AppNavGraph() {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
                 onResumeToSession = { energyLvl ->
-                    navController.navigate("live_session/$energyLvl")},
+                    navController.navigate("live_session/$energyLvl"){
+                        popUpTo("pre_session_check_in"){inclusive=false}
+                    } },
                 onCancel = { navController.popBackStack() }
             )
         }
