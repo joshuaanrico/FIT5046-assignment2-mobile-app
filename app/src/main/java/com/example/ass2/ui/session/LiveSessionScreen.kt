@@ -61,6 +61,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.ui.theme.BrandTeal
@@ -78,12 +79,13 @@ fun LiveSessionScreen(
     onEndSession: () -> Unit,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = context as LifecycleOwner
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val poseViewModel: PoseViewModel = viewModel()
 
     // Observe ViewModel state
-    val update by poseViewModel.exerciseUpdate.collectAsState()
-    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsState()
+    val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
+    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
+
 
     // Camera permission
     var hasCameraPermission by remember {
