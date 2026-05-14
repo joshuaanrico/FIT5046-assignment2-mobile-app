@@ -1,4 +1,5 @@
 package com.example.ass2.sensor
+
 import android.content.Context
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,8 @@ import kotlinx.coroutines.flow.flow
  * Takes the users age, gets the data for that age range,
  * the max HRs for the age range, calculates the threshold value,
  * at which point a warning is due.
+ *
+ * @author Yapa Jayasinghe
 */
 class HeartRateSimulator(private val context: Context) {
 

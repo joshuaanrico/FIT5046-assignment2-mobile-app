@@ -3,8 +3,6 @@ package com.example.ass2.viewmodel
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -17,29 +15,30 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
+import com.example.ass2.data.repository.ProfileRepository
 import com.example.ass2.pose.ExerciseUpdate
 import com.example.ass2.pose.BicepCurlExercise
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.pose.UpperBodyExercise
 import com.example.ass2.pose.UpperBodyExercises
+import com.example.ass2.sensor.HeartRateSimulator
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.Executors
 
-class PoseViewModel(application: Application) : AndroidViewModel(application) {
-
+class PoseViewModel(application: Application) : AndroidViewModel(application)
+{
     // Public state observed by LiveSessionScreen
     private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
-
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
     val currentExerciseName: StateFlow<String> = _currentExerciseName.asStateFlow()
-
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
 
     // Internal - plain holders, not Compose state
@@ -73,6 +72,27 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         Log.e(TAG, "Model load failed: ${e.message}")
         null
     }
+
+    // ---------------------------------------------------------------------------------------------
+
+    // heart rate simulation - related
+    private val profileRepo = ProfileRepository(application)
+    private val heartRateSim = HeartRateSimulator(application)
+    // hr - observable variable.
+    private val hr = MutableStateFlow(0)
+    // readonly heartRate
+    val heartRate: StateFlow<Int> = hr.asStateFlow()
+    private val showAlert = MutableStateFlow(false)
+    // readonly showHRAlert
+    val showHRAlert: StateFlow<Boolean> = showAlert.asStateFlow()
+    // To store the HR values during the session to calculate the avg at the end of session.
+    private val hrSamples = mutableListOf<Int>()
+    // Reference to the coroutine in which the simulation is being run.
+    private var simulatorJob: Job? = null
+    private var sessionSrtTime = 0L
+
+    // ---------------------------------------------------------------------------------------------
+
 
     // Called by LiveSessionScreen's AndroidView factory + update lambda
     fun setOverlayView(view: PoseOverlayView?) {
