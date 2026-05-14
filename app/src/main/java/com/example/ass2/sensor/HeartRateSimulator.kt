@@ -1,5 +1,6 @@
 package com.example.ass2.sensor
-
+import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -7,9 +8,9 @@ import kotlinx.coroutines.flow.flow
 /**
  * To simulate the heart rate of the app user.
  * Takes the users age, gets the data for that age range,
- * normalizes the max HR values and
+ * the max HR for the user, at which point a warning is due.
 */
-class HeartRateSimulator {
+class HeartRateSimulator(private val context: Context) {
 
     /**
      * Streaming simulated HR for a seated exercise session.
@@ -29,7 +30,7 @@ class HeartRateSimulator {
         val restingHR: Int = (75 - (ageOfUser - 20) * 0.1f).toInt().coerceIn(60,80)
 
         // moderate HR for the workout (seated) - expected reach.
-        val targetHR: Int = (restingHR + 25) .coerceIn(75, 105)
+        val targetHR: Int = (restingHR + 25).coerceIn(75, 105)
 
         // the current HR generated (initially it's the resting HR)
         var currentHR: Double = restingHR.toDouble()
@@ -52,8 +53,75 @@ class HeartRateSimulator {
             delay(1000L)
             secondsPassed++
         }
-
-
     }
+
+    /**
+     * Reads the data from the heart.csv in assets,
+     * age and max HR is being considered.
+     * gets sufficient data from the closest age range.
+     *
+     * @param ageOfUser current users age to get data of the near age range.
+     * @return List of Int containing max HR for the specific age range.
+     */
+    fun readDataOfAge(ageOfUser: Int): List<Int>
+    {
+        // contains age, max HR
+        val allDataRead = mutableListOf<Pair<Int,Int>>()
+
+        try {
+            val reader = context.assets.open("heart.csv").bufferedReader()
+            reader.readLine() // to skip the header
+            var line = reader.readLine()
+            while (line != null)
+            {
+                val columns = line.split(",")
+                if (columns.size > 7)
+                {
+                    val age = columns[0].trim().toIntOrNull()
+                    val maxHR = columns[7].trim().toIntOrNull()
+                    if(age != null && maxHR != null)
+                    {
+                        allDataRead.add(Pair(age, maxHR))
+                    }
+                }
+                line = reader.readLine()
+            }
+            reader.close()
+        }
+        catch (e: Exception)
+        {
+            return emptyList()
+        }
+
+        // getting sufficient amount of data, starting from the closest / smaller age range.
+        val ranges = listOf(5,10,15)
+        for (range in ranges)
+        {
+            val result = mutableListOf<Int>()
+            for (dataPair in allDataRead)
+            {
+                val age = dataPair.first
+                val maxHR = dataPair.second
+                if (kotlin.math.abs(age - ageOfUser) <= range)
+                {
+                    result.add(maxHR)
+                }
+            }
+            // once enough data is found stop and return the result.
+            if (result.size>=20)
+            {
+                return result
+            }
+        }
+
+        // when not enough data is to be found return all the maxHRs.
+        val allMaxHR = mutableListOf<Int>()
+        for (dataPair in allDataRead)
+        {
+            allMaxHR.add(dataPair.second)
+        }
+        return allMaxHR
+    }
+
 
 }
