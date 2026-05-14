@@ -15,23 +15,39 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.util.Patterns
+
+// OAuth 2.0 Web Client ID from the Firebase project, used to authenticate Google Sign-In tokens
 const val WEB_CLIENT_ID = "1017626561698-63hggmjkld746mgrcm8mjo1lkdio9sgp.apps.googleusercontent.com"
 
+// Represents the possible states of an authentication operation
 sealed class AuthState {
-    object Idle : AuthState()
-    object Loading : AuthState()
-    object Success : AuthState()
-    data class Error(val message: String) : AuthState()
+    object Idle : AuthState()       // No operation in progress
+    object Loading : AuthState()    // Waiting for Firebase response
+    object Success : AuthState()    // Operation completed successfully
+    data class Error(val message: String) : AuthState() // Operation failed with an error message
 }
 
+// ViewModel that handles all authentication logic for login, registration,
+// password reset, and Google Sign-In using Firebase Authentication.
+// Uses AndroidViewModel to access application context for SharedPreferences.
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Firebase Authentication instance for performing auth operations
     private val auth: FirebaseAuth = Firebase.auth
 
+    // Exposes auth state to the UI — screens observe this to react to login/register results
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    fun signInWithEmail(email: String, password: String) {
+    // SharedPreferences used to persist the user's email when "Remember Me" is checked
+    private val prefs = application.getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+
+    // Returns the previously saved email, or empty string if none was saved
+    fun getSavedEmail(): String = prefs.getString("saved_email", "") ?: ""
+
+    // Signs in the user with email and password via Firebase.
+    // If rememberMe is true, saves the email locally so it is pre-filled on next launch.
+    fun signInWithEmail(email: String, password: String, rememberMe: Boolean) {
         if (email.isBlank() || password.isBlank()) {
             _authState.value = AuthState.Error("Email and password cannot be empty")
             return
@@ -40,6 +56,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _authState.value = AuthState.Loading
             try {
                 auth.signInWithEmailAndPassword(email, password).await()
+                // Save or clear the email based on the Remember Me checkbox
+                if (rememberMe) prefs.edit().putString("saved_email", email).apply()
+                else prefs.edit().remove("saved_email").apply()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Sign in failed")
@@ -47,6 +66,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Creates a new Firebase account after validating that:
+    // - fields are not blank
+    // - passwords match
+    // - password meets strength requirements (min 8 chars, 1 uppercase, 1 special character)
     fun registerWithEmail(email: String, password: String, confirmPassword: String) {
         if (email.isBlank() || password.isBlank()) {
             _authState.value = AuthState.Error("All fields are required")
@@ -60,6 +83,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _authState.value = AuthState.Error("Password must be at least 8 characters")
             return
         }
+        if (!password.any { it.isUpperCase() }) {
+            _authState.value = AuthState.Error("Password must contain at least 1 uppercase letter")
+            return
+        }
+        if (!password.any { !it.isLetterOrDigit() }) {
+            _authState.value = AuthState.Error("Password must contain at least 1 special character")
+            return
+        }
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -71,6 +102,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Sends a password reset email via Firebase to the provided address.
+    // Firebase only delivers the email if the address belongs to a registered account.
     fun sendPasswordReset(email: String) {
         val trimmedEmail = email.trim()
 
@@ -95,12 +128,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Called from the screen after the Google Sign-In intent returns a result
+    // Completes Google Sign-In by exchanging the Google ID token for a Firebase credential.
+    // Called from the screen after the Google Sign-In intent returns a result.
     fun handleGoogleSignInResult(task: Task<GoogleSignInAccount>) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
                 val account = task.getResult(ApiException::class.java)
+                // Exchange the Google ID token for a Firebase auth credential
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
                 auth.signInWithCredential(credential).await()
                 _authState.value = AuthState.Success
@@ -112,13 +147,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Signs the current user out of Firebase
     fun signOut() {
         auth.signOut()
     }
 
+    // Resets auth state back to Idle — called after the UI has handled a Success or Error
     fun resetState() {
         _authState.value = AuthState.Idle
     }
 
+    // Returns true if a Firebase user session is currently active
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
 }

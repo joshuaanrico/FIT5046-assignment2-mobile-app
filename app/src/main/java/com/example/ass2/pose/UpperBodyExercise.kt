@@ -5,45 +5,62 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.sqrt
 
-// Base class for upper-body pose exercises.
-// Each subclass implements a 3-state FSM (start -> mid -> peak) and
-// counts a rep when a specific state transition occurs.
-// Landmark indices follow MediaPipe Pose (33 landmarks):
+// Base class for all upper-body pose exercises.
+// Each subclass implements a finite state machine (FSM) with 3 states (e.g. start → mid → peak)
+// and counts a rep when a specific state transition occurs.
+//
+// MediaPipe Pose landmark indices used across exercises:
 //   11 = LEFT_SHOULDER   12 = RIGHT_SHOULDER
 //   13 = LEFT_ELBOW      14 = RIGHT_ELBOW
 //   15 = LEFT_WRIST      16 = RIGHT_WRIST
 //   23 = LEFT_HIP        24 = RIGHT_HIP
+//   25 = LEFT_KNEE       26 = RIGHT_KNEE
 abstract class UpperBodyExercise(
     val displayName: String,
-    val isBilateral: Boolean = false,
+    val isBilateral: Boolean = false, // true if both sides of the body are tracked simultaneously
 ) {
+    // Current FSM state, initialised to each subclass's starting state
     protected var state: String = initialState()
     var repCount: Int = 0
+
+    // Tracks the timestamp of the last counted rep to prevent double-counting
     private var lastRepMs: Long = 0L
+
+    // Minimum time (ms) between two consecutive reps to debounce fast movements
     private val minRepIntervalMs = 800L
 
+    // Returns the starting state string for this exercise (e.g. "EXTENDED", "UPRIGHT")
     abstract fun initialState(): String
 
-    // Returns (leftAngle, rightAngle) in degrees from normalized landmark list.
+    // Computes the relevant joint angles from the landmark list.
+    // Returns (leftAngle, rightAngle) in degrees.
     abstract fun computeAngles(landmarks: List<NormalizedLandmark>): Pair<Float, Float>
 
-    // Given the current state and angles, returns (nextState, didCount, feedback).
-    // didCount is true only on the specific transition that signals a completed rep.
+    // Advances the FSM given the current state and joint angles.
+    // Returns Triple(nextState, didCountRep, feedbackMessage).
+    // didCountRep is true only on the specific transition that signals a completed rep.
     abstract fun step(
         currentState: String,
         leftAngle: Float,
         rightAngle: Float,
     ): Triple<String, Boolean, String>
 
-    // Override to provide exercise-specific quality scoring (0-100).
+    // Returns a quality score from 0 to 100 for the current frame.
+    // Subclasses override this with exercise-specific scoring logic.
     protected open fun estimateQuality(leftAngle: Float, rightAngle: Float): Float = 75f
 
+    // Called every camera frame with the latest MediaPipe landmarks.
+    // Runs the FSM, increments the rep counter on valid transitions,
+    // and returns an ExerciseUpdate snapshot for the UI.
     fun process(landmarks: List<NormalizedLandmark>): ExerciseUpdate {
+        // Require at least 27 landmarks to cover all upper-body + hip points
         if (landmarks.size < 27) {
             return ExerciseUpdate(repCount, state, "Step back so your upper body is visible", 0f, 0f, 0f)
         }
         val (left, right) = computeAngles(landmarks)
         val (nextState, didCount, feedback) = step(state, left, right)
+
+        // Increment rep count only if enough time has passed since the last rep
         val now = System.currentTimeMillis()
         if (didCount && now - lastRepMs > minRepIntervalMs) {
             repCount++
@@ -53,13 +70,15 @@ abstract class UpperBodyExercise(
         return ExerciseUpdate(repCount, state, feedback, estimateQuality(left, right), left, right)
     }
 
+    // Resets the FSM and rep counter — called when the user switches exercises
     fun reset() {
         state = initialState()
         repCount = 0
         lastRepMs = 0L
     }
 
-    // Angle (degrees) at landmark b formed by vectors b->a and b->c.
+    // Calculates the angle (in degrees) at landmark b, formed by the vectors b→a and b→c.
+    // Uses the dot product formula: angle = acos((a·c) / (|a| * |c|))
     protected fun angleBetween(
         landmarks: List<NormalizedLandmark>,
         a: Int, b: Int, c: Int,
@@ -75,6 +94,8 @@ abstract class UpperBodyExercise(
         return Math.toDegrees(acos((dot / (magA * magC)).coerceIn(-1.0, 1.0))).toFloat()
     }
 
+    // Quality scoring based on left/right symmetry.
+    // Returns 100 when both sides are equal, decreasing as the angle difference grows.
     protected fun symmetryQuality(leftAngle: Float, rightAngle: Float): Float =
         (1f - abs(leftAngle - rightAngle) / 180f).coerceIn(0f, 1f) * 100f
 }
