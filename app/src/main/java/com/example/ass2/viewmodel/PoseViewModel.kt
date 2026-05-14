@@ -136,6 +136,42 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * This method is run when the live session is ended / when navigated to a new screen.
+     */
+    fun stopSimulationOfHR()
+    {
+        simulatorJob?.cancel()
+        simulatorJob = null
+    }
+
+    /**
+     * Calculates and returns the avg HR observed during the session.
+     */
+    fun getAvgHR(): Int
+    {
+        return hrSamples.average().toInt()
+    }
+
+    /**
+     * calculates the duration of the session.
+     *
+     * @return duration in milliseconds
+     */
+    fun getDurationOfSession(): Int
+    {
+        return ((System.currentTimeMillis() - sessionSrtTime)/1000).toInt()
+    }
+
+    /**
+     * After the user is directed to the alert screen,
+     * When the user returns to the session this method is executed to reset.
+     */
+    fun dismissAlert()
+    {
+        showAlert.value = false
+    }
+
+    /**
      * Calculates the age of the user.
      *
      * @param dob the birthdate as Long
@@ -147,7 +183,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         val today = Calendar.getInstance()
         val userAge = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
 
-        return  userAge
+        return  userAge.coerceIn(18,100)
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -204,6 +240,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         overlayView = null
         cameraExecutor.shutdown()
         poseLandmarker?.close()
+        stopSimulationOfHR()
     }
 
     companion object {
