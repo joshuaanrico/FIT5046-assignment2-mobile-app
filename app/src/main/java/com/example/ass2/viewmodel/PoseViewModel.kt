@@ -22,6 +22,7 @@ import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.pose.UpperBodyExercise
 import com.example.ass2.pose.UpperBodyExercises
 import com.example.ass2.sensor.HeartRateSimulator
+import com.google.firebase.auth.FirebaseAuth
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
@@ -30,6 +31,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.firstOrNull
+import java.util.Calendar
 import java.util.concurrent.Executors
 
 class PoseViewModel(application: Application) : AndroidViewModel(application)
@@ -76,6 +80,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     // ---------------------------------------------------------------------------------------------
 
     // heart rate simulation - related
+
     private val profileRepo = ProfileRepository(application)
     private val heartRateSim = HeartRateSimulator(application)
     // hr - observable variable.
@@ -90,6 +95,60 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     // Reference to the coroutine in which the simulation is being run.
     private var simulatorJob: Job? = null
     private var sessionSrtTime = 0L
+
+    /**
+     * Being called when the live session screen opens.
+     * Reads the user profile, calculates the user HR threshold.
+     * Then the HR-BPM stream is started / the simulation.
+     *
+     * @author Yapa Jayasinghe
+     */
+    fun sessionStart()
+    {
+        sessionSrtTime = System.currentTimeMillis()
+        hrSamples.clear()
+        showAlert.value = false
+
+        // getting the user id - so that age can be calculated.
+        val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
+
+        // starting a new coroutine - tied to the viewmodel lifecycle
+        simulatorJob = viewModelScope.launch(Dispatchers.IO)
+        {
+            // accessing the user profile (Room).
+            val userProfile = profileRepo.observe(userId).firstOrNull()
+            // age calculation (default set to 40yrs)
+            val currentUserAge = if (userProfile?.dob != null) ageCalc(userProfile.dob) else 40
+            // getting the personalized threshold HR for current user
+            val threshold = heartRateSim.getThresholdHRForAge(currentUserAge)
+            // starting BPM stream.
+            heartRateSim.streamHR(currentUserAge).collect()
+            {
+                bpm -> hrSamples.add(bpm)
+                hr.value = bpm
+                // deciding whether to give warning or not
+                if (bpm > threshold && !showAlert.value)
+                {
+                    showAlert.value = true
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculates the age of the user.
+     *
+     * @param dob the birthdate as Long
+     * @return age as Int
+     */
+    private fun ageCalc(dob: Long): Int
+    {
+        val birth = Calendar.getInstance().apply { timeInMillis = dob }
+        val today = Calendar.getInstance()
+        val userAge = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
+
+        return  userAge
+    }
 
     // ---------------------------------------------------------------------------------------------
 
