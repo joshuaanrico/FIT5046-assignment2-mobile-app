@@ -121,10 +121,13 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
             val currentUserAge = if (userProfile?.dob != null) ageCalc(userProfile.dob) else 40
             // getting the personalized threshold HR for current user
             val threshold = heartRateSim.getThresholdHRForAge(currentUserAge)
+            // Log.d("HeartRate", "Age=$currentUserAge Threshold=$threshold uid=$userId profile=$userProfile")
             // starting BPM stream.
             heartRateSim.streamHR(currentUserAge).collect()
             {
-                bpm -> hrSamples.add(bpm)
+                bpm ->
+                // Log.d("HeartRate", "BPM=$bpm threshold=$threshold")
+                hrSamples.add(bpm)
                 hr.value = bpm
                 // deciding whether to give warning or not
                 if (bpm > threshold && !showAlert.value)

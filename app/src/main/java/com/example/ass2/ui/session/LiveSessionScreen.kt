@@ -43,6 +43,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,6 +70,7 @@ import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.FieldBackground
 import com.example.ass2.viewmodel.PoseViewModel
+import kotlinx.coroutines.delay
 
 private const val TARGET_REPS = 12
 
@@ -86,6 +89,8 @@ fun LiveSessionScreen(
     val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
     val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
 
+    val heartRate by poseViewModel.heartRate.collectAsStateWithLifecycle()
+    val showAlert by poseViewModel.showHRAlert.collectAsStateWithLifecycle()
 
     // Camera permission
     var hasCameraPermission by remember {
@@ -105,6 +110,33 @@ fun LiveSessionScreen(
     }
 
     val isGoodForm = update.poseQuality >= 70f && update.feedback.isNotEmpty()
+
+
+// -------------------------------------------------------------------------------------------------
+    // the number of seconds that has gone by since the screen opened.
+    var secondsPassed by remember { mutableIntStateOf(0) }
+    // to be run once when the screen opens
+    LaunchedEffect(Unit)
+    {
+        // starting the HR simulator and the timer at the same time.
+        poseViewModel.sessionStart()
+        while (true){
+            delay(1000L)
+            secondsPassed++
+        }
+    }
+    // watching the HR alert flag, on true -> dismiss it -> then navigate to alert screen.
+    LaunchedEffect(showAlert)
+    {
+        if (showAlert)
+        {
+            poseViewModel.dismissAlert()
+            onPause()
+        }
+    }
+
+// -------------------------------------------------------------------------------------------------
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.statusBarsPadding())
@@ -215,7 +247,12 @@ fun LiveSessionScreen(
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AccessTime, "Timer", tint = BrandTealDark, modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text("00:00 min", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
+                                Text(
+                                    text = "%02d:%02d min".format(secondsPassed / 60, secondsPassed % 60),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1F1F1F)
+                                )
                             }
                         }
                         Card(modifier = Modifier.width(170.dp), shape = RoundedCornerShape(20.dp),
@@ -224,7 +261,12 @@ fun LiveSessionScreen(
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Favorite, null, tint = Color(0xFFC62828), modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text("-- BPM", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
+                                Text(
+                                    text = if (heartRate == 0) "-- BPM" else "$heartRate BPM",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1F1F1F)
+                                )
                             }
                         }
                     }
