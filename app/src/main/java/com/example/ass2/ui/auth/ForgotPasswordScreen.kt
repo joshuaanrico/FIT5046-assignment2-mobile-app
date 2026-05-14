@@ -25,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.ui.theme.*
 import com.example.ass2.viewmodel.AuthState
 import com.example.ass2.viewmodel.AuthViewModel
+import android.util.Patterns
 
 @Composable
 fun ForgotPasswordScreen(
@@ -133,7 +134,7 @@ fun ForgotPasswordScreen(
                     )
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { email = it.trimStart() },
                         placeholder = { Text("name@example.com", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9E9E9E))
