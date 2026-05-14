@@ -69,11 +69,7 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
                     }
                     .sortedBy { exerciseOrder(it.name) }
 
-                val finalExercises = if (selectedExercises.size == 4) {
-                    selectedExercises
-                } else {
-                    mergeWithFallback(selectedExercises)
-                }
+                val finalExercises = selectedExercises
 
                 exerciseRepository.clear()
                 exerciseRepository.insertAll(finalExercises)
@@ -86,18 +82,9 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
                     )
                 }
             } catch (e: Exception) {
-                val fallback = fallbackPoseExercises()
+                val fallback = ""
 
                 exerciseRepository.clear()
-                exerciseRepository.insertAll(fallback)
-
-                _uiState.update {
-                    it.copy(
-                        exercises = fallback,
-                        isLoading = false,
-                        errorMessage = null
-                    )
-                }
             }
         }
     }
@@ -113,23 +100,15 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
         return Exercise(
             id = id.toString(),
             name = appDisplayName,
-            category = category?.name ?: categoryForPose(appDisplayName),
+            category = categoryForPose(appDisplayName),
             instructions = apiDescription
                 .replace(Regex("<.*?>"), "")
-                .ifBlank { fallbackInstructions(appDisplayName) },
+                .ifBlank { "" },
             imageUrl = images.firstOrNull()?.image
         )
     }
 
-    private fun mergeWithFallback(apiExercises: List<Exercise>): List<Exercise> {
-        val fallback = fallbackPoseExercises()
-        val existingNames = apiExercises.map { it.name }.toSet()
-        val missing = fallback.filterNot { it.name in existingNames }
 
-        return (apiExercises + missing)
-            .distinctBy { it.name }
-            .sortedBy { exerciseOrder(it.name) }
-    }
 
     private fun exerciseOrder(name: String): Int {
         return when (name) {
@@ -143,63 +122,14 @@ class ExercisesViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun categoryForPose(name: String): String {
         return when (name) {
-            "Bicep Curl" -> "Arms"
-            "Side Stretch" -> "Core"
-            "Forward Fold" -> "Legs"
+            "Bicep Curl" -> "Strength"
+            "Side Stretch" -> "Stretch"
+            "Forward Fold" -> "Mobility"
             "Seated Twist" -> "Core"
             else -> "Mobility"
         }
     }
 
-    private fun fallbackInstructions(name: String): String {
-        return when (name) {
-            "Bicep Curl" ->
-                "Sit or stand upright. Keep your elbow close to your body, curl your forearm upward, then lower slowly with control."
 
-            "Side Stretch" ->
-                "Sit or stand tall. Raise one arm overhead and gently lean to the opposite side. Hold briefly, then switch sides."
 
-            "Forward Fold" ->
-                "Sit or stand with control. Slowly hinge forward from the hips, keeping the movement gentle and avoiding strain."
-
-            "Seated Twist" ->
-                "Sit upright. Rotate your torso gently to one side while keeping your hips stable, then repeat on the other side."
-
-            else ->
-                "Move slowly and stop if you feel discomfort."
-        }
-    }
-
-    private fun fallbackPoseExercises(): List<Exercise> {
-        return listOf(
-            Exercise(
-                id = "fallback_bicep_curl",
-                name = "Bicep Curl",
-                category = "Arms",
-                instructions = fallbackInstructions("Bicep Curl"),
-                imageUrl = null
-            ),
-            Exercise(
-                id = "fallback_side_stretch",
-                name = "Side Stretch",
-                category = "Core",
-                instructions = fallbackInstructions("Side Stretch"),
-                imageUrl = null
-            ),
-            Exercise(
-                id = "fallback_forward_fold",
-                name = "Forward Fold",
-                category = "Legs",
-                instructions = fallbackInstructions("Forward Fold"),
-                imageUrl = null
-            ),
-            Exercise(
-                id = "fallback_seated_twist",
-                name = "Seated Twist",
-                category = "Core",
-                instructions = fallbackInstructions("Seated Twist"),
-                imageUrl = null
-            )
-        )
-    }
 }

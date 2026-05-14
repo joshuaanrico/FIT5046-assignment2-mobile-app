@@ -47,8 +47,7 @@ fun exerciseImageForName(name: String): Int = when {
 
     else -> R.drawable.exercise1
 }
-private val filterCategories = listOf("All", "Mobility", "Strength", "Flexibility")
-
+private val filterCategories = listOf("All", "Mobility", "Strength", "Stretch")
 @Composable
 fun ExercisesScreen(
     onExerciseClick: (String) -> Unit,

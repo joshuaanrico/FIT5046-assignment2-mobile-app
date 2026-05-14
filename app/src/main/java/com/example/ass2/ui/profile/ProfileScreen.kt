@@ -45,6 +45,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
@@ -54,7 +58,27 @@ fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
     onHelpClick: () -> Unit = {},
     onSignOut: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
 ) {
+
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val conditionText = if (uiState.conditions.isBlank() || uiState.conditions == "Not set") {
+        "Profile not set"
+    } else {
+        uiState.conditions
+    }
+
+    val painText = uiState.painBaseline?.let {
+        "Pain baseline: $it/10"
+    } ?: "Pain baseline: Not set"
+
+    val profileMessage = if (uiState.isProfileSetup) {
+        "Your workouts are adapted using your saved accessibility profile, comfort level, and movement preferences."
+    } else {
+        "Complete your profile setup so Sit&Fit can better adapt exercises to your comfort and mobility needs."
+    }
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val lightTeal = Color(0xFFD5ECE8)
@@ -112,7 +136,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Alex Johnson",
+                text = uiState.displayName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = textDark
@@ -121,7 +145,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "alex@example.com",
+                text = uiState.email.ifBlank { "No email available" },
                 fontSize = 16.sp,
                 color = textGray
             )
@@ -156,7 +180,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(18.dp))
 
                     ProfileChip(
-                        text = "Seated Mobility",
+                        text = conditionText,
                         background = lightTeal,
                         textColor = textGray,
                         icon = Icons.Outlined.Accessibility
@@ -165,7 +189,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     ProfileChip(
-                        text = "Primary Goal: Flexibility",
+                        text = painText,
                         background = lightGray,
                         textColor = textDark,
                         icon = Icons.Outlined.FitnessCenter
@@ -174,7 +198,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(18.dp))
 
                     Text(
-                        text = "Your workouts are automatically adapted to prioritize seated exercises and upper-body range of motion.",
+                        text = profileMessage,
                         fontSize = 15.sp,
                         lineHeight = 25.sp,
                         color = textGray
@@ -218,7 +242,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(36.dp))
 
             Row(
-                modifier = Modifier.clickable { onSignOut() },
+                modifier = Modifier.clickable {
+                    viewModel.signOut()
+                    onSignOut() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
