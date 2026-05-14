@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.flow
 /**
  * To simulate the heart rate of the app user.
  * Takes the users age, gets the data for that age range,
- * the max HR for the user, at which point a warning is due.
+ * the max HRs for the age range, calculates the threshold value,
+ * at which point a warning is due.
 */
 class HeartRateSimulator(private val context: Context) {
 
