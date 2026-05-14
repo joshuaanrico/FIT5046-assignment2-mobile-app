@@ -72,15 +72,26 @@ import com.example.ass2.ui.theme.FieldBackground
 import com.example.ass2.viewmodel.PoseViewModel
 import kotlinx.coroutines.delay
 
-private const val TARGET_REPS = 12
 
 @Composable
 fun LiveSessionScreen(
+    energyLevel: Int = 3,
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onPause: () -> Unit,
     onEndSession: () -> Unit,
 ) {
+
+    val targetReps = when(energyLevel)
+    {
+        1 -> 5
+        2 -> 8
+        3 -> 12
+        4 -> 15
+        5 -> 20
+        else -> 12
+    }
+
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val poseViewModel: PoseViewModel = viewModel()
@@ -125,6 +136,16 @@ fun LiveSessionScreen(
             secondsPassed++
         }
     }
+
+    // watches the rep count and ends session once the taget is met.
+    LaunchedEffect(update.repCount)
+    {
+       if (update.repCount >= targetReps)
+       {
+           poseViewModel.lockExercise()
+       }
+    }
+
     // watching the HR alert flag, on true -> dismiss it -> then navigate to alert screen.
     LaunchedEffect(showAlert)
     {
@@ -235,7 +256,7 @@ fun LiveSessionScreen(
                             Spacer(Modifier.height(24.dp))
                             Text("Target", fontSize = 14.sp, color = Color(0xFF666666))
                             Spacer(Modifier.height(8.dp))
-                            Text("${update.repCount}/$TARGET_REPS\nReps", fontSize = 22.sp,
+                            Text("${update.repCount.coerceAtMost(targetReps)}/$targetReps\nReps", fontSize = 22.sp,
                                 lineHeight = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
                         }
                     }
@@ -274,7 +295,7 @@ fun LiveSessionScreen(
 
                 Spacer(Modifier.height(18.dp))
                 LinearProgressIndicator(
-                    progress = { (update.repCount.toFloat() / TARGET_REPS).coerceIn(0f, 1f) },
+                    progress = { (update.repCount.toFloat() / targetReps).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)
                         .height(10.dp).clip(RoundedCornerShape(20.dp)),
                     color = BrandTealDark,

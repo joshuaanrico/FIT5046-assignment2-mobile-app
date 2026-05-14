@@ -39,6 +39,8 @@ import java.util.concurrent.Executors
 class PoseViewModel(application: Application) : AndroidViewModel(application)
 {
     // Public state observed by LiveSessionScreen
+
+    private var sessionLocked = false
     private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
@@ -61,8 +63,11 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
             .setResultListener { result, _ ->
                 // Exercise FSM (background thread → post state update to main)
                 result.landmarks().firstOrNull()?.let { landmarks ->
-                    val u = exerciseHolder.ex.process(landmarks)
-                    viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
+                    // does not execute when the rep goal has been met.
+                    if (!sessionLocked) {
+                        val u = exerciseHolder.ex.process(landmarks)
+                        viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
+                    }
                 }
                 viewModelScope.launch(Dispatchers.Main) {
                     val ov = overlayView ?: return@launch
@@ -236,6 +241,16 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         exerciseHolder.ex = exercise
         _currentExerciseName.value = exercise.displayName
         _exerciseUpdate.value = ExerciseUpdate()
+        unlockExercise()
+    }
+
+    fun lockExercise(){
+        sessionLocked = true
+    }
+
+    fun unlockExercise()
+    {
+        sessionLocked = false
     }
 
     override fun onCleared() {

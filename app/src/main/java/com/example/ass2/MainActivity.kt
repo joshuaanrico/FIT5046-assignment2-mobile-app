@@ -222,12 +222,19 @@ fun AppNavGraph() {
         composable("pre_session_check_in") {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
-                onResumeToSession = { navController.navigate("live_session") },
+                onResumeToSession = { energyLvl ->
+                    navController.navigate("live_session/$energyLvl")},
                 onCancel = { navController.popBackStack() }
             )
         }
-        composable("live_session") {
+        composable(
+            route = "live_session/{energyLvl}",
+            arguments = listOf(navArgument("energyLvl"){ type = NavType.IntType })
+        ) {
+            backStackEntry ->
+            val energyLvl = backStackEntry.arguments?.getInt("energyLvl")?:3
             LiveSessionScreen(
+                energyLevel = energyLvl,
                 onBack = { navController.popBackStack() },
                 onHelp = { navController.navigate("help") },
                 onPause = { navController.navigate("pause_alert") },
