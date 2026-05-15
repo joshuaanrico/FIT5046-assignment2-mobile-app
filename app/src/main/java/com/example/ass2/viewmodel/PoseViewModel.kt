@@ -28,11 +28,13 @@ import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import java.util.Calendar
 import java.util.concurrent.Executors
 
@@ -92,14 +94,31 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     private val hr = MutableStateFlow(0)
     // readonly heartRate
     val heartRate: StateFlow<Int> = hr.asStateFlow()
-    private val showAlert = MutableStateFlow(false)
-    // readonly showHRAlert
-    val showHRAlert: StateFlow<Boolean> = showAlert.asStateFlow()
+    private val hrAlertChannel = Channel<Unit>(Channel.CONFLATED)
+    val hrAlertEvent = hrAlertChannel.receiveAsFlow()
     // To store the HR values during the session to calculate the avg at the end of session.
     private val hrSamples = mutableListOf<Int>()
     // Reference to the coroutine in which the simulation is being run.
     private var simulatorJob: Job? = null
     private var sessionSrtTime = 0L
+    private var currentUserAge = 0
+    private var currentThreshold = 0
+
+    private fun startHrStream()
+    {
+        simulatorJob?.cancel()
+        simulatorJob = viewModelScope.launch(Dispatchers.IO)
+        {
+            heartRateSim.streamHR(currentUserAge).collect { bpm ->
+                hrSamples.add(bpm)
+                hr.value = bpm
+                if (bpm > currentThreshold)
+                {
+                    hrAlertChannel.trySend(Unit)
+                }
+            }
+        }
+    }
 
     /**
      * Being called when the live session screen opens.
@@ -112,35 +131,36 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     {
         sessionSrtTime = System.currentTimeMillis()
         hrSamples.clear()
-        showAlert.value = false
+        // remove any leftover event from previous session.
+        hrAlertChannel.tryReceive()
 
         // getting the user id - so that age can be calculated.
         val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
 
         // starting a new coroutine - tied to the viewmodel lifecycle
-        simulatorJob = viewModelScope.launch(Dispatchers.IO)
+        viewModelScope.launch(Dispatchers.IO)
         {
             // accessing the user profile (Room).
             val userProfile = profileRepo.observe(userId).firstOrNull()
             // age calculation (default set to 40yrs)
-            val currentUserAge = if (userProfile?.dob != null) ageCalc(userProfile.dob) else 40
+            currentUserAge = if (userProfile?.dob != null) ageCalc(userProfile.dob) else 40
             // getting the personalized threshold HR for current user
-            val threshold = heartRateSim.getThresholdHRForAge(currentUserAge)
+            currentThreshold = heartRateSim.getThresholdHRForAge(currentUserAge)
             // Log.d("HeartRate", "Age=$currentUserAge Threshold=$threshold uid=$userId profile=$userProfile")
-            // starting BPM stream.
-            heartRateSim.streamHR(currentUserAge).collect()
-            {
-                bpm ->
-                // Log.d("HeartRate", "BPM=$bpm threshold=$threshold")
-                hrSamples.add(bpm)
-                hr.value = bpm
-                // deciding whether to give warning or not
-                if (bpm > threshold && !showAlert.value)
-                {
-                    showAlert.value = true
-                }
-            }
+            startHrStream()
         }
+    }
+
+    /**
+     * called on alert screen btn press.
+     * Restarts HR from the resting HR so that the alert is not retriggered.
+     */
+    fun resumeAfterAlert()
+    {
+        // remove any pending event
+        hrAlertChannel.tryReceive()
+        // getting a fresh stream of Hrs
+        startHrStream()
     }
 
     /**
@@ -170,14 +190,6 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         return ((System.currentTimeMillis() - sessionSrtTime)/1000).toInt()
     }
 
-    /**
-     * After the user is directed to the alert screen,
-     * When the user returns to the session this method is executed to reset.
-     */
-    fun dismissAlert()
-    {
-        showAlert.value = false
-    }
 
     /**
      * Calculates the age of the user.

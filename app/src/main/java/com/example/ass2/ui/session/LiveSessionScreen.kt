@@ -96,7 +96,6 @@ fun LiveSessionScreen(
     val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
 
     val heartRate by poseViewModel.heartRate.collectAsStateWithLifecycle()
-    val showAlert by poseViewModel.showHRAlert.collectAsStateWithLifecycle()
 
     // Camera permission
     var hasCameraPermission by remember {
@@ -141,12 +140,10 @@ fun LiveSessionScreen(
        }
     }
 
-    // watching the HR alert flag, on true -> dismiss it -> then navigate to alert screen.
-    LaunchedEffect(showAlert)
+    // collect the one shot event.
+    LaunchedEffect(Unit)
     {
-        if (showAlert)
-        {
-            poseViewModel.dismissAlert()
+        poseViewModel.hrAlertEvent.collect {
             onPause()
         }
     }

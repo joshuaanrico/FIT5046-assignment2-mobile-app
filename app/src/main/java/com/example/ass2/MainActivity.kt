@@ -42,6 +42,7 @@ import com.example.ass2.ui.profile.ProfileSetupScreen
 import com.example.ass2.ui.profile.SettingsScreen
 import com.example.ass2.ui.profile.HelpScreen
 import com.example.ass2.ui.profile.LegalScreen
+import com.example.ass2.viewmodel.PoseViewModel
 
 class MainActivity : ComponentActivity() {
     // Registers the system permission dialog launcher for POST_NOTIFICATIONS (Android 13+)
@@ -248,14 +249,22 @@ fun AppNavGraph() {
                 exerciseName = exerciseName,
                 onBack = { navController.popBackStack() },
                 onHelp = { navController.navigate("help") },
-                onPause = { navController.navigate("pause_alert") },
+                onPause = { navController.navigate("pause_alert"){
+                    // when pause_alert is already on top of the back stack not pushing another copy
+                    launchSingleTop = true
+                } },
                 onEndSession = { navController.navigate("session_result") }
             )
         }
         composable("pause_alert") {
+            val poseViewModel: PoseViewModel = viewModel()
             AlertScreen(
-                onRest = { navController.popBackStack() },
-                onContinueLowerIntensity = { navController.popBackStack() },
+                onRest = {
+                    poseViewModel.resumeAfterAlert()
+                    navController.popBackStack() },
+                onContinueLowerIntensity = {
+                    poseViewModel.resumeAfterAlert()
+                    navController.popBackStack() },
                 onEndSession = { navController.navigate("session_result") }
             )
         }
