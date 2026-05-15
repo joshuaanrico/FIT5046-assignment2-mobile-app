@@ -1,4 +1,5 @@
 package com.example.ass2.ui.exercises
+
 import com.example.ass2.R
 import com.example.ass2.ui.navigation.BottomNavBar
 import com.example.ass2.ui.navigation.NavTab
@@ -24,95 +25,61 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.data.local.Exercise
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
+import com.example.ass2.viewmodel.ExercisesViewModel
 
-data class Exercise(
-    val name: String,
-    val description: String,
-    val category: String,
-    val tags: List<String>,
-    val imageRes: Int
-)
-
-/** Maps an exercise name to a drawable resource - used by both list and detail screens. */
 fun exerciseImageForName(name: String): Int = when {
-    name.contains("Morning", ignoreCase = true) -> R.drawable.exercise4
-    name.contains("Torso", ignoreCase = true) -> R.drawable.exercise1
-    name.contains("Leg", ignoreCase = true) -> R.drawable.exercise2
-    name.contains("Push", ignoreCase = true) -> R.drawable.exercise3
-    name.contains("Shoulder", ignoreCase = true) -> R.drawable.exercise1
-    name.contains("Ankle", ignoreCase = true) -> R.drawable.exercise2
+    name.contains("Bicep", ignoreCase = true) ||
+            name.contains("Curl", ignoreCase = true) -> R.drawable.exercise3
+
+    name.contains("Side", ignoreCase = true) ||
+            name.contains("Stretch", ignoreCase = true) -> R.drawable.exercise1
+
+    name.contains("Forward", ignoreCase = true) ||
+            name.contains("Fold", ignoreCase = true) -> R.drawable.exercise2
+
+    name.contains("Seated", ignoreCase = true) ||
+            name.contains("Twist", ignoreCase = true) -> R.drawable.exercise4
+
     else -> R.drawable.exercise1
 }
-
-private val sampleExercises = listOf(
-    Exercise(
-        name = "Morning Mobility: Seated Flow",
-        description = "A gentle sequence to wake up your joints and improve circulation before starting the day.",
-        category = "MOBILITY",
-        tags = listOf("Recommended", "Seated", "Beginner"),
-        imageRes = R.drawable.exercise4
-    ),
-    Exercise(
-        name = "Gentle Torso Twists",
-        description = "Build upper back strength and improve posture safely from a seated position.",
-        category = "STRENGTH",
-        tags = listOf("Seated", "Beginner"),
-        imageRes = R.drawable.exercise1
-    ),
-    Exercise(
-        name = "Leg Extensions",
-        description = "Gentle knee mobilisation to maintain joint fluid and strengthen the quadriceps.",
-        category = "MOBILITY",
-        tags = listOf("Lower Body", "Intermediate"),
-        imageRes = R.drawable.exercise2
-    ),
-    Exercise(
-        name = "Wall Push-ups",
-        description = "A low-impact variation of the classic push-up, excellent for chest and arm strength without floor work.",
-        category = "STRENGTH",
-        tags = listOf("Standing", "Beginner"),
-        imageRes = R.drawable.exercise3
-    ),
-    Exercise(
-        name = "Seated Shoulder Rolls",
-        description = "Relieve upper body tension and improve shoulder mobility from a comfortable seated position.",
-        category = "MOBILITY",
-        tags = listOf("Seated", "Beginner"),
-        imageRes = R.drawable.exercise1
-    ),
-    Exercise(
-        name = "Ankle Circles",
-        description = "Simple ankle rotations to improve circulation and maintain lower limb flexibility.",
-        category = "FLEXIBILITY",
-        tags = listOf("Seated", "Beginner"),
-        imageRes = R.drawable.exercise2
-    ),
-)
-
-private val filterCategories = listOf("All", "Seated", "Recommended", "Lower Body")
-
+private val filterCategories = listOf("All", "Mobility", "Strength", "Stretch")
 @Composable
 fun ExercisesScreen(
     onExerciseClick: (String) -> Unit,
     onTabSelected: (NavTab) -> Unit,
-    initialFilter: String = "All"
+    initialFilter: String = "All",
+    viewModel: ExercisesViewModel = viewModel()
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(initialFilter) }
 
-    val filteredExercises = sampleExercises.filter { exercise ->
-        val matchesSearch = searchQuery.isEmpty() ||
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val filteredExercises = uiState.exercises.filter { exercise ->
+        val cleanInstructions = exercise.instructions.replace(Regex("<.*?>"), "")
+
+        val matchesSearch = searchQuery.isBlank() ||
                 exercise.name.contains(searchQuery, ignoreCase = true) ||
-                exercise.description.contains(searchQuery, ignoreCase = true)
+                cleanInstructions.contains(searchQuery, ignoreCase = true)
+
         val matchesFilter = selectedFilter == "All" ||
-                exercise.tags.any { it.equals(selectedFilter, ignoreCase = true) }
+                exercise.category.equals(selectedFilter, ignoreCase = true)
+
         matchesSearch && matchesFilter
     }
 
     Scaffold(
-        bottomBar = { BottomNavBar(selected = NavTab.EXERCISES, onTabSelected = onTabSelected) },
+        bottomBar = {
+            BottomNavBar(
+                selected = NavTab.EXERCISES,
+                onTabSelected = onTabSelected
+            )
+        },
         containerColor = BrandBackground
     ) { innerPadding ->
         Column(
@@ -153,14 +120,63 @@ fun ExercisesScreen(
                 }
             }
 
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(filteredExercises) { exercise ->
-                    ExerciseCard(exercise = exercise, onClick = { onExerciseClick(exercise.name) })
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = BrandTeal)
+                    }
                 }
-                item { Spacer(Modifier.height(8.dp)) }
+
+                uiState.errorMessage != null -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = uiState.errorMessage ?: "Could not load exercises.",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                filteredExercises.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No exercises found.",
+                            color = Color(0xFF6B6B6B),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(filteredExercises) { exercise ->
+                            ExerciseCard(
+                                exercise = exercise,
+                                onClick = { onExerciseClick(exercise.name) }
+                            )
+                        }
+
+                        item {
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
             }
         }
     }
@@ -175,9 +191,19 @@ private fun SearchField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text("Search exercises...", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+        placeholder = {
+            Text(
+                text = "Search exercises...",
+                color = Color(0xFFBBBBBB),
+                fontSize = 14.sp
+            )
+        },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF9E9E9E))
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = Color(0xFF9E9E9E)
+            )
         },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
@@ -192,7 +218,11 @@ private fun SearchField(
 }
 
 @Composable
-private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun FilterChipItem(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
@@ -210,7 +240,14 @@ private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit
 }
 
 @Composable
-private fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
+private fun ExerciseCard(
+    exercise: Exercise,
+    onClick: () -> Unit
+) {
+    val cleanInstructions = exercise.instructions
+        .replace(Regex("<.*?>"), "")
+        .ifBlank { "No instructions available." }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -221,7 +258,7 @@ private fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
     ) {
         Column {
             Image(
-                painter = painterResource(exercise.imageRes),
+                painter = painterResource(exerciseImageForName(exercise.name)),
                 contentDescription = exercise.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -237,32 +274,56 @@ private fun ExerciseCard(exercise: Exercise, onClick: () -> Unit) {
                         .background(BrandTeal.copy(alpha = 0.1f))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
-                    Text(exercise.category, fontSize = 11.sp, color = BrandTeal, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = exercise.category,
+                        fontSize = 11.sp,
+                        color = BrandTeal,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
 
-                Text(exercise.name, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                Text(
+                    text = exercise.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A)
+                )
 
                 Spacer(Modifier.height(4.dp))
 
-                Text(exercise.description, fontSize = 13.sp, color = Color(0xFF6B6B6B), lineHeight = 18.sp)
+                Text(
+                    text = cleanInstructions.take(180),
+                    fontSize = 13.sp,
+                    color = Color(0xFF6B6B6B),
+                    lineHeight = 18.sp
+                )
 
                 Spacer(Modifier.height(10.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    exercise.tags.forEach { tag ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFF0F0F0))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(tag, fontSize = 12.sp, color = Color(0xFF4A4A4A))
-                        }
-                    }
+                    ExerciseTag(text = exercise.category)
+
+                    ExerciseTag(text = "Beginner")
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ExerciseTag(text: String) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFFF0F0F0))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color(0xFF4A4A4A)
+        )
     }
 }

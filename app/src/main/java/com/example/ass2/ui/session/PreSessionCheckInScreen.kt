@@ -314,9 +314,7 @@ fun PreSessionCheckInScreen(
     }
 }
 
-/**
- * Composable to be reused - card ready to use with styling in place.
- */
+// Reusable card composable with styling in place.
 @Composable
 private fun CheckInCard(
     icon: @Composable () -> Unit,

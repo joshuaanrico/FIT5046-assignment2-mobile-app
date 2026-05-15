@@ -20,20 +20,48 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.ui.theme.*
+import com.example.ass2.viewmodel.AuthState
+import com.example.ass2.viewmodel.AuthViewModel
+import android.util.Patterns
 
 @Composable
 fun ForgotPasswordScreen(
     onBack: () -> Unit,
-    onBackToLogin: () -> Unit = {}
+    onBackToLogin: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
+
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val isLoading = authState is AuthState.Loading
+
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> {
+                viewModel.resetState()
+                snackbarHostState.showSnackbar("Reset email sent! Check your inbox.")
+            }
+            is AuthState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BrandBackground)
     ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,7 +134,7 @@ fun ForgotPasswordScreen(
                     )
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { email = it.trimStart() },
                         placeholder = { Text("name@example.com", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9E9E9E))
@@ -129,14 +157,19 @@ fun ForgotPasswordScreen(
                     Spacer(Modifier.height(20.dp))
 
                     Button(
-                        onClick = { /* TODO: send reset email */ },
+                        onClick = { viewModel.sendPasswordReset(email) },
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
                     ) {
-                        Text("Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
                     }
 
                     Spacer(Modifier.height(16.dp))
