@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,8 +34,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
@@ -60,9 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
@@ -76,6 +70,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun LiveSessionScreen(
     energyLevel: Int = 3,
+    exerciseName: String = "Bicep Curl",
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onPause: () -> Unit,
@@ -156,6 +151,17 @@ fun LiveSessionScreen(
         }
     }
 
+    // makes sure the correct exercise is being selected.
+    LaunchedEffect(exerciseName)
+    {
+        val exercise = poseViewModel.availableExercises.firstOrNull{
+            it.displayName == exerciseName
+        }
+        if (exercise != null)
+        {
+            poseViewModel.selectExercise(exercise)
+        }
+    }
 // -------------------------------------------------------------------------------------------------
 
 
@@ -180,27 +186,6 @@ fun LiveSessionScreen(
                 modifier = Modifier.align(Alignment.CenterEnd).clickable { onHelp() })
         }
 
-        // Exercise picker
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(FieldBackground)
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            poseViewModel.availableExercises.forEach { exercise ->
-                FilterChip(
-                    selected = exercise.displayName == selectedExerciseName,
-                    onClick = { poseViewModel.selectExercise(exercise) },
-                    label = { Text(exercise.displayName, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandTeal,
-                        selectedLabelColor = Color.White,
-                    ),
-                )
-            }
-        }
 
         // Camera + overlay + UI overlays
         Box(modifier = Modifier.fillMaxSize()) {

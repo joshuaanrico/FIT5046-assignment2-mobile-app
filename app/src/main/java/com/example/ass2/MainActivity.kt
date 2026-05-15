@@ -143,7 +143,7 @@ fun AppNavGraph() {
             ExerciseDetailScreen(
                 exerciseName = name,
                 onBack = { navController.popBackStack() },
-                onStartSession = { navController.navigate("pre_session_check_in") }
+                onStartSession = { navController.navigate("pre_session_check_in/$name") }
             )
         }
         composable("sessions") {
@@ -219,24 +219,33 @@ fun AppNavGraph() {
             )
         }
         // Session flow: check-in -> live session -> (optional pause alert) -> result
-        composable("pre_session_check_in") {
+        composable(
+            route = "pre_session_check_in/{exerciseName}",
+            arguments = listOf(navArgument("exerciseName"){type = NavType.StringType})
+        ) { backStackEntry ->
+            val exerciseName = backStackEntry.arguments?.getString("exerciseName")?:"Bicep Curl"
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
                 onResumeToSession = { energyLvl ->
-                    navController.navigate("live_session/$energyLvl"){
-                        popUpTo("pre_session_check_in"){inclusive=false}
+                    navController.navigate("live_session/$energyLvl/$exerciseName"){
+                        popUpTo("pre_session_check_in/$exerciseName"){ inclusive=false }
                     } },
                 onCancel = { navController.popBackStack() }
             )
         }
         composable(
-            route = "live_session/{energyLvl}",
-            arguments = listOf(navArgument("energyLvl"){ type = NavType.IntType })
-        ) {
+            route = "live_session/{energyLvl}/{exerciseName}",
+            arguments = listOf(
+                navArgument("energyLvl"){ type = NavType.IntType },
+                navArgument("exerciseName"){type = NavType.StringType}
+            ))
+        {
             backStackEntry ->
             val energyLvl = backStackEntry.arguments?.getInt("energyLvl")?:3
+            val exerciseName = backStackEntry.arguments?.getString("exerciseName")?:""
             LiveSessionScreen(
                 energyLevel = energyLvl,
+                exerciseName = exerciseName,
                 onBack = { navController.popBackStack() },
                 onHelp = { navController.navigate("help") },
                 onPause = { navController.navigate("pause_alert") },
