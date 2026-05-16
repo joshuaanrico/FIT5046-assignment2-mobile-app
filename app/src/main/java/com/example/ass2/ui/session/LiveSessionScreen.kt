@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,13 +34,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,31 +56,53 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.LifecycleOwner
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.FieldBackground
+import com.example.ass2.viewmodel.LiveSessionViewModel
 import com.example.ass2.viewmodel.PoseViewModel
+import kotlinx.coroutines.delay
 
-private const val TARGET_REPS = 12
 
 @Composable
 fun LiveSessionScreen(
+    energyLevel: Int = 3,
+    exerciseName: String = "Bicep Curl",
+    liveSessionViewModel : LiveSessionViewModel,
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onPause: () -> Unit,
     onEndSession: () -> Unit,
 ) {
+
+    var targetReps by remember{
+        mutableIntStateOf(
+            when(energyLevel)
+            {
+                1 -> 5
+                2 -> 8
+                3 -> 12
+                4 -> 15
+                5 -> 20
+                else -> 12
+            }
+        )
+    }
+
     val context = LocalContext.current
-    val lifecycleOwner = context as LifecycleOwner
+    val lifecycleOwner = LocalLifecycleOwner.current
     val poseViewModel: PoseViewModel = viewModel()
 
     // Observe ViewModel state
-    val update by poseViewModel.exerciseUpdate.collectAsState()
-    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsState()
+    val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
+    val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
+
+    val heartRate by liveSessionViewModel.heartRate.collectAsStateWithLifecycle()
 
     // Camera permission
     var hasCameraPermission by remember {
@@ -103,6 +122,77 @@ fun LiveSessionScreen(
     }
 
     val isGoodForm = update.poseQuality >= 70f && update.feedback.isNotEmpty()
+
+
+// -------------------------------------------------------------------------------------------------
+    // the number of seconds that has gone by since the screen opened.
+    var secondsPassed by remember { mutableIntStateOf(0) }
+    // to check if the lower intensity version of exercise is to be executed
+    val lowerIntensitySelected by liveSessionViewModel.selectedLow.collectAsStateWithLifecycle()
+
+    // to be run once when the screen opens
+    LaunchedEffect("session")
+    {
+        // starting the HR simulator and the timer at the same time.
+        liveSessionViewModel.sessionStart()
+        while (true){
+            delay(1000L)
+            secondsPassed = liveSessionViewModel.getDurationOfSession()
+        }
+    }
+
+    // watches the rep count and ends session once the taget is met.
+    LaunchedEffect(update.repCount)
+    {
+       if (update.repCount >= targetReps)
+       {
+           poseViewModel.lockExercise()
+       }
+    }
+
+    // collect the one shot event.
+    LaunchedEffect("hrAlert")
+    {
+        liveSessionViewModel.hRAlertEvent.collect {
+            onPause()
+        }
+    }
+
+    // makes sure the correct exercise is being selected.
+    LaunchedEffect(exerciseName)
+    {
+        val exercise = poseViewModel.availableExercises.firstOrNull{
+            it.displayName == exerciseName
+        }
+        if (exercise != null)
+        {
+            poseViewModel.selectExercise(exercise)
+        }
+    }
+
+    LaunchedEffect(lowerIntensitySelected)
+    {
+        if (lowerIntensitySelected)
+        {
+            targetReps = when {
+                targetReps > 15 -> 15
+                targetReps > 12 -> 12
+                targetReps > 8 -> 8
+                targetReps > 5 -> 5
+                else -> 5
+            }
+            liveSessionViewModel.acknowledgeTheLowerIntensity()
+        }
+    }
+
+    /**
+     * Keeping the live session view model aware of the target rep count.
+     */
+    LaunchedEffect(targetReps) {
+        liveSessionViewModel.setTargetReps(targetReps)
+    }
+// -------------------------------------------------------------------------------------------------
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.statusBarsPadding())
@@ -125,27 +215,6 @@ fun LiveSessionScreen(
                 modifier = Modifier.align(Alignment.CenterEnd).clickable { onHelp() })
         }
 
-        // Exercise picker
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(FieldBackground)
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            poseViewModel.availableExercises.forEach { exercise ->
-                FilterChip(
-                    selected = exercise.displayName == selectedExerciseName,
-                    onClick = { poseViewModel.selectExercise(exercise) },
-                    label = { Text(exercise.displayName, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandTeal,
-                        selectedLabelColor = Color.White,
-                    ),
-                )
-            }
-        }
 
         // Camera + overlay + UI overlays
         Box(modifier = Modifier.fillMaxSize()) {
@@ -201,7 +270,7 @@ fun LiveSessionScreen(
                             Spacer(Modifier.height(24.dp))
                             Text("Target", fontSize = 14.sp, color = Color(0xFF666666))
                             Spacer(Modifier.height(8.dp))
-                            Text("${update.repCount}/$TARGET_REPS\nReps", fontSize = 22.sp,
+                            Text("${update.repCount.coerceAtMost(targetReps)}/$targetReps\nReps", fontSize = 22.sp,
                                 lineHeight = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
                         }
                     }
@@ -213,7 +282,12 @@ fun LiveSessionScreen(
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AccessTime, "Timer", tint = BrandTealDark, modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text("00:00 min", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
+                                Text(
+                                    text = "%02d:%02d min".format(secondsPassed / 60, secondsPassed % 60),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1F1F1F)
+                                )
                             }
                         }
                         Card(modifier = Modifier.width(170.dp), shape = RoundedCornerShape(20.dp),
@@ -222,7 +296,12 @@ fun LiveSessionScreen(
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Favorite, null, tint = Color(0xFFC62828), modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text("-- BPM", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F1F1F))
+                                Text(
+                                    text = if (heartRate == 0) "-- BPM" else "$heartRate BPM",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1F1F1F)
+                                )
                             }
                         }
                     }
@@ -230,7 +309,7 @@ fun LiveSessionScreen(
 
                 Spacer(Modifier.height(18.dp))
                 LinearProgressIndicator(
-                    progress = { (update.repCount.toFloat() / TARGET_REPS).coerceIn(0f, 1f) },
+                    progress = { (update.repCount.toFloat() / targetReps).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)
                         .height(10.dp).clip(RoundedCornerShape(20.dp)),
                     color = BrandTealDark,
@@ -270,13 +349,21 @@ fun LiveSessionScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
-                    Surface(modifier = Modifier.size(65.dp).clickable { onPause() },
+                    Surface(modifier = Modifier.size(65.dp).clickable { liveSessionViewModel.pauseSession()
+                        onPause() },
                         shape = CircleShape, color = Color.White.copy(alpha = 0.66f)) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Pause, "Pause", tint = BrandTealDark, modifier = Modifier.size(32.dp))
                         }
                     }
-                    Button(onClick = onEndSession, modifier = Modifier.weight(1f).height(65.dp),
+                    Button(onClick = {
+                        liveSessionViewModel.finalizeSession(
+                            exerciseName = selectedExerciseName,
+                            reps = update.repCount,
+                            poseQuality = update.poseQuality
+                        )
+                        onEndSession() },
+                        modifier = Modifier.weight(1f).height(65.dp),
                         shape = RoundedCornerShape(41.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)) {
                         Icon(Icons.Default.StopCircle, null, tint = Color.White, modifier = Modifier.size(24.dp))

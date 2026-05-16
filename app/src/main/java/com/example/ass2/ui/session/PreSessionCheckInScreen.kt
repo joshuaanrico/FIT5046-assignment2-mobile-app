@@ -59,7 +59,7 @@ import com.example.ass2.ui.theme.IconBackground
 @Composable
 fun PreSessionCheckInScreen(
     onClose: () -> Unit,
-    onResumeToSession: () -> Unit,
+    onResumeToSession: (energyLvl: Int) -> Unit,
     onCancel: () -> Unit
 ) {
     var energyLevel by remember { mutableIntStateOf(3) }
@@ -280,7 +280,7 @@ fun PreSessionCheckInScreen(
             Spacer(modifier = Modifier.height(30.dp))
 
             Button(
-                onClick = onResumeToSession,
+                onClick = {onResumeToSession(energyLevel)},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),

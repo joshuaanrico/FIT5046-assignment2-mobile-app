@@ -83,7 +83,7 @@ fun AlertScreen(
                 ) {
                     Icon(Icons.Default.Pause, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Rest", color = Color.White)
+                    Text("Resume", color = Color.White)
                 }
 
                 Button(

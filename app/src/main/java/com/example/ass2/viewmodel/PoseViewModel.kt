@@ -1,10 +1,9 @@
 package com.example.ass2.viewmodel
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -31,32 +30,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.Executors
 
-// ViewModel that manages real-time pose estimation using MediaPipe and CameraX.
-// Handles camera binding, landmark detection, exercise FSM updates, and overlay rendering.
-class PoseViewModel(application: Application) : AndroidViewModel(application) {
-
-    // Latest exercise rep count, state, and feedback — observed by LiveSessionScreen
+class PoseViewModel(application: Application) : AndroidViewModel(application)
+{
+    // Public state observed by LiveSessionScreen
     private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
-
-    // Name of the currently selected exercise, displayed in the session UI
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
     val currentExerciseName: StateFlow<String> = _currentExerciseName.asStateFlow()
-
-    // Full list of available exercises shown in the exercise picker
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
-
-    // Reference to the overlay view that draws the skeleton on top of the camera feed.
-    // @Volatile ensures the MediaPipe callback thread always reads the latest value
-    // set by the main thread (avoids stale cache in multi-threaded access).
-    @Volatile private var overlayView: PoseOverlayView? = null
-
-    // Holds the active exercise instance — wrapped in an object to allow mutation
-    // from both the main thread (selectExercise) and the camera background thread
     private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
+    private val selectedLowerIntensity = MutableStateFlow(false)
+    @Volatile private var sessionLocked = false
 
-    // Dedicated single-thread executor for camera image analysis,
-    // keeping heavy image processing off the main thread
+    // Internal - plain holders, not Compose state
+    // The overlay view is set/cleared by LiveSessionScreen's AndroidView callbacks.
+    // @Volatile ensures the MediaPipe callback thread always sees the latest value.
+    @SuppressLint("StaticFieldLeak")
+    @Volatile private var overlayView: PoseOverlayView? = null
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
     // MediaPipe PoseLandmarker initialised once with the lite model for real-time performance.
@@ -68,8 +58,11 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
             .setResultListener { result, _ ->
                 // Run on the camera background thread — post state updates back to main thread
                 result.landmarks().firstOrNull()?.let { landmarks ->
-                    val u = exerciseHolder.ex.process(landmarks)
-                    viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
+                    // does not execute when the rep goal has been met.
+                    if (!sessionLocked) {
+                        val u = exerciseHolder.ex.process(landmarks)
+                        viewModelScope.launch(Dispatchers.Main) { _exerciseUpdate.value = u }
+                    }
                 }
                 // Update the skeleton overlay — clear it if no person is detected
                 viewModelScope.launch(Dispatchers.Main) {
@@ -142,6 +135,23 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         exerciseHolder.ex = exercise
         _currentExerciseName.value = exercise.displayName
         _exerciseUpdate.value = ExerciseUpdate()
+        unlockExercise()
+    }
+
+    fun resetExercise()
+    {
+        exerciseHolder.ex.reset()
+        _exerciseUpdate.value = ExerciseUpdate()
+        unlockExercise()
+    }
+
+    fun lockExercise(){
+        sessionLocked = true
+    }
+
+    fun unlockExercise()
+    {
+        sessionLocked = false
     }
 
     // Releases camera and MediaPipe resources when the ViewModel is destroyed
@@ -152,9 +162,11 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
         poseLandmarker?.close()
     }
 
-    companion object {
+    companion object
+    {
         private const val TAG = "PoseViewModel"
         // Lite model used for real-time inference — balanced accuracy vs. performance
         private const val MODEL = "pose_landmarker_lite.task"
+
     }
 }
