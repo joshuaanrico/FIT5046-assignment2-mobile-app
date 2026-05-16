@@ -38,7 +38,8 @@ fun ProfileSetupScreen(
     val grayText = Color(0xFF5F6368)
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // below code error because overwrite profile page with talent code
+//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var displayName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
@@ -292,15 +293,15 @@ fun ProfileSetupScreen(
                                 append(" bpm")
                             }
                         }
-
-                        viewModel.saveProfile(
-                            displayName = displayName.ifBlank { uiState.displayName },
-                            dob = null,
-                            heightCm = null,
-                            weightKg = null,
-                            conditions = combinedConditions,
-                            painBaseline = painLevel.toInt()
-                        )
+// below code error because overwrite profile page with talent code
+//                        viewModel.saveProfile(
+//                            displayName = displayName.ifBlank { uiState.displayName },
+//                            dob = null,
+//                            heightCm = null,
+//                            weightKg = null,
+//                            conditions = combinedConditions,
+//                            painBaseline = painLevel.toInt()
+//                        )
 
                         onSaveAndContinue()
                     },
