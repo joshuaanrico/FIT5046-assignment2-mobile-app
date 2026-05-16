@@ -17,6 +17,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+data class SessionSnapshot(
+    val exerciseName: String,
+    val durationSec: Int,
+    val avgHr: Int,
+    val reps: Int,
+    val targetReps: Int,
+    val poseQuality: Float,
+    val endedAt: Long
+)
+
+
 /**
  * For the runtime state of the live session.
  * Scoped to the session flow to ensure that a single instance is being share,
@@ -56,6 +67,12 @@ class LiveSessionViewModel(application: Application) : AndroidViewModel(applicat
     // live session observes this val
     private val selectedLowerIntensity = MutableStateFlow(false)
     val selectedLow: StateFlow<Boolean> = selectedLowerIntensity.asStateFlow()
+
+    // Target reps for the current session, set by LiveSessionScreen as the user's energy-based
+    private var currentTargetReps = 0
+    // The snapshot of the most recently finalized session.
+    private var lastSnapshot: SessionSnapshot? = null
+
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -220,6 +237,64 @@ class LiveSessionViewModel(application: Application) : AndroidViewModel(applicat
     {
         return hrSamples.average().toInt()
     }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Called by LiveSessionScreen whenever its targetReps value changes
+     * Keeps the VM aware of the goal so finalizeSession() can include it in the snapshot.
+     */
+    fun setTargetReps(reps: Int) {
+        currentTargetReps = reps
+    }
+
+    /**
+     * This takes the final session data into a snapshot, stops the HR stream, and resets the
+     * session-runtime state so the next session starts cleanly. Called by LiveSessionScreen
+     * and by AlertScreen's End Session path before navigating to SessionResultScreen.
+     *
+     * @param exerciseName the name of the exercise being done
+     * @param reps the count of reps achieved
+     * @param poseQuality the pose quality score.
+     */
+    fun finalizeSession(exerciseName: String, reps: Int, poseQuality: Float) {
+        // If the user ends while paused, It's treated as ending at the pause moment and won't
+        // include the time spent on the alert screen in the recorded duration.
+        if (sessionPausedTime > 0L) {
+            val durationPaused = System.currentTimeMillis() - sessionPausedTime
+            sessionSrtTime += durationPaused
+            sessionPausedTime = 0L
+        }
+        stopSimulationOfHR()
+
+        lastSnapshot = SessionSnapshot(
+            exerciseName = exerciseName,
+            durationSec = getDurationOfSession(),
+            avgHr = getAvgHR(),
+            reps = reps,
+            targetReps = currentTargetReps,
+            poseQuality = poseQuality,
+            endedAt = System.currentTimeMillis()
+        )
+
+        // Reset runtime state so the next session starts fresh. The snapshot is preserved
+        // in lastSnapshot until consumeSessionResult() reads and clears it.
+        sessionSrtTime = 0L
+        hrSamples.clear()
+        hr.value = 0
+        consumeHrAlert()
+        selectedLowerIntensity.value = false
+    }
+
+    /**
+     * Reads the last session's snapshot exactly once.
+     */
+    fun consumeSessionResult(): SessionSnapshot? {
+        val s = lastSnapshot
+        lastSnapshot = null
+        return s
+    }
+
+    //----------------------------------------------------------------------------------------------
 
     override fun onCleared() {
         super.onCleared()

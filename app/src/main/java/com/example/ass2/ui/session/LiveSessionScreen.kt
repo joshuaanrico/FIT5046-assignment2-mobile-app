@@ -184,6 +184,13 @@ fun LiveSessionScreen(
             liveSessionViewModel.acknowledgeTheLowerIntensity()
         }
     }
+
+    /**
+     * Keeping the live session view model aware of the target rep count.
+     */
+    LaunchedEffect(targetReps) {
+        liveSessionViewModel.setTargetReps(targetReps)
+    }
 // -------------------------------------------------------------------------------------------------
 
 
@@ -349,7 +356,14 @@ fun LiveSessionScreen(
                             Icon(Icons.Default.Pause, "Pause", tint = BrandTealDark, modifier = Modifier.size(32.dp))
                         }
                     }
-                    Button(onClick = onEndSession, modifier = Modifier.weight(1f).height(65.dp),
+                    Button(onClick = {
+                        liveSessionViewModel.finalizeSession(
+                            exerciseName = selectedExerciseName,
+                            reps = update.repCount,
+                            poseQuality = update.poseQuality
+                        )
+                        onEndSession() },
+                        modifier = Modifier.weight(1f).height(65.dp),
                         shape = RoundedCornerShape(41.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)) {
                         Icon(Icons.Default.StopCircle, null, tint = Color.White, modifier = Modifier.size(24.dp))

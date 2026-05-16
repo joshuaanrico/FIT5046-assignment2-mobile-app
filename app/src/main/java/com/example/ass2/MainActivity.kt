@@ -47,6 +47,7 @@ import com.example.ass2.ui.profile.HelpScreen
 import com.example.ass2.ui.profile.LegalScreen
 import com.example.ass2.viewmodel.LiveSessionViewModel
 import com.example.ass2.viewmodel.PoseViewModel
+import com.example.ass2.viewmodel.SessionViewModel
 
 class MainActivity : ComponentActivity() {
     // Registers the system permission dialog launcher for POST_NOTIFICATIONS (Android 13+)
@@ -239,9 +240,6 @@ fun AppNavGraph() {
             )
         }
 
-        // --------------------------------------------------------------------------------------------------------
-        // --------------------------------------------------------------------------------------------------------
-
         navigation(
             route = "session_flow/{energyLvl}/{exerciseName}",
             startDestination = "live_session",
@@ -289,21 +287,32 @@ fun AppNavGraph() {
                         poseViewModel.resetExercise()
                         navController.popBackStack()
                     },
-                    onEndSession = { navController.navigate("session_result") }
+                    onEndSession = {
+                        val update = poseViewModel.exerciseUpdate.value
+                        liveSessionViewModel.finalizeSession(
+                            exerciseName = poseViewModel.currentExerciseName.value,
+                            reps = update.repCount,
+                            poseQuality = update.poseQuality
+                        )
+                        navController.navigate("session_result")
+
+                    }
                 )
             }
 
 
         }
 
-
-        // --------------------------------------------------------------------------------------------------------
-        // --------------------------------------------------------------------------------------------------------
-
-
         // Session result - all exit paths popUpTo home to prevent back-navigating into the session flow
-        composable("session_result") {
+        composable("session_result") { backStackEntry ->
+            val parentEntry: NavBackStackEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("session_flow/{energyLvl}/{exerciseName}")
+            }
+            val liveSessionViewModel: LiveSessionViewModel = viewModel(parentEntry)
+            val sessionViewModel: SessionViewModel = viewModel()
             SessionResultScreen(
+                liveSessionViewModel = liveSessionViewModel,
+                sessionViewModel = sessionViewModel,
                 onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
                 onSaveSession = { navController.navigate("sessions") { popUpTo("home") { inclusive = false } } },
                 onRepeatLater = { navController.navigate("exercises") { popUpTo("home") { inclusive = false } } },

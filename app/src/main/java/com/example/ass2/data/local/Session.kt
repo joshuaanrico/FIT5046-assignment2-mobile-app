@@ -12,5 +12,7 @@ data class Session(
     val exerciseId: String? = null, // links to Exercise cache (nullable: user may log free session)
     val avgHr: Int? = null,         // nullable until Yapa sensor track lands (Week 9)
     val poseQuality: Float? = null, // nullable until Yapa MediaPipe lands (Week 10)
-    val notes: String? = null       // editable in SessionDetailScreen
+    val notes: String? = null,       // editable in SessionDetailScreen
+    val fatigueLevel: String? = null,
+    val discomfort: String? = null
 )

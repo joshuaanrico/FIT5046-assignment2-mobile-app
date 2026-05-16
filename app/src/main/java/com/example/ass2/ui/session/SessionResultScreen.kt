@@ -49,18 +49,49 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ass2.data.local.Session
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.CardBackground
+import com.example.ass2.viewmodel.LiveSessionViewModel
+import com.example.ass2.viewmodel.SessionViewModel
 
 @Composable
 fun SessionResultScreen(
+    liveSessionViewModel: LiveSessionViewModel,
+    sessionViewModel: SessionViewModel,
     onCancel: () -> Unit,
     onSaveSession: () -> Unit,
     onRepeatLater: () -> Unit,
     onHome: () -> Unit
 ) {
+
+    // Reading the snapshot.
+    val snapshot = remember { liveSessionViewModel.consumeSessionResult() }
+
+    //----------------------------------------------------------------------------------------------
+    // the variables used to display the details of the session.
+
+    val durationDisplay = remember (snapshot) {
+        if (snapshot == null) "----"
+        else "%02d:%02d".format(snapshot.durationSec / 60, snapshot.durationSec % 60)
+    }
+    val avgHrDisplay = snapshot?.avgHr?.takeIf { it > 0 }?.toString() ?: "--"
+    val exerciseNameDisplay = snapshot?.exerciseName ?: "Exercise"
+    val completionPct = remember(snapshot) {
+        if (snapshot == null || snapshot.targetReps == 0) 0
+        else ((snapshot.reps.toFloat() / snapshot.targetReps) * 100).toInt().coerceIn(0, 100)
+    }
+    val poseQualityLabel = remember(snapshot) {
+        when {
+            snapshot == null -> "—"
+            snapshot.poseQuality >= 80 -> "Excellent Form"
+            snapshot.poseQuality >= 60 -> "Good Form"
+            snapshot.poseQuality >= 40 -> "Fair Form" else -> "Needs Work" } }
+
+    //----------------------------------------------------------------------------------------------
+
     var selectedFatigueLevel by remember { mutableStateOf("") }
     var selectedDiscomfort by remember { mutableStateOf("") }
 
@@ -141,7 +172,7 @@ fun SessionResultScreen(
                         )
                         Spacer(modifier = Modifier.height(18.dp))
                         Text(
-                            text = "You successfully completed the\nseated torso twist routine.",
+                            text = "You successfully completed the\n$exerciseNameDisplay routine.",
                             fontSize = 12.sp,
                             color = Color.Gray,
                             textAlign = TextAlign.Center,
@@ -170,7 +201,7 @@ fun SessionResultScreen(
                                     Text(text = "Duration", fontSize = 14.sp, color = Color.DarkGray)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "12.45",
+                                        text = durationDisplay,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.DarkGray
@@ -194,7 +225,7 @@ fun SessionResultScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
-                                            text = "80",
+                                            text = avgHrDisplay,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.DarkGray
@@ -223,7 +254,7 @@ fun SessionResultScreen(
                                     Text(text = "Pose Quality", fontSize = 14.sp, color = Color.DarkGray)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Good Form",
+                                        text = poseQualityLabel,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = BrandTealDark
@@ -434,7 +465,21 @@ fun SessionResultScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Button(
-                        onClick = onSaveSession,
+                        onClick ={
+                            if (snapshot != null){
+                                val session = Session(
+                                    startTime = snapshot.endedAt - (snapshot.durationSec * 1000L),
+                                    durationSec = snapshot.durationSec,
+                                    exerciseName = snapshot.exerciseName,
+                                    avgHr = snapshot.avgHr.takeIf { it > 0 },
+                                    poseQuality = snapshot.poseQuality.takeIf { it > 0f },
+                                    fatigueLevel = selectedFatigueLevel.takeIf { it.isNotEmpty() },
+                                    discomfort = selectedDiscomfort.takeIf { it.isNotEmpty() }
+                                )
+                                sessionViewModel.insert(session)
+                            }
+                            onSaveSession()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(58.dp),
