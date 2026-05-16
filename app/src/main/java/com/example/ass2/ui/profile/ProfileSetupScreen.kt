@@ -21,19 +21,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandTeal
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileSetupScreen(
     onBack: () -> Unit,
-    onSaveAndContinue: () -> Unit
-) {
+    onSaveAndContinue: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
+)  {
     val bgColor = Color(0xFFF4F5F4)
     val teal = BrandTeal
     val darkText = Color(0xFF1F1F1F)
     val grayText = Color(0xFF5F6368)
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
+    // below code error because overwrite profile page with talent code
+//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    var displayName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var mobilitySupport by remember { mutableStateOf("") }
     var activityLevel by remember { mutableStateOf("") }
@@ -100,6 +108,29 @@ fun ProfileSetupScreen(
                             teal = teal
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "Display Name",
+                            color = grayText,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = displayName,
+                            onValueChange = { displayName = it },
+                            placeholder = { Text("Enter your name", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = whiteCard,
+                                focusedContainerColor = whiteCard,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = teal
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
                         Text("Age", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
                         OutlinedTextField(
                             value = age,
@@ -238,12 +269,53 @@ fun ProfileSetupScreen(
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Button(
-                    onClick = onSaveAndContinue,
+                    onClick = {
+                        val combinedConditions = buildString {
+                            append("Mobility support: ")
+                            append(mobilitySupport.ifBlank { "Not provided" })
+
+                            append("\nActivity level: ")
+                            append(activityLevel.ifBlank { "Not provided" })
+
+                            if (conditions.isNotBlank()) {
+                                append("\nCondition notes: ")
+                                append(conditions)
+                            }
+
+                            if (age.isNotBlank()) {
+                                append("\nAge: ")
+                                append(age)
+                            }
+
+                            if (restingHeartRate.isNotBlank()) {
+                                append("\nResting heart rate: ")
+                                append(restingHeartRate)
+                                append(" bpm")
+                            }
+                        }
+// below code error because overwrite profile page with talent code
+//                        viewModel.saveProfile(
+//                            displayName = displayName.ifBlank { uiState.displayName },
+//                            dob = null,
+//                            heightCm = null,
+//                            weightKg = null,
+//                            conditions = combinedConditions,
+//                            painBaseline = painLevel.toInt()
+//                        )
+
+                        onSaveAndContinue()
+                    },
+                    enabled = displayName.isNotBlank() &&
+                            mobilitySupport.isNotBlank() &&
+                            activityLevel.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = teal)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = teal,
+                        disabledContainerColor = teal.copy(alpha = 0.35f)
+                    )
                 ) {
                     Text("Save and Continue", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }

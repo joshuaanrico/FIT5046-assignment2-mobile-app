@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import android.util.Patterns
 
 // OAuth 2.0 Web Client ID from the Firebase project, used to authenticate Google Sign-In tokens
 const val WEB_CLIENT_ID = "1017626561698-63hggmjkld746mgrcm8mjo1lkdio9sgp.apps.googleusercontent.com"
@@ -104,14 +105,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // Sends a password reset email via Firebase to the provided address.
     // Firebase only delivers the email if the address belongs to a registered account.
     fun sendPasswordReset(email: String) {
-        if (email.isBlank()) {
+        val trimmedEmail = email.trim()
+
+        if (trimmedEmail.isBlank()) {
             _authState.value = AuthState.Error("Please enter your email address")
             return
         }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches()) {
+            _authState.value = AuthState.Error("Please enter a valid email address")
+            return
+        }
+
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                auth.sendPasswordResetEmail(email).await()
+                auth.sendPasswordResetEmail(trimmedEmail).await()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Failed to send reset email")

@@ -105,7 +105,11 @@ fun AppNavGraph() {
         composable("forgot_password") {
             ForgotPasswordScreen(
                 onBack = { navController.popBackStack() },
-                onBackToLogin = { navController.popBackStack() }
+                onBackToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("forgot_password") { inclusive = true }
+                    }
+                }
             )
         }
         composable("register") {
