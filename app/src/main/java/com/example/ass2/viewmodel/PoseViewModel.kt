@@ -125,6 +125,8 @@ class PoseViewModel(application: Application) : AndroidViewModel(application) {
             // Use front camera if available, otherwise fall back to rear camera
             val selector = if (provider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA))
                 CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+            // Mirror the skeleton overlay to match CameraX's horizontally-flipped front preview
+            overlayView?.isMirrored = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
             try {
                 provider.unbindAll()
                 provider.bindToLifecycle(lifecycleOwner, selector, preview, analysis)

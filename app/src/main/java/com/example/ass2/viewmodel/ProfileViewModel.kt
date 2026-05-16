@@ -5,132 +5,46 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ass2.data.local.Profile
 import com.example.ass2.data.repository.ProfileRepository
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class ProfileUiState(
-    val userId: String = "",
-    val displayName: String = "User",
-    val email: String = "",
-    val dob: Long? = null,
-    val heightCm: Float? = null,
-    val weightKg: Float? = null,
-    val conditions: String = "Not set",
-    val painBaseline: Int? = null,
-    val isProfileSetup: Boolean = false,
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null
-)
-
+// ViewModel responsible for loading and saving the user's profile from Room.
+// Bridges ProfileScreen and ProfileSetupScreen with the local Room database.
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val profileRepository = ProfileRepository(application)
+    private val repository = ProfileRepository(application)
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    // Firebase Auth instance used to get the current user's UID and email
+    private val auth = Firebase.auth
 
-    init {
-        loadProfile()
-    }
+    // The Firebase UID used as the primary key in the Room profile table
+    val uid: String get() = auth.currentUser?.uid ?: ""
 
-    private fun loadProfile() {
-        val user = auth.currentUser
+    // Email address from Firebase Auth — not stored in Room since Firebase is the source of truth
+    val email: String get() = auth.currentUser?.email ?: ""
 
-        if (user == null) {
-            _uiState.update {
-                it.copy(
-                    displayName = "Guest",
-                    email = "",
-                    isLoading = false,
-                    errorMessage = "No signed-in user found."
-                )
-            }
-            return
+    // Observes the profile row for the logged-in user from Room.
+    // Emits null if the user has not completed profile setup yet.
+    // WhileSubscribed(5000) keeps the upstream Flow alive for 5 seconds after
+    // the last collector disappears, avoiding unnecessary DB re-queries on recomposition.
+    val profile: StateFlow<Profile?> = repository.observe(uid)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    // Persists the profile to Room on a background thread.
+    // Uses REPLACE conflict strategy (upsert) so this works for both
+    // first-time setup and subsequent edits.
+    fun saveProfile(profile: Profile) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.upsert(profile)
         }
-
-        val uid = user.uid
-        val fallbackName = user.displayName
-            ?: user.email?.substringBefore("@")
-            ?: "User"
-
-        _uiState.update {
-            it.copy(
-                userId = uid,
-                displayName = fallbackName,
-                email = user.email.orEmpty(),
-                isLoading = true,
-                errorMessage = null
-            )
-        }
-
-        viewModelScope.launch {
-            profileRepository.observe(uid).collect { profile ->
-                if (profile == null) {
-                    _uiState.update {
-                        it.copy(
-                            userId = uid,
-                            displayName = fallbackName,
-                            email = user.email.orEmpty(),
-                            conditions = "Not set",
-                            painBaseline = null,
-                            isProfileSetup = false,
-                            isLoading = false
-                        )
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            userId = uid,
-                            displayName = profile.displayName.ifBlank { fallbackName },
-                            email = user.email.orEmpty(),
-                            dob = profile.dob,
-                            heightCm = profile.heightCm,
-                            weightKg = profile.weightKg,
-                            conditions = profile.conditions?.ifBlank { "Not set" } ?: "Not set",
-                            painBaseline = profile.painBaseline,
-                            isProfileSetup = true,
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun saveProfile(
-        displayName: String,
-        dob: Long?,
-        heightCm: Float?,
-        weightKg: Float?,
-        conditions: String?,
-        painBaseline: Int?
-    ) {
-        val user = auth.currentUser ?: return
-
-        viewModelScope.launch {
-            val profile = Profile(
-                userId = user.uid,
-                displayName = displayName.ifBlank {
-                    user.displayName ?: user.email?.substringBefore("@") ?: "User"
-                },
-                dob = dob,
-                heightCm = heightCm,
-                weightKg = weightKg,
-                conditions = conditions,
-                painBaseline = painBaseline
-            )
-
-            profileRepository.upsert(profile)
-        }
-    }
-
-    fun signOut() {
-        auth.signOut()
     }
 }
