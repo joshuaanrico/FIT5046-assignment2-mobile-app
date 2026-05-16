@@ -49,6 +49,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.ProfileViewModel
 
 // Displays the user's profile summary — name, email, accessibility info, and navigation menu.
 // Data is sourced from Room (via ProfileViewModel) and Firebase Auth.
@@ -177,7 +181,7 @@ fun ProfileScreen(
 
                     // Static chips for mobility type and primary goal
                     ProfileChip(
-                        text = "Seated Mobility",
+                        text = conditionText,
                         background = lightTeal,
                         textColor = textGray,
                         icon = Icons.Outlined.Accessibility
@@ -186,7 +190,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     ProfileChip(
-                        text = "Primary Goal: Flexibility",
+                        text = painText,
                         background = lightGray,
                         textColor = textDark,
                         icon = Icons.Outlined.FitnessCenter
@@ -242,7 +246,9 @@ fun ProfileScreen(
 
             // Sign out — calls Firebase signOut via AuthViewModel in MainActivity
             Row(
-                modifier = Modifier.clickable { onSignOut() },
+                modifier = Modifier.clickable {
+                    viewModel.signOut()
+                    onSignOut() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
