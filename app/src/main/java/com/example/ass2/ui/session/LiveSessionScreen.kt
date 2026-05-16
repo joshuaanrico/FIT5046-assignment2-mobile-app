@@ -64,6 +64,7 @@ import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
 import com.example.ass2.ui.theme.FieldBackground
+import com.example.ass2.viewmodel.LiveSessionViewModel
 import com.example.ass2.viewmodel.PoseViewModel
 import kotlinx.coroutines.delay
 
@@ -72,6 +73,7 @@ import kotlinx.coroutines.delay
 fun LiveSessionScreen(
     energyLevel: Int = 3,
     exerciseName: String = "Bicep Curl",
+    liveSessionViewModel : LiveSessionViewModel,
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onPause: () -> Unit,
@@ -100,7 +102,7 @@ fun LiveSessionScreen(
     val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
     val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
 
-    val heartRate by poseViewModel.heartRate.collectAsStateWithLifecycle()
+    val heartRate by liveSessionViewModel.heartRate.collectAsStateWithLifecycle()
 
     // Camera permission
     var hasCameraPermission by remember {
@@ -126,16 +128,16 @@ fun LiveSessionScreen(
     // the number of seconds that has gone by since the screen opened.
     var secondsPassed by remember { mutableIntStateOf(0) }
     // to check if the lower intensity version of exercise is to be executed
-    val lowerIntensitySelected by poseViewModel.selectedLow.collectAsStateWithLifecycle()
+    val lowerIntensitySelected by liveSessionViewModel.selectedLow.collectAsStateWithLifecycle()
 
     // to be run once when the screen opens
     LaunchedEffect("session")
     {
         // starting the HR simulator and the timer at the same time.
-        poseViewModel.sessionStart()
+        liveSessionViewModel.sessionStart()
         while (true){
             delay(1000L)
-            secondsPassed = poseViewModel.getDurationOfSession()
+            secondsPassed = liveSessionViewModel.getDurationOfSession()
         }
     }
 
@@ -151,7 +153,7 @@ fun LiveSessionScreen(
     // collect the one shot event.
     LaunchedEffect("hrAlert")
     {
-        poseViewModel.hrAlertEvent.collect {
+        liveSessionViewModel.hRAlertEvent.collect {
             onPause()
         }
     }
@@ -179,7 +181,7 @@ fun LiveSessionScreen(
                 targetReps > 5 -> 5
                 else -> 5
             }
-            poseViewModel.acknowledgeTheLowerIntensity()
+            liveSessionViewModel.acknowledgeTheLowerIntensity()
         }
     }
 // -------------------------------------------------------------------------------------------------
@@ -340,7 +342,7 @@ fun LiveSessionScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
-                    Surface(modifier = Modifier.size(65.dp).clickable { poseViewModel.pauseSession()
+                    Surface(modifier = Modifier.size(65.dp).clickable { liveSessionViewModel.pauseSession()
                         onPause() },
                         shape = CircleShape, color = Color.White.copy(alpha = 0.66f)) {
                         Box(contentAlignment = Alignment.Center) {

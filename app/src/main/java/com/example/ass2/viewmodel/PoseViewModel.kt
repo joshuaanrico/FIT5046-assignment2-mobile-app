@@ -16,37 +16,31 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
-import com.example.ass2.data.repository.ProfileRepository
 import com.example.ass2.pose.ExerciseUpdate
 import com.example.ass2.pose.BicepCurlExercise
 import com.example.ass2.pose.PoseOverlayView
 import com.example.ass2.pose.UpperBodyExercise
 import com.example.ass2.pose.UpperBodyExercises
-import com.example.ass2.sensor.HeartRateSimulator
-import com.google.firebase.auth.FirebaseAuth
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.receiveAsFlow
-import java.util.Calendar
 import java.util.concurrent.Executors
 
 class PoseViewModel(application: Application) : AndroidViewModel(application)
 {
     // Public state observed by LiveSessionScreen
+    private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
     val currentExerciseName: StateFlow<String> = _currentExerciseName.asStateFlow()
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
-
+    private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
+    private val selectedLowerIntensity = MutableStateFlow(false)
+    @Volatile private var sessionLocked = false
 
     // Internal - plain holders, not Compose state
     // The overlay view is set/cleared by LiveSessionScreen's AndroidView callbacks.
@@ -81,170 +75,6 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         Log.e(TAG, "Model load failed: ${e.message}")
         null
     }
-
-    // ---------------------------------------------------------------------------------------------
-
-    // heart rate simulation - related
-    private val profileRepo = ProfileRepository(application)
-    private val heartRateSim = HeartRateSimulator(application)
-    // To store the HR values during the session to calculate the avg at the end of session.
-    // readonly vals
-    val heartRate: StateFlow<Int> = hr.asStateFlow()
-    val hrAlertEvent = hrAlertChannel.receiveAsFlow()
-    // when the user decides to continue with a reduced intensity - flag.
-    val selectedLow: StateFlow<Boolean> = selectedLowerIntensity.asStateFlow()
-
-    /**
-     * Responsible for getting the simulated HR values,
-     * stores the values in hrSamples val.
-     */
-    private fun startHrStream()
-    {
-        simulatorJob?.cancel()
-        simulatorJob = sessionScope.launch{
-            heartRateSim.streamHR(currentUserAge).collect { bpm ->
-                hrSamples.add(bpm)
-                hr.value = bpm
-                if (bpm > currentThreshold)
-                {
-                    hrAlertChannel.trySend(Unit)
-                }
-            }
-        }
-    }
-
-    /**
-     * Being called when the live session screen opens.
-     * Reads the user profile, calculates the user HR threshold.
-     * Then the HR-BPM stream is started / the simulation.
-     *
-     * @author Yapa Jayasinghe
-     */
-    fun sessionStart()
-    {
-        if (sessionSrtTime > 0L) return  // making sure to only run if already not running.
-        sessionSrtTime = System.currentTimeMillis()
-        sessionPausedTime = 0L
-        hrSamples.clear()
-        // remove any leftover event from previous session.
-        hrAlertChannel.tryReceive()
-        // for a new session needs to reset.
-        selectedLowerIntensity.value = false
-
-        // getting the user id - so that age can be calculated.
-        val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
-
-        // starting a new coroutine - tied to the viewmodel lifecycle
-        sessionScope.launch{
-            // accessing the user profile (Room).
-            val userProfile = profileRepo.observe(userId).firstOrNull()
-            // age calculation (default set to 40yrs)
-            currentUserAge = if (userProfile?.dob != null) ageCalc(userProfile.dob) else 40
-            // getting the personalized threshold HR for current user
-            currentThreshold = heartRateSim.getThresholdHRForAge(currentUserAge)
-            // Log.d("HeartRate", "Age=$currentUserAge Threshold=$threshold uid=$userId profile=$userProfile")
-            startHrStream()
-        }
-    }
-
-    /**
-     * This method is run when the live session is ended / when navigated to a new screen.
-     */
-    private fun stopSimulationOfHR()
-    {
-        simulatorJob?.cancel()
-        simulatorJob = null
-    }
-
-    /**
-     * Called when the user presses the pause btn,
-     * records when the pause is being started.
-     * cancels the HR job / simulation.
-     */
-    fun pauseSession()
-    {
-        if(sessionPausedTime > 0L) return
-        sessionPausedTime = System.currentTimeMillis()
-        stopSimulationOfHR()
-    }
-
-    /**
-     * Called on when the user presses the resume btn on the alert screen.
-     */
-    fun resumeSession()
-    {
-        if (sessionPausedTime > 0L)
-        {
-            val durationPaused = System.currentTimeMillis() - sessionPausedTime
-            sessionSrtTime += durationPaused
-            sessionPausedTime = 0L
-        }
-        hrAlertChannel.tryReceive()
-        startHrStream()
-    }
-
-    /**
-     * Called on when the user clicks on the continue with low intensity btn,
-     * Timer and reps reset to O, target rep count is reduced.
-     */
-    fun sameExerciseWithLowIntensity()
-    {
-        // resetting timer
-        sessionSrtTime = System.currentTimeMillis()
-        sessionPausedTime = 0L
-        // making sure the old simulator job is removed / done
-        stopSimulationOfHR()
-        // resetting rep count
-        exerciseHolder.ex.reset()
-        _exerciseUpdate.value = ExerciseUpdate() // UI change, rep - 0
-        unlockExercise()
-        selectedLowerIntensity.value = true
-        hrAlertChannel.tryReceive()
-        startHrStream()
-    }
-
-    /**
-     * Calculates and returns the avg HR observed during the session.
-     */
-    fun getAvgHR(): Int
-    {
-        return hrSamples.average().toInt()
-    }
-
-    fun acknowledgeTheLowerIntensity()
-    {
-        selectedLowerIntensity.value = false
-    }
-
-    /**
-     * calculates the time passed by.
-     *
-     * @return duration in milliseconds
-     */
-    fun getDurationOfSession(): Int
-    {
-        val base = if (sessionPausedTime > 0L) sessionPausedTime else System.currentTimeMillis()
-        return ((base - sessionSrtTime)/1000).toInt()
-    }
-
-
-    /**
-     * Calculates the age of the user.
-     *
-     * @param dob the birthdate as Long
-     * @return age as Int
-     */
-    private fun ageCalc(dob: Long): Int
-    {
-        val birth = Calendar.getInstance().apply { timeInMillis = dob }
-        val today = Calendar.getInstance()
-        val userAge = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
-
-        return  userAge.coerceIn(18,100)
-    }
-
-    // ---------------------------------------------------------------------------------------------
-
 
     // Called by LiveSessionScreen's AndroidView factory + update lambda
     fun setOverlayView(view: PoseOverlayView?) {
@@ -293,6 +123,13 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         unlockExercise()
     }
 
+    fun resetExercise()
+    {
+        exerciseHolder.ex.reset()
+        _exerciseUpdate.value = ExerciseUpdate()
+        unlockExercise()
+    }
+
     fun lockExercise(){
         sessionLocked = true
     }
@@ -309,37 +146,10 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         poseLandmarker?.close()
     }
 
-    // a companion object is used to share the state states across when changing screens.
-    // cuz in the navigations new instances of PoseViewModel are being called on.
     companion object
     {
         private const val TAG = "PoseViewModel"
         private const val MODEL = "pose_landmarker_lite.task"
-
-        // the shared session states across all the PoseViewModel instances
-        private val hrSamples = mutableListOf<Int>()
-
-        // following fields with @Volatile - read and written across threads,
-        // @Volatile guarantees - each thread referencing the latest value.
-        // Reference to the coroutine in which the simulation is being run.
-        @Volatile private var simulatorJob: Job? = null
-        @Volatile private var sessionSrtTime = 0L
-        // for when the session is paused / when alert shown.
-        @Volatile private var sessionPausedTime = 0L
-        @Volatile private var currentUserAge = 0
-        @Volatile private var currentThreshold = 0
-        // hr - observable variable.
-        private val hr = MutableStateFlow(0)
-        private val hrAlertChannel = Channel<Unit>(Channel.CONFLATED)
-        private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
-        private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
-        private val selectedLowerIntensity = MutableStateFlow(false)
-        @Volatile private var sessionLocked = false
-
-        // a shared scope os that the Hr job survives across nav entry scoped viewmodel instances
-        private val sessionScope = kotlinx.coroutines.CoroutineScope(
-            SupervisorJob() + Dispatchers.IO
-        )
 
     }
 }

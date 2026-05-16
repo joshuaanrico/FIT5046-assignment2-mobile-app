@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,6 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.compose.navigation
 import com.example.ass2.ui.theme.Ass2Theme
 import com.example.ass2.ui.navigation.NavTab
 import com.example.ass2.ui.auth.LoginScreen
@@ -42,6 +45,7 @@ import com.example.ass2.ui.profile.ProfileSetupScreen
 import com.example.ass2.ui.profile.SettingsScreen
 import com.example.ass2.ui.profile.HelpScreen
 import com.example.ass2.ui.profile.LegalScreen
+import com.example.ass2.viewmodel.LiveSessionViewModel
 import com.example.ass2.viewmodel.PoseViewModel
 
 class MainActivity : ComponentActivity() {
@@ -228,46 +232,75 @@ fun AppNavGraph() {
             PreSessionCheckInScreen(
                 onClose = { navController.popBackStack() },
                 onResumeToSession = { energyLvl ->
-                    navController.navigate("live_session/$energyLvl/$exerciseName"){
+                    navController.navigate("session_flow/$energyLvl/$exerciseName"){
                         popUpTo("pre_session_check_in/$exerciseName"){ inclusive=false }
                     } },
                 onCancel = { navController.popBackStack() }
             )
         }
-        composable(
-            route = "live_session/{energyLvl}/{exerciseName}",
+
+        // --------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------
+
+        navigation(
+            route = "session_flow/{energyLvl}/{exerciseName}",
+            startDestination = "live_session",
             arguments = listOf(
-                navArgument("energyLvl"){ type = NavType.IntType },
+                navArgument("energyLvl"){type = NavType.IntType},
                 navArgument("exerciseName"){type = NavType.StringType}
-            ))
-        {
-            backStackEntry ->
-            val energyLvl = backStackEntry.arguments?.getInt("energyLvl")?:3
-            val exerciseName = backStackEntry.arguments?.getString("exerciseName")?:""
-            LiveSessionScreen(
-                energyLevel = energyLvl,
-                exerciseName = exerciseName,
-                onBack = { navController.popBackStack() },
-                onHelp = { navController.navigate("help") },
-                onPause = { navController.navigate("pause_alert"){
-                    // when pause_alert is already on top of the back stack not pushing another copy
-                    launchSingleTop = true
-                } },
-                onEndSession = { navController.navigate("session_result") }
             )
+
+        ) {
+            composable("live_session") { backStackEntry ->
+                val parentEntry: NavBackStackEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("session_flow/{energyLvl}/{exerciseName}")
+                }
+                val liveSessionViewModel: LiveSessionViewModel = viewModel(parentEntry)
+                val energyLvl = backStackEntry.arguments?.getInt("energyLvl") ?: 3
+                val exerciseName = backStackEntry.arguments?.getString("exerciseName") ?: ""
+                LiveSessionScreen(
+                    energyLevel = energyLvl,
+                    exerciseName = exerciseName,
+                    liveSessionViewModel = liveSessionViewModel,
+                    onBack = { navController.popBackStack() },
+                    onHelp = { navController.navigate("help") },
+                    onPause = {
+                        navController.navigate("pause_alert") {
+                            // when pause_alert is already on top of the back stack not pushing another copy
+                            launchSingleTop = true
+                        }
+                    },
+                    onEndSession = { navController.navigate("session_result") }
+                )
+            }
+            composable("pause_alert") { backStackEntry ->
+                val parentEntry: NavBackStackEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("session_flow/{energyLvl}/{exerciseName}")
+                }
+                val liveSessionViewModel: LiveSessionViewModel = viewModel(parentEntry)
+                val poseViewModel: PoseViewModel = viewModel(parentEntry)
+                AlertScreen(
+                    onRest = {
+                        liveSessionViewModel.resumeSession()
+                        navController.popBackStack()
+                    },
+                    onContinueLowerIntensity = {
+                        liveSessionViewModel.sameExerciseWithLowIntensity()
+                        poseViewModel.resetExercise()
+                        navController.popBackStack()
+                    },
+                    onEndSession = { navController.navigate("session_result") }
+                )
+            }
+
+
         }
-        composable("pause_alert") {
-            val poseViewModel: PoseViewModel = viewModel()
-            AlertScreen(
-                onRest = {
-                    poseViewModel.resumeSession()
-                    navController.popBackStack() },
-                onContinueLowerIntensity = {
-                    poseViewModel.sameExerciseWithLowIntensity()
-                    navController.popBackStack() },
-                onEndSession = { navController.navigate("session_result") }
-            )
-        }
+
+
+        // --------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------
+
+
         // Session result - all exit paths popUpTo home to prevent back-navigating into the session flow
         composable("session_result") {
             SessionResultScreen(
