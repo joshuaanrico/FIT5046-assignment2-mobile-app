@@ -260,10 +260,10 @@ fun AppNavGraph() {
             val poseViewModel: PoseViewModel = viewModel()
             AlertScreen(
                 onRest = {
-                    poseViewModel.resumeAfterAlert()
+                    poseViewModel.resumeSession()
                     navController.popBackStack() },
                 onContinueLowerIntensity = {
-                    poseViewModel.resumeAfterAlert()
+                    poseViewModel.sameExerciseWithLowIntensity()
                     navController.popBackStack() },
                 onEndSession = { navController.navigate("session_result") }
             )

@@ -1,5 +1,6 @@
 package com.example.ass2.viewmodel
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -28,11 +29,11 @@ import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import java.util.Calendar
@@ -41,20 +42,17 @@ import java.util.concurrent.Executors
 class PoseViewModel(application: Application) : AndroidViewModel(application)
 {
     // Public state observed by LiveSessionScreen
-
-    private var sessionLocked = false
-    private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
     val exerciseUpdate: StateFlow<ExerciseUpdate> = _exerciseUpdate.asStateFlow()
     private val _currentExerciseName = MutableStateFlow(UpperBodyExercises.all.first().displayName)
     val currentExerciseName: StateFlow<String> = _currentExerciseName.asStateFlow()
     val availableExercises: List<UpperBodyExercise> = UpperBodyExercises.all
 
+
     // Internal - plain holders, not Compose state
     // The overlay view is set/cleared by LiveSessionScreen's AndroidView callbacks.
     // @Volatile ensures the MediaPipe callback thread always sees the latest value.
+    @SuppressLint("StaticFieldLeak")
     @Volatile private var overlayView: PoseOverlayView? = null
-
-    private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
     // MediaPipe — initialised once with application context
@@ -87,26 +85,13 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     // ---------------------------------------------------------------------------------------------
 
     // heart rate simulation - related
-
     private val profileRepo = ProfileRepository(application)
     private val heartRateSim = HeartRateSimulator(application)
-    // hr - observable variable.
-    private val hr = MutableStateFlow(0)
-    // readonly heartRate
-    val heartRate: StateFlow<Int> = hr.asStateFlow()
-    private val hrAlertChannel = Channel<Unit>(Channel.CONFLATED)
-    val hrAlertEvent = hrAlertChannel.receiveAsFlow()
     // To store the HR values during the session to calculate the avg at the end of session.
-    private val hrSamples = mutableListOf<Int>()
-    // Reference to the coroutine in which the simulation is being run.
-    private var simulatorJob: Job? = null
-    private var sessionSrtTime = 0L
-    // for when the session is paused / when alert shown.
-    private var sessionPausedTime = 0L
-    private var currentUserAge = 0
-    private var currentThreshold = 0
+    // readonly vals
+    val heartRate: StateFlow<Int> = hr.asStateFlow()
+    val hrAlertEvent = hrAlertChannel.receiveAsFlow()
     // when the user decides to continue with a reduced intensity - flag.
-    private val selectedLowerIntensity = MutableStateFlow(false)
     val selectedLow: StateFlow<Boolean> = selectedLowerIntensity.asStateFlow()
 
     /**
@@ -116,8 +101,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     private fun startHrStream()
     {
         simulatorJob?.cancel()
-        simulatorJob = viewModelScope.launch(Dispatchers.IO)
-        {
+        simulatorJob = sessionScope.launch{
             heartRateSim.streamHR(currentUserAge).collect { bpm ->
                 hrSamples.add(bpm)
                 hr.value = bpm
@@ -138,6 +122,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
      */
     fun sessionStart()
     {
+        if (sessionSrtTime > 0L) return  // making sure to only run if already not running.
         sessionSrtTime = System.currentTimeMillis()
         sessionPausedTime = 0L
         hrSamples.clear()
@@ -150,8 +135,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
 
         // starting a new coroutine - tied to the viewmodel lifecycle
-        viewModelScope.launch(Dispatchers.IO)
-        {
+        sessionScope.launch{
             // accessing the user profile (Room).
             val userProfile = profileRepo.observe(userId).firstOrNull()
             // age calculation (default set to 40yrs)
@@ -164,21 +148,9 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Called on alert screen btn press.
-     * Restarts HR from the resting HR so that the alert is not retriggered.
-     */
-    fun resumeAfterAlert()
-    {
-        // remove any pending event
-        hrAlertChannel.tryReceive()
-        // getting a fresh stream of Hrs
-        startHrStream()
-    }
-
-    /**
      * This method is run when the live session is ended / when navigated to a new screen.
      */
-    fun stopSimulationOfHR()
+    private fun stopSimulationOfHR()
     {
         simulatorJob?.cancel()
         simulatorJob = null
@@ -187,10 +159,13 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     /**
      * Called when the user presses the pause btn,
      * records when the pause is being started.
+     * cancels the HR job / simulation.
      */
     fun pauseSession()
     {
+        if(sessionPausedTime > 0L) return
         sessionPausedTime = System.currentTimeMillis()
+        stopSimulationOfHR()
     }
 
     /**
@@ -209,6 +184,26 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * Called on when the user clicks on the continue with low intensity btn,
+     * Timer and reps reset to O, target rep count is reduced.
+     */
+    fun sameExerciseWithLowIntensity()
+    {
+        // resetting timer
+        sessionSrtTime = System.currentTimeMillis()
+        sessionPausedTime = 0L
+        // making sure the old simulator job is removed / done
+        stopSimulationOfHR()
+        // resetting rep count
+        exerciseHolder.ex.reset()
+        _exerciseUpdate.value = ExerciseUpdate() // UI change, rep - 0
+        unlockExercise()
+        selectedLowerIntensity.value = true
+        hrAlertChannel.tryReceive()
+        startHrStream()
+    }
+
+    /**
      * Calculates and returns the avg HR observed during the session.
      */
     fun getAvgHR(): Int
@@ -216,14 +211,20 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         return hrSamples.average().toInt()
     }
 
+    fun acknowledgeTheLowerIntensity()
+    {
+        selectedLowerIntensity.value = false
+    }
+
     /**
-     * calculates the duration of the session.
+     * calculates the time passed by.
      *
      * @return duration in milliseconds
      */
     fun getDurationOfSession(): Int
     {
-        return ((System.currentTimeMillis() - sessionSrtTime)/1000).toInt()
+        val base = if (sessionPausedTime > 0L) sessionPausedTime else System.currentTimeMillis()
+        return ((base - sessionSrtTime)/1000).toInt()
     }
 
 
@@ -306,11 +307,34 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         overlayView = null
         cameraExecutor.shutdown()
         poseLandmarker?.close()
-        stopSimulationOfHR()
     }
 
-    companion object {
+    companion object
+    {
         private const val TAG = "PoseViewModel"
         private const val MODEL = "pose_landmarker_lite.task"
+
+        // the shared session states across all the PoseViewModel instances
+        private val hrSamples = mutableListOf<Int>()
+        // Reference to the coroutine in which the simulation is being run.
+        @Volatile private var simulatorJob: Job? = null
+        @Volatile private var sessionSrtTime = 0L
+        // for when the session is paused / when alert shown.
+        @Volatile private var sessionPausedTime = 0L
+        @Volatile private var currentUserAge = 0
+        @Volatile private var currentThreshold = 0
+        // hr - observable variable.
+        private val hr = MutableStateFlow(0)
+        private val hrAlertChannel = Channel<Unit>(Channel.CONFLATED)
+        private val _exerciseUpdate = MutableStateFlow(ExerciseUpdate())
+        private val exerciseHolder = object { var ex: UpperBodyExercise = BicepCurlExercise() }
+        private val selectedLowerIntensity = MutableStateFlow(false)
+        @Volatile private var sessionLocked = false
+
+        // a shared scope os that the Hr job survives across nav entry scoped viewmodel instances
+        private val sessionScope = kotlinx.coroutines.CoroutineScope(
+            SupervisorJob() + Dispatchers.IO
+        )
+
     }
 }

@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.pose.PoseOverlayView
@@ -77,18 +78,22 @@ fun LiveSessionScreen(
     onEndSession: () -> Unit,
 ) {
 
-    val targetReps = when(energyLevel)
-    {
-        1 -> 5
-        2 -> 8
-        3 -> 12
-        4 -> 15
-        5 -> 20
-        else -> 12
+    var targetReps by remember{
+        mutableIntStateOf(
+            when(energyLevel)
+            {
+                1 -> 5
+                2 -> 8
+                3 -> 12
+                4 -> 15
+                5 -> 20
+                else -> 12
+            }
+        )
     }
 
     val context = LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val poseViewModel: PoseViewModel = viewModel()
 
     // Observe ViewModel state
@@ -120,14 +125,17 @@ fun LiveSessionScreen(
 // -------------------------------------------------------------------------------------------------
     // the number of seconds that has gone by since the screen opened.
     var secondsPassed by remember { mutableIntStateOf(0) }
+    // to check if the lower intensity version of exercise is to be executed
+    val lowerIntensitySelected by poseViewModel.selectedLow.collectAsStateWithLifecycle()
+
     // to be run once when the screen opens
-    LaunchedEffect(Unit)
+    LaunchedEffect("session")
     {
         // starting the HR simulator and the timer at the same time.
         poseViewModel.sessionStart()
         while (true){
             delay(1000L)
-            secondsPassed++
+            secondsPassed = poseViewModel.getDurationOfSession()
         }
     }
 
@@ -141,7 +149,7 @@ fun LiveSessionScreen(
     }
 
     // collect the one shot event.
-    LaunchedEffect(Unit)
+    LaunchedEffect("hrAlert")
     {
         poseViewModel.hrAlertEvent.collect {
             onPause()
@@ -157,6 +165,21 @@ fun LiveSessionScreen(
         if (exercise != null)
         {
             poseViewModel.selectExercise(exercise)
+        }
+    }
+
+    LaunchedEffect(lowerIntensitySelected)
+    {
+        if (lowerIntensitySelected)
+        {
+            targetReps = when {
+                targetReps > 15 -> 15
+                targetReps > 12 -> 12
+                targetReps > 8 -> 8
+                targetReps > 5 -> 5
+                else -> 5
+            }
+            poseViewModel.acknowledgeTheLowerIntensity()
         }
     }
 // -------------------------------------------------------------------------------------------------
@@ -317,7 +340,8 @@ fun LiveSessionScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
-                    Surface(modifier = Modifier.size(65.dp).clickable { onPause() },
+                    Surface(modifier = Modifier.size(65.dp).clickable { poseViewModel.pauseSession()
+                        onPause() },
                         shape = CircleShape, color = Color.White.copy(alpha = 0.66f)) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Pause, "Pause", tint = BrandTealDark, modifier = Modifier.size(32.dp))
