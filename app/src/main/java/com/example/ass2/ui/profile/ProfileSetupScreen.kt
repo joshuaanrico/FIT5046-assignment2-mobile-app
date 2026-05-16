@@ -279,39 +279,18 @@ fun ProfileSetupScreen(
 
                 Button(
                     onClick = {
-                        val combinedConditions = buildString {
-                            append("Mobility support: ")
-                            append(mobilitySupport.ifBlank { "Not provided" })
-
-                            append("\nActivity level: ")
-                            append(activityLevel.ifBlank { "Not provided" })
-
-                            if (conditions.isNotBlank()) {
-                                append("\nCondition notes: ")
-                                append(conditions)
-                            }
-
-                            if (age.isNotBlank()) {
-                                append("\nAge: ")
-                                append(age)
-                            }
-
-                            if (restingHeartRate.isNotBlank()) {
-                                append("\nResting heart rate: ")
-                                append(restingHeartRate)
-                                append(" bpm")
-                            }
-                        }
-// below code error because overwrite profile page with talent code
-//                        viewModel.saveProfile(
-//                            displayName = displayName.ifBlank { uiState.displayName },
-//                            dob = null,
-//                            heightCm = null,
-//                            weightKg = null,
-//                            conditions = combinedConditions,
-//                            painBaseline = painLevel.toInt()
-//                        )
-
+                        viewModel.saveProfile(
+                            com.example.ass2.data.local.Profile(
+                                userId = viewModel.uid,
+                                displayName = displayName,
+                                conditions = conditions.takeIf { it.isNotBlank() },
+                                painBaseline = painLevel.toInt(),
+                                mobilitySupport = mobilitySupport.takeIf { it.isNotBlank() },
+                                activityLevel = activityLevel.takeIf { it.isNotBlank() },
+                                age = age.toIntOrNull(),
+                                restingHeartRate = restingHeartRate.toIntOrNull()
+                            )
+                        )
                         onSaveAndContinue()
                     },
                     enabled = displayName.isNotBlank() &&
