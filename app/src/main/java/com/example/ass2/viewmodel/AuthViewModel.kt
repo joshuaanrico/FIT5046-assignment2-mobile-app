@@ -61,7 +61,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 else prefs.edit().remove("saved_email").apply()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Sign in failed")
+                _authState.value = AuthState.Error(friendlyError(e))
             }
         }
     }
@@ -97,7 +97,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 auth.createUserWithEmailAndPassword(email, password).await()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Registration failed")
+                _authState.value = AuthState.Error(friendlyError(e))
             }
         }
     }
@@ -123,7 +123,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 auth.sendPasswordResetEmail(trimmedEmail).await()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Failed to send reset email")
+                _authState.value = AuthState.Error(friendlyError(e))
             }
         }
     }
@@ -140,9 +140,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 auth.signInWithCredential(credential).await()
                 _authState.value = AuthState.Success
             } catch (e: ApiException) {
-                _authState.value = AuthState.Error("Google Sign-In failed (code ${e.statusCode})")
+                _authState.value = AuthState.Error("Google sign-in failed. Please try again.")
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Google Sign-In failed")
+                _authState.value = AuthState.Error(friendlyError(e))
             }
         }
     }
@@ -159,4 +159,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     // Returns true if a Firebase user session is currently active
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
+
+    // Converts raw Firebase exception messages into short, user-friendly strings
+    private fun friendlyError(e: Exception): String {
+        val msg = e.message?.lowercase() ?: ""
+        return when {
+            "credential is incorrect" in msg || "malformed" in msg || "expired" in msg
+                || "invalid credential" in msg -> "Incorrect email or password. Please try again."
+            "no user record" in msg || "user-not-found" in msg -> "No account found with that email."
+            "email address is already in use" in msg || "email already in use" in msg -> "An account with this email already exists."
+            "password is invalid" in msg || "wrong-password" in msg -> "Incorrect password. Please try again."
+            "badly formatted" in msg || "invalid-email" in msg -> "Please enter a valid email address."
+            "too many requests" in msg || "too-many-requests" in msg -> "Too many attempts. Please wait a moment and try again."
+            "network" in msg -> "No internet connection. Please check your network."
+            else -> "Something went wrong. Please try again."
+        }
+    }
 }

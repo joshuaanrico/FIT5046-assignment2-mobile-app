@@ -1,5 +1,6 @@
 package com.example.ass2.ui.profile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,6 +31,7 @@ import com.example.ass2.viewmodel.ProfileViewModel
 fun ProfileSetupScreen(
     onBack: () -> Unit,
     onSaveAndContinue: () -> Unit,
+    showBackButton: Boolean = true,
     viewModel: ProfileViewModel = viewModel()
 )  {
     val bgColor = Color(0xFFF4F5F4)
@@ -51,6 +53,9 @@ fun ProfileSetupScreen(
     val mobilityOptions = listOf("Wheelchair", "Cane / Walker", "Independent", "Other")
     val activityOptions = listOf("Sedentary", "Lightly Active", "Moderately Active", "Very Active")
 
+    // Block the system back gesture when arriving from registration
+    BackHandler(enabled = !showBackButton) {}
+
     Surface(modifier = Modifier.fillMaxSize(), color = bgColor) {
         Column(
             modifier = Modifier
@@ -64,8 +69,12 @@ fun ProfileSetupScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                if (showBackButton) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(48.dp))
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text("Sit&Fit", color = teal, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)

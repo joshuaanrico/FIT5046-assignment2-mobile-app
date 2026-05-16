@@ -95,10 +95,6 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(BrandBackground)
     ) {
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -290,7 +286,7 @@ fun RegisterScreen(
                 Text("Continue with Google", fontSize = 15.sp)
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Already have account
             Row(
@@ -306,7 +302,7 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = "By joining, you agree to our",
@@ -319,11 +315,17 @@ fun RegisterScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { onNavigateToLegal("terms") }, contentPadding = PaddingValues(0.dp)) {
+                TextButton(
+                    onClick = { onNavigateToLegal("terms") },
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
+                ) {
                     Text("Terms of Service", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
                 Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
-                TextButton(onClick = { onNavigateToLegal("privacy") }, contentPadding = PaddingValues(0.dp)) {
+                TextButton(
+                    onClick = { onNavigateToLegal("privacy") },
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
+                ) {
                     Text("Privacy Policy", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
             }
@@ -335,6 +337,10 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
