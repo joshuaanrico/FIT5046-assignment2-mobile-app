@@ -309,6 +309,8 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
         poseLandmarker?.close()
     }
 
+    // a companion object is used to share the state states across when changing screens.
+    // cuz in the navigations new instances of PoseViewModel are being called on.
     companion object
     {
         private const val TAG = "PoseViewModel"
@@ -316,6 +318,9 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
 
         // the shared session states across all the PoseViewModel instances
         private val hrSamples = mutableListOf<Int>()
+
+        // following fields with @Volatile - read and written across threads,
+        // @Volatile guarantees - each thread referencing the latest value.
         // Reference to the coroutine in which the simulation is being run.
         @Volatile private var simulatorJob: Job? = null
         @Volatile private var sessionSrtTime = 0L
