@@ -115,7 +115,7 @@ fun AppNavGraph() {
         composable("register") {
             RegisterScreen(
                 onNavigateToLogin = { navController.popBackStack() },
-                onRegisterSuccess = { navController.navigate("profile_setup") },
+                onRegisterSuccess = { navController.navigate("profile_setup?fromRegister=true") },
                 onNavigateToLegal = { tab -> navController.navigate("legal?tab=$tab") }
             )
         }
@@ -212,14 +212,22 @@ fun AppNavGraph() {
                 onDelete = { navController.popBackStack() }
             )
         }
-        composable("profile_setup") {
+        composable(
+            route = "profile_setup?fromRegister={fromRegister}",
+            arguments = listOf(navArgument("fromRegister") {
+                type = NavType.BoolType
+                defaultValue = false
+            })
+        ) { backStackEntry ->
+            val fromRegister = backStackEntry.arguments?.getBoolean("fromRegister") ?: false
             ProfileSetupScreen(
                 onBack = { navController.popBackStack() },
                 onSaveAndContinue = {
                     navController.navigate("home") {
                         popUpTo("profile_setup") { inclusive = true }
                     }
-                }
+                },
+                showBackButton = !fromRegister
             )
         }
         // Session flow: check-in -> live session -> (optional pause alert) -> result
