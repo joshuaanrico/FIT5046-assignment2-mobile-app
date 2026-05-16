@@ -46,6 +46,16 @@ class LiveSessionViewModel(application: Application) : AndroidViewModel(applicat
     private var currentUserAge = 0
     private var currentHrThreshold = 0
 
+    //----------------------------------------------------------------------------------------------
+    private var sessionSrtTime = 0L
+    // for when the session is paused / when alert shown.
+    private var sessionPausedTime = 0L
+
+    //----------------------------------------------------------------------------------------------
+    // when the user decides to continue with a reduced intensity - flag.
+    // live session observes this val
+    private val selectedLowerIntensity = MutableStateFlow(false)
+    val selectedLow: StateFlow<Boolean> = selectedLowerIntensity.asStateFlow()
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -87,6 +97,87 @@ class LiveSessionViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Being called when the live session screen is opened for the firs time.
+     */
+    fun sessionStart() {
+        if (sessionSrtTime > 0L) return  // making sure to only run if already not running.
+        sessionSrtTime = System.currentTimeMillis()
+        sessionPausedTime = 0L
+        hrSamples.clear()
+        // remove any leftover event from previous session.
+        consumeHrAlert()
+        selectedLowerIntensity.value = false
+        beginHr()
+    }
+
+    /**
+     * Called when the user presses the pause btn,
+     * records when the pause is being started.
+     * cancels the HR job / simulation.
+     */
+    fun pauseSession()
+    {
+        if(sessionPausedTime > 0L) return
+        sessionPausedTime = System.currentTimeMillis()
+        stopSimulationOfHR()
+    }
+
+    /**
+     * Called on when the user presses the resume btn on the alert screen.
+     */
+    fun resumeSession()
+    {
+        if (sessionPausedTime > 0L)
+        {
+            val durationPaused = System.currentTimeMillis() - sessionPausedTime
+            sessionSrtTime += durationPaused
+            sessionPausedTime = 0L
+        }
+        consumeHrAlert()
+        startHrStream()
+    }
+
+    /**
+     * Called on when the user clicks on the continue with low intensity btn,
+     * Timer and reps reset to O, target rep count is reduced.
+     */
+    fun sameExerciseWithLowIntensity()
+    {
+        // resetting timer
+        sessionSrtTime = System.currentTimeMillis()
+        sessionPausedTime = 0L
+        // making sure the old simulator job is removed / done
+        stopSimulationOfHR()
+        resetHrSample()
+        selectedLowerIntensity.value = true
+        consumeHrAlert()
+        startHrStream()
+    }
+
+    /**
+     * Being called by the live session screen after it had applied the lower intensity flag,
+     * to prevent it a reduction for the next time.
+     */
+    fun acknowledgeTheLowerIntensity()
+    {
+        selectedLowerIntensity.value = false
+    }
+
+    /**
+     * calculates the time passed by.
+     *
+     * @return duration in milliseconds
+     */
+    fun getDurationOfSession(): Int
+    {
+        val base = if (sessionPausedTime > 0L) sessionPausedTime else System.currentTimeMillis()
+        return ((base - sessionSrtTime)/1000).toInt()
+    }
+
+    //----------------------------------------------------------------------------------------------
     /**
      * Calculates the age of the user.
      *
