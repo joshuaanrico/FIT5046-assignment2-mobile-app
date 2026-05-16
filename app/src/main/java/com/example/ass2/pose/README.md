@@ -51,3 +51,36 @@ A transparent Android `View` rendered on top of the CameraX `PreviewView`. Draws
 - **Teal dots** — joint positions at each visible landmark
 
 Only landmarks with a visibility score ≥ 0.5 are drawn to avoid rendering noisy or occluded points. Normalized landmark coordinates (0–1) are scaled to the view's pixel dimensions at draw time.
+
+---
+
+## How the files connect
+
+```
+UpperBodyExercises.kt
+├── BicepCurlExercise
+├── SideStretchExercise        all extend UpperBodyExercise (UpperBodyExercise.kt)
+├── ForwardFoldExercise
+└── SeatedTwistExercise
+
+UpperBodyExercise.process()
+  │  called every camera frame by PoseViewModel
+  │  returns
+  └──► ExerciseUpdate (ExerciseUpdate.kt)
+         emitted to LiveSessionScreen via StateFlow in PoseViewModel
+
+PoseViewModel
+  │  feeds MediaPipe landmark results to
+  ├──► UpperBodyExercise.process()   (exercise tracking)
+  └──► PoseOverlayView.setResults()  (skeleton drawing)
+
+PoseOverlayView (PoseOverlayView.kt)
+     draws the skeleton on top of the CameraX PreviewView
+     reads isMirrored set by PoseViewModel when front camera is selected
+```
+
+In plain terms:
+- `UpperBodyExercise` defines the rules; its subclasses in `UpperBodyExercises.kt` fill in the exercise-specific logic
+- Every frame, `PoseViewModel` sends landmarks to both the active exercise (for rep counting) and `PoseOverlayView` (for drawing)
+- The exercise packages its results into an `ExerciseUpdate` which the UI observes
+- `UpperBodyExercises` (the registry) is only used at startup to populate the exercise picker and look up the selected exercise by name
