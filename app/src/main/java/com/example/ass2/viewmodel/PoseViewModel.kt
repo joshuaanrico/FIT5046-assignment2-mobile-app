@@ -101,9 +101,18 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     // Reference to the coroutine in which the simulation is being run.
     private var simulatorJob: Job? = null
     private var sessionSrtTime = 0L
+    // for when the session is paused / when alert shown.
+    private var sessionPausedTime = 0L
     private var currentUserAge = 0
     private var currentThreshold = 0
+    // when the user decides to continue with a reduced intensity - flag.
+    private val selectedLowerIntensity = MutableStateFlow(false)
+    val selectedLow: StateFlow<Boolean> = selectedLowerIntensity.asStateFlow()
 
+    /**
+     * Responsible for getting the simulated HR values,
+     * stores the values in hrSamples val.
+     */
     private fun startHrStream()
     {
         simulatorJob?.cancel()
@@ -130,9 +139,12 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     fun sessionStart()
     {
         sessionSrtTime = System.currentTimeMillis()
+        sessionPausedTime = 0L
         hrSamples.clear()
         // remove any leftover event from previous session.
         hrAlertChannel.tryReceive()
+        // for a new session needs to reset.
+        selectedLowerIntensity.value = false
 
         // getting the user id - so that age can be calculated.
         val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
@@ -152,7 +164,7 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * called on alert screen btn press.
+     * Called on alert screen btn press.
      * Restarts HR from the resting HR so that the alert is not retriggered.
      */
     fun resumeAfterAlert()
@@ -170,6 +182,30 @@ class PoseViewModel(application: Application) : AndroidViewModel(application)
     {
         simulatorJob?.cancel()
         simulatorJob = null
+    }
+
+    /**
+     * Called when the user presses the pause btn,
+     * records when the pause is being started.
+     */
+    fun pauseSession()
+    {
+        sessionPausedTime = System.currentTimeMillis()
+    }
+
+    /**
+     * Called on when the user presses the resume btn on the alert screen.
+     */
+    fun resumeSession()
+    {
+        if (sessionPausedTime > 0L)
+        {
+            val durationPaused = System.currentTimeMillis() - sessionPausedTime
+            sessionSrtTime += durationPaused
+            sessionPausedTime = 0L
+        }
+        hrAlertChannel.tryReceive()
+        startHrStream()
     }
 
     /**
