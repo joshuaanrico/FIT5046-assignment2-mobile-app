@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +71,7 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
+                Toast.makeText(context, "Signed in successfully!", Toast.LENGTH_SHORT).show()
                 viewModel.resetState()
                 onLoginSuccess()
             }
@@ -81,10 +83,11 @@ fun LoginScreen(
         }
     }
 
-    var email by remember { mutableStateOf("") }
+    val savedEmail = remember { viewModel.getSavedEmail() }
+    var email by remember { mutableStateOf(savedEmail) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(savedEmail.isNotEmpty()) }
     val isLoading = authState is AuthState.Loading
 
     Box(
@@ -231,7 +234,7 @@ fun LoginScreen(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = { viewModel.signInWithEmail(email, password) },
+                onClick = { viewModel.signInWithEmail(email, password, rememberMe) },
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()

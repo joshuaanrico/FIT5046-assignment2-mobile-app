@@ -37,6 +37,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.ProfileViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +50,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Displays the user's profile summary — name, email, accessibility info, and navigation menu.
+// Data is sourced from Room (via ProfileViewModel) and Firebase Auth.
 @Composable
 fun ProfileScreen(
     onTabSelected: (NavTab) -> Unit,
@@ -54,7 +60,21 @@ fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
     onHelpClick: () -> Unit = {},
     onSignOut: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
 ) {
+    // Collect the profile Flow as Compose state — recomposes automatically when Room data changes
+    val profile by viewModel.profile.collectAsState()
+
+    // Fall back to placeholder text if the user hasn't completed profile setup yet
+    val displayName = profile?.displayName?.takeIf { it.isNotBlank() } ?: "No name set"
+    val email = viewModel.email.takeIf { it.isNotBlank() } ?: "No email"
+    val mobilitySupport = profile?.mobilitySupport?.takeIf { it.isNotBlank() }
+    val activityLevel = profile?.activityLevel?.takeIf { it.isNotBlank() }
+    val age = profile?.age
+    val restingHeartRate = profile?.restingHeartRate
+    val conditions = profile?.conditions?.takeIf { it.isNotBlank() }
+    val painBaseline = profile?.painBaseline
+
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val lightTeal = Color(0xFFD5ECE8)
@@ -75,6 +95,7 @@ fun ProfileScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Top bar with screen title and Help shortcut
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -100,6 +121,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Profile avatar image
             Image(
                 painter = painterResource(R.drawable.exercise4),
                 contentDescription = null,
@@ -111,8 +133,9 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Display name from Room — updates automatically when profile is saved
             Text(
-                text = "Alex Johnson",
+                text = displayName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = textDark
@@ -120,14 +143,16 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // Email from Firebase Auth — always reflects the currently logged-in account
             Text(
-                text = "alex@example.com",
+                text = email,
                 fontSize = 16.sp,
                 color = textGray
             )
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Accessibility profile card — shows mobility type, goal, and health conditions
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -155,8 +180,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
+                    // Mobility support chip — teal, from Room
                     ProfileChip(
-                        text = "Seated Mobility",
+                        text = "Mobility Support: ${mobilitySupport ?: "Not set"}",
                         background = lightTeal,
                         textColor = textGray,
                         icon = Icons.Outlined.Accessibility
@@ -164,8 +190,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Activity level chip — grey, from Room
                     ProfileChip(
-                        text = "Primary Goal: Flexibility",
+                        text = "Activity Level: ${activityLevel ?: "Not set"}",
                         background = lightGray,
                         textColor = textDark,
                         icon = Icons.Outlined.FitnessCenter
@@ -173,17 +200,25 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    Text(
-                        text = "Your workouts are automatically adapted to prioritize seated exercises and upper-body range of motion.",
-                        fontSize = 15.sp,
-                        lineHeight = 25.sp,
-                        color = textGray
-                    )
+                    // Profile details — from Room
+                    if (age != null) {
+                        Text("Age: $age", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (restingHeartRate != null) {
+                        Text("Resting heart rate: $restingHeartRate bpm", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (!conditions.isNullOrBlank()) {
+                        Text("Related conditions: $conditions", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (painBaseline != null) {
+                        Text("Typical daily pain level: $painBaseline / 10", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Navigation menu cards — each routes to a different settings/config screen
             MenuCard(
                 icon = Icons.Outlined.AccountCircle,
                 title = "Profile Setup",
@@ -217,6 +252,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
+            // Sign out — calls Firebase signOut via AuthViewModel in MainActivity
             Row(
                 modifier = Modifier.clickable { onSignOut() },
                 verticalAlignment = Alignment.CenterVertically
@@ -239,6 +275,7 @@ fun ProfileScreen(
     }
 }
 
+// A pill-shaped chip used to display accessibility attributes like mobility type or goal
 @Composable
 private fun ProfileChip(
     text: String,
@@ -267,6 +304,7 @@ private fun ProfileChip(
     }
 }
 
+// A tappable card row used for navigating to settings sub-screens
 @Composable
 private fun MenuCard(
     icon: ImageVector,
@@ -289,6 +327,7 @@ private fun MenuCard(
                 .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Circular icon background
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -312,6 +351,7 @@ private fun MenuCard(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // Chevron indicates this card is tappable and leads to another screen
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,

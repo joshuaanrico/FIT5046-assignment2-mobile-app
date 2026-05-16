@@ -1,5 +1,6 @@
 package com.example.ass2.ui.profile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,19 +22,28 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandTeal
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileSetupScreen(
     onBack: () -> Unit,
-    onSaveAndContinue: () -> Unit
-) {
+    onSaveAndContinue: () -> Unit,
+    showBackButton: Boolean = true,
+    viewModel: ProfileViewModel = viewModel()
+)  {
     val bgColor = Color(0xFFF4F5F4)
     val teal = BrandTeal
     val darkText = Color(0xFF1F1F1F)
     val grayText = Color(0xFF5F6368)
     val cardColor = Color(0xFFF0F2F1)
     val whiteCard = Color(0xFFFCFCFC)
+    // below code error because overwrite profile page with talent code
+//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    var displayName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var mobilitySupport by remember { mutableStateOf("") }
     var activityLevel by remember { mutableStateOf("") }
@@ -42,6 +52,9 @@ fun ProfileSetupScreen(
     var restingHeartRate by remember { mutableStateOf("") }
     val mobilityOptions = listOf("Wheelchair", "Cane / Walker", "Independent", "Other")
     val activityOptions = listOf("Sedentary", "Lightly Active", "Moderately Active", "Very Active")
+
+    // Block the system back gesture when arriving from registration
+    BackHandler(enabled = !showBackButton) {}
 
     Surface(modifier = Modifier.fillMaxSize(), color = bgColor) {
         Column(
@@ -56,8 +69,12 @@ fun ProfileSetupScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                if (showBackButton) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = teal)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(48.dp))
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text("Sit&Fit", color = teal, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -100,6 +117,29 @@ fun ProfileSetupScreen(
                             teal = teal
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "Display Name",
+                            color = grayText,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = displayName,
+                            onValueChange = { displayName = it },
+                            placeholder = { Text("Enter your name", color = Color(0xFFBBBBBB), fontSize = 14.sp) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = whiteCard,
+                                focusedContainerColor = whiteCard,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = teal
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
                         Text("Age", color = grayText, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
                         OutlinedTextField(
                             value = age,
@@ -238,12 +278,32 @@ fun ProfileSetupScreen(
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Button(
-                    onClick = onSaveAndContinue,
+                    onClick = {
+                        viewModel.saveProfile(
+                            com.example.ass2.data.local.Profile(
+                                userId = viewModel.uid,
+                                displayName = displayName,
+                                conditions = conditions.takeIf { it.isNotBlank() },
+                                painBaseline = painLevel.toInt(),
+                                mobilitySupport = mobilitySupport.takeIf { it.isNotBlank() },
+                                activityLevel = activityLevel.takeIf { it.isNotBlank() },
+                                age = age.toIntOrNull(),
+                                restingHeartRate = restingHeartRate.toIntOrNull()
+                            )
+                        )
+                        onSaveAndContinue()
+                    },
+                    enabled = displayName.isNotBlank() &&
+                            mobilitySupport.isNotBlank() &&
+                            activityLevel.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = teal)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = teal,
+                        disabledContainerColor = teal.copy(alpha = 0.35f)
+                    )
                 ) {
                     Text("Save and Continue", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }

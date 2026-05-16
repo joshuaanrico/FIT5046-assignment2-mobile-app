@@ -2,6 +2,7 @@ package com.example.ass2.ui.auth
 import com.example.ass2.R
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -77,6 +79,7 @@ fun RegisterScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
+                Toast.makeText(context, "Account created successfully!", Toast.LENGTH_SHORT).show()
                 viewModel.resetState()
                 onRegisterSuccess()
             }
@@ -93,10 +96,6 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(BrandBackground)
     ) {
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -226,12 +225,12 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "✓ At least 8 characters, 1 uppercase letter, and 1 unique symbol.",
-                fontSize = 12.sp,
-                color = if (passwordStrength >= 3) BrandTeal else Color(0xFF9E9E9E),
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                PasswordCriterionRow("At least 8 characters",     password.length >= 8)
+                PasswordCriterionRow("1 uppercase letter",         password.any { it.isUpperCase() })
+                PasswordCriterionRow("1 number",                   password.any { it.isDigit() })
+                PasswordCriterionRow("1 special character",        password.any { !it.isLetterOrDigit() })
+            }
 
             Spacer(Modifier.height(28.dp))
 
@@ -288,7 +287,7 @@ fun RegisterScreen(
                 Text("Continue with Google", fontSize = 15.sp)
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Already have account
             Row(
@@ -304,35 +303,51 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "By joining, you agree to our",
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B),
-                textAlign = TextAlign.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
-            )
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { onNavigateToLegal("terms") }, contentPadding = PaddingValues(0.dp)) {
-                    Text("Terms of Service", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    text = "By joining, you agree to our",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B),
+                    textAlign = TextAlign.Center
+                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.height(24.dp)
+                ) {
+                    Text(
+                        text = "Terms of Service",
+                        color = BrandTeal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onNavigateToLegal("terms") }
+                    )
+                    Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
+                    Text(
+                        text = "Privacy Policy",
+                        color = BrandTeal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onNavigateToLegal("privacy") }
+                    )
                 }
-                Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
-                TextButton(onClick = { onNavigateToLegal("privacy") }, contentPadding = PaddingValues(0.dp)) {
-                    Text("Privacy Policy", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                }
+                Text(
+                    text = "Wellness is a commitment to yourself.",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B),
+                    textAlign = TextAlign.Center
+                )
             }
-            Text(
-                text = "Wellness is a commitment to yourself.",
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -422,7 +437,29 @@ private fun PasswordStrengthBar(strength: Int) {
     }
 }
 
-// Returns 0 (empty) to 4 (strong)
+@Composable
+private fun PasswordCriterionRow(label: String, met: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 2.dp)
+    ) {
+        Text(
+            text = if (met) "✓" else "✗",
+            fontSize = 12.sp,
+            color = if (met) BrandTeal else Color(0xFFCC0000),
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = if (met) BrandTeal else Color(0xFF9E9E9E)
+        )
+    }
+}
+
+// Returns 0 (empty) to 4 (strong), one point per required constraint:
+// 1. length >= 8, 2. has uppercase, 3. has digit, 4. has special character
 private fun computePasswordStrength(password: String): Int {
     if (password.isEmpty()) return 0
     var score = 0

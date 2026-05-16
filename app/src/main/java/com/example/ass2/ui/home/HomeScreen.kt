@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.sp
 import com.example.ass2.ui.theme.BrandBackground
 import com.example.ass2.ui.theme.BrandTeal
 import com.example.ass2.ui.theme.BrandTealDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.HomeViewModel
 
 private val moods = listOf(
     Icons.Default.SentimentVerySatisfied to "Great",
@@ -43,8 +46,10 @@ private val moods = listOf(
 @Composable
 fun HomeScreen(
     onGoToExercises: () -> Unit,
-    onTabSelected: (NavTab) -> Unit
+    onTabSelected: (NavTab) -> Unit,
+    viewModel: HomeViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedMood by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -72,7 +77,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
 
                 Text(
-                    text = "Good morning,\nAlex",
+                    text = "Good morning,\n${uiState.greetingName}",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A),
@@ -87,7 +92,13 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                UpNextCard(onStart = onGoToExercises)
+                UpNextCard(
+                    exerciseName = uiState.recommendedExercise?.name ?: "Seated Mobility Flow",
+                    description = uiState.recommendedExercise?.instructions
+                        ?: "A gentle sequence to improve circulation and reduce stiffness.",
+                    isLoading = uiState.isLoadingExercise,
+                    onStart = onGoToExercises
+                )
 
                 Spacer(Modifier.height(16.dp))
 
@@ -118,40 +129,115 @@ fun HomeScreen(
                 SectionCard(
                     icon = Icons.Default.History,
                     title = "Last Session",
-                    trailing = { Text("Yesterday", fontSize = 12.sp, color = Color(0xFF9E9E9E)) }
+                    trailing = {
+                        Text(
+                            text = if (uiState.recentSession == null) "Empty" else "Latest",
+                            fontSize = 12.sp,
+                            color = Color(0xFF9E9E9E)
+                        )
+                    }
                 ) {
+
                     Spacer(Modifier.height(10.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFF8F8F8))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text("Evening Wind Down", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
-                            Text("Low impact stretching", fontSize = 13.sp, color = Color(0xFF6B6B6B), modifier = Modifier.padding(top = 2.dp))
-                            Spacer(Modifier.height(10.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color(0xFF9E9E9E), modifier = Modifier.size(14.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("20m", fontSize = 12.sp, color = Color(0xFF6B6B6B))
-                                }
+
+                    val recentSession = uiState.recentSession
+
+                    if (recentSession == null) {
+                        Text(
+                            text = "No sessions completed yet.",
+                            fontSize = 14.sp,
+                            color = Color(0xFF6B6B6B)
+                        )
+
+                        Text(
+                            text = "Start your first exercise session to build your history.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF9E9E9E),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFF8F8F8))
+                                .padding(12.dp)
+                        ) {
+                            Column {
                                 Text(
-                                    text = "View Details >",
-                                    fontSize = 13.sp,
+                                    text = recentSession.exerciseName,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = BrandTeal
+                                    color = Color(0xFF1A1A1A)
                                 )
+
+                                Text(
+                                    text = "${recentSession.durationSec / 60} min session",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF6B6B6B),
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+
+                                Spacer(Modifier.height(10.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = Color(0xFF9E9E9E),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            text = "${recentSession.durationSec / 60}m",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF6B6B6B)
+                                        )
+                                    }
+
+                                    Text(
+                                        text = recentSession.avgHr?.let { "$it bpm avg" } ?: "No HR data",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = BrandTeal
+                                    )
+                                }
                             }
                         }
                     }
                 }
+
+
+
+                Spacer(Modifier.height(16.dp))
+
+                SectionCard(
+                    icon = Icons.Default.FitnessCenter,
+                    title = "Recent Summary"
+                ) {
+                    Spacer(Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SummaryStat(
+                            label = "Sessions",
+                            value = uiState.totalSessions.toString()
+                        )
+
+                        SummaryStat(
+                            label = "Minutes",
+                            value = uiState.totalMinutes.toString()
+                        )
+                    }
+                }
+
 
                 Spacer(Modifier.height(16.dp))
 
@@ -188,7 +274,7 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                HydrationTip()
+                AdaptiveRecommendationBanner(message = uiState.adaptiveMessage)
 
                 Spacer(Modifier.height(20.dp))
 
@@ -211,7 +297,12 @@ fun HomeScreen(
 }
 
 @Composable
-private fun UpNextCard(onStart: () -> Unit) {
+private fun UpNextCard(
+    exerciseName: String,
+    description: String,
+    isLoading: Boolean,
+    onStart: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -231,33 +322,54 @@ private fun UpNextCard(onStart: () -> Unit) {
                         .background(Color(0xFFB2DFDB))
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
-                    Text("Up Next", fontSize = 12.sp, color = BrandTeal, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Recommended",
+                        fontSize = 12.sp,
+                        color = BrandTeal,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color(0xFF6B6B6B), modifier = Modifier.size(14.dp))
+                    Icon(
+                        Icons.Default.AccessTime,
+                        contentDescription = null,
+                        tint = Color(0xFF6B6B6B),
+                        modifier = Modifier.size(14.dp)
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text("15 min", fontSize = 12.sp, color = Color(0xFF6B6B6B))
+                    Text("10-15 min", fontSize = 12.sp, color = Color(0xFF6B6B6B))
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            Text(
-                text = "Morning Mobility:\nSeated Flow",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A),
-                lineHeight = 28.sp
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    color = BrandTeal,
+                    strokeWidth = 3.dp
+                )
+            } else {
+                Text(
+                    text = exerciseName,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A),
+                    lineHeight = 28.sp
+                )
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "A gentle sequence to wake up your joints and improve circulation before starting the day.",
-                fontSize = 13.sp,
-                color = Color(0xFF4A4A4A),
-                lineHeight = 18.sp
-            )
+                Text(
+                    text = description
+                        .replace(Regex("<.*?>"), "")
+                        .take(160),
+                    fontSize = 13.sp,
+                    color = Color(0xFF4A4A4A),
+                    lineHeight = 18.sp
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -269,7 +381,12 @@ private fun UpNextCard(onStart: () -> Unit) {
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
             ) {
-                Text("Start Recommended Session", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                Text(
+                    text = "View Exercises",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
             }
         }
     }
@@ -332,7 +449,35 @@ private fun MoodChip(icon: ImageVector, label: String, selected: Boolean, onClic
 }
 
 @Composable
-private fun HydrationTip() {
+private fun SummaryStat(
+    label: String,
+    value: String
+) {
+    Column(
+        modifier = Modifier
+            .width(130.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFF5F5F5))
+            .padding(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = BrandTeal
+        )
+
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Color(0xFF6B6B6B)
+        )
+    }
+}
+
+@Composable
+private fun AdaptiveRecommendationBanner(message: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -341,13 +486,27 @@ private fun HydrationTip() {
             .padding(16.dp)
     ) {
         Row {
-            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = BrandTeal, modifier = Modifier.size(22.dp))
+            Icon(
+                Icons.Default.Lightbulb,
+                contentDescription = null,
+                tint = BrandTeal,
+                modifier = Modifier.size(22.dp)
+            )
+
             Spacer(Modifier.width(12.dp))
+
             Column {
-                Text("Stay Hydrated", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
-                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Remember to drink water before starting your mobility routine. It helps keep your joints lubricated and moving smoothly.",
+                    text = "Today’s Recommendation",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A1A)
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = message,
                     fontSize = 13.sp,
                     color = Color(0xFF4A4A4A),
                     lineHeight = 18.sp
