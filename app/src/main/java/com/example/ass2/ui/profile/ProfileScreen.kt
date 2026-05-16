@@ -68,7 +68,12 @@ fun ProfileScreen(
     // Fall back to placeholder text if the user hasn't completed profile setup yet
     val displayName = profile?.displayName?.takeIf { it.isNotBlank() } ?: "No name set"
     val email = viewModel.email.takeIf { it.isNotBlank() } ?: "No email"
-    val conditions = profile?.conditions?.takeIf { it.isNotBlank() } ?: "None recorded"
+    val mobilitySupport = profile?.mobilitySupport?.takeIf { it.isNotBlank() }
+    val activityLevel = profile?.activityLevel?.takeIf { it.isNotBlank() }
+    val age = profile?.age
+    val restingHeartRate = profile?.restingHeartRate
+    val conditions = profile?.conditions?.takeIf { it.isNotBlank() }
+    val painBaseline = profile?.painBaseline
 
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
@@ -175,9 +180,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    // Static chips for mobility type and primary goal
+                    // Mobility support chip — teal, from Room
                     ProfileChip(
-                        text = "Seated Mobility",
+                        text = "Mobility Support: ${mobilitySupport ?: "Not set"}",
                         background = lightTeal,
                         textColor = textGray,
                         icon = Icons.Outlined.Accessibility
@@ -185,8 +190,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Activity level chip — grey, from Room
                     ProfileChip(
-                        text = "Primary Goal: Flexibility",
+                        text = "Activity Level: ${activityLevel ?: "Not set"}",
                         background = lightGray,
                         textColor = textDark,
                         icon = Icons.Outlined.FitnessCenter
@@ -194,13 +200,19 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    // Health conditions entered during profile setup — from Room
-                    Text(
-                        text = "Conditions: $conditions",
-                        fontSize = 15.sp,
-                        lineHeight = 25.sp,
-                        color = textGray
-                    )
+                    // Profile details — from Room
+                    if (age != null) {
+                        Text("Age: $age", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (restingHeartRate != null) {
+                        Text("Resting heart rate: $restingHeartRate bpm", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (!conditions.isNullOrBlank()) {
+                        Text("Related conditions: $conditions", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
+                    if (painBaseline != null) {
+                        Text("Typical daily pain level: $painBaseline / 10", fontSize = 15.sp, lineHeight = 25.sp, color = textGray)
+                    }
                 }
             }
 

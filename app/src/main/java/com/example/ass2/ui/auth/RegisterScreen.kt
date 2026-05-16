@@ -2,6 +2,7 @@ package com.example.ass2.ui.auth
 import com.example.ass2.R
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -225,7 +226,7 @@ fun RegisterScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "✓ At least 8 characters, 1 uppercase letter, and 1 unique symbol.",
+                text = "✓ At least 8 characters, 1 uppercase letter, 1 number, and 1 symbol.",
                 fontSize = 12.sp,
                 color = if (passwordStrength >= 3) BrandTeal else Color(0xFF9E9E9E),
                 modifier = Modifier.fillMaxWidth()
@@ -304,38 +305,44 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "By joining, you agree to our",
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B),
-                textAlign = TextAlign.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
-            )
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(
-                    onClick = { onNavigateToLegal("terms") },
-                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
+                Text(
+                    text = "By joining, you agree to our",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B),
+                    textAlign = TextAlign.Center
+                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.height(24.dp)
                 ) {
-                    Text("Terms of Service", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Terms of Service",
+                        color = BrandTeal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onNavigateToLegal("terms") }
+                    )
+                    Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
+                    Text(
+                        text = "Privacy Policy",
+                        color = BrandTeal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onNavigateToLegal("privacy") }
+                    )
                 }
-                Text(" and ", fontSize = 12.sp, color = Color(0xFF6B6B6B))
-                TextButton(
-                    onClick = { onNavigateToLegal("privacy") },
-                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
-                ) {
-                    Text("Privacy Policy", color = BrandTeal, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                }
+                Text(
+                    text = "Wellness is a commitment to yourself.",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B),
+                    textAlign = TextAlign.Center
+                )
             }
-            Text(
-                text = "Wellness is a commitment to yourself.",
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
         SnackbarHost(
             hostState = snackbarHostState,
@@ -430,7 +437,8 @@ private fun PasswordStrengthBar(strength: Int) {
     }
 }
 
-// Returns 0 (empty) to 4 (strong)
+// Returns 0 (empty) to 4 (strong), one point per required constraint:
+// 1. length >= 8, 2. has uppercase, 3. has digit, 4. has special character
 private fun computePasswordStrength(password: String): Int {
     if (password.isEmpty()) return 0
     var score = 0

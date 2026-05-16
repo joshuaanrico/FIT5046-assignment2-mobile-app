@@ -87,6 +87,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _authState.value = AuthState.Error("Password must contain at least 1 uppercase letter")
             return
         }
+        if (!password.any { it.isDigit() }) {
+            _authState.value = AuthState.Error("Password must contain at least 1 number")
+            return
+        }
         if (!password.any { !it.isLetterOrDigit() }) {
             _authState.value = AuthState.Error("Password must contain at least 1 special character")
             return
