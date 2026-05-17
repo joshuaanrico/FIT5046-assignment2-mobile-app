@@ -264,12 +264,14 @@ fun AppNavGraph() {
                     navController.getBackStackEntry("session_flow/{energyLvl}/{exerciseName}")
                 }
                 val liveSessionViewModel: LiveSessionViewModel = viewModel(parentEntry)
+                val poseViewModel: PoseViewModel = viewModel(parentEntry)
                 val energyLvl = backStackEntry.arguments?.getInt("energyLvl") ?: 3
                 val exerciseName = backStackEntry.arguments?.getString("exerciseName") ?: ""
                 LiveSessionScreen(
                     energyLevel = energyLvl,
                     exerciseName = exerciseName,
                     liveSessionViewModel = liveSessionViewModel,
+                    poseViewModel = poseViewModel,
                     onBack = { navController.popBackStack() },
                     onHelp = { navController.navigate("help") },
                     onPause = {

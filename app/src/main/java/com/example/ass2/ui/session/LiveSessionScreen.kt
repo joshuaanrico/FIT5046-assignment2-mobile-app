@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,6 +75,7 @@ fun LiveSessionScreen(
     energyLevel: Int = 3,
     exerciseName: String = "Bicep Curl",
     liveSessionViewModel : LiveSessionViewModel,
+    poseViewModel: PoseViewModel,
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onPause: () -> Unit,
@@ -96,11 +98,13 @@ fun LiveSessionScreen(
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val poseViewModel: PoseViewModel = viewModel()
 
     // Observe ViewModel state
     val update by poseViewModel.exerciseUpdate.collectAsStateWithLifecycle()
     val selectedExerciseName by poseViewModel.currentExerciseName.collectAsStateWithLifecycle()
+    // Tracks whether we've already selected the exercise. Stays true across the pause/resume
+    // round trip so selectExercise isn't re-called (which would reset the rep count).
+    var exerciseSelected by rememberSaveable { mutableStateOf(false) }
 
     val heartRate by liveSessionViewModel.heartRate.collectAsStateWithLifecycle()
 
@@ -161,12 +165,15 @@ fun LiveSessionScreen(
     // makes sure the correct exercise is being selected.
     LaunchedEffect(exerciseName)
     {
-        val exercise = poseViewModel.availableExercises.firstOrNull{
-            it.displayName == exerciseName
-        }
-        if (exercise != null)
-        {
-            poseViewModel.selectExercise(exercise)
+        if (!exerciseSelected){
+            val exercise = poseViewModel.availableExercises.firstOrNull{
+                it.displayName == exerciseName
+            }
+            if (exercise != null)
+            {
+                poseViewModel.selectExercise(exercise)
+                exerciseSelected = true
+            }
         }
     }
 
