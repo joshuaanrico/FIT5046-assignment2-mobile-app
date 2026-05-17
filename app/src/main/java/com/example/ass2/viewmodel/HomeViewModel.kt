@@ -259,7 +259,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             // when no session history available
             recent == null -> 2
             recent.fatigueLevel == "Fatigued" || recent.discomfort == "Severe" -> 1
-            recent.fatigueLevel == "Energized" && recent.discomfort == "None" -> 1
+            recent.fatigueLevel == "Energized" && recent.discomfort == "None" -> 4
             else -> 2
         }
 

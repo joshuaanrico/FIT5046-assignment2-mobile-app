@@ -1,6 +1,7 @@
 package com.example.ass2
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -93,11 +94,7 @@ fun AppNavGraph() {
             NavTab.PROGRESS -> "progress"
             NavTab.PROFILE -> "profile"
         }
-        navController.navigate(route) {
-            popUpTo("home") { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+        navController.navigate(route)
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -127,7 +124,8 @@ fun AppNavGraph() {
         }
         composable("home") {
             HomeScreen(
-                onGoToExercises = { navController.navigate("exercises?filter=Recommended") },
+                onGoToExerciseDetail = { exerciseName ->
+                    navController.navigate("exercise_detail/$exerciseName") },
                 onTabSelected = ::handleTabSelected
             )
         }
