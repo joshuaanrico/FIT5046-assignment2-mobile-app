@@ -45,7 +45,7 @@ private val moods = listOf(
 
 @Composable
 fun HomeScreen(
-    onGoToExercises: () -> Unit,
+    onGoToExerciseDetail: (String) -> Unit,
     onTabSelected: (NavTab) -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -97,7 +97,10 @@ fun HomeScreen(
                     description = uiState.recommendedExercise?.instructions
                         ?: "A gentle sequence to improve circulation and reduce stiffness.",
                     isLoading = uiState.isLoadingExercise,
-                    onStart = onGoToExercises
+                    onStart = {
+                        // navigates to the exercise details screen for the current recommended exercise.
+                        uiState.recommendedExercise?.let { onGoToExerciseDetail(it.name) }
+                    }
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -266,7 +269,11 @@ fun HomeScreen(
                                     .width(28.dp)
                                     .fillMaxHeight(fraction)
                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                    .background(if (index == barHeights.lastIndex) BrandTeal else BrandTeal.copy(alpha = 0.3f + index * 0.1f))
+                                    .background(
+                                        if (index == barHeights.lastIndex) BrandTeal else BrandTeal.copy(
+                                            alpha = 0.3f + index * 0.1f
+                                        )
+                                    )
                             )
                         }
                     }
