@@ -68,12 +68,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val recent = sessions.maxByOrNull { it.startTime }
                 val totalMinutes = sessions.sumOf { it.durationSec } / 60
 
+                // getting the recommended exercise
+                val exercises = exerciseRepository.all.first()
+                val recommended = getRecommendedExercise(exercises, recent)
+
                 _uiState.update {
                     it.copy(
                         recentSession = recent,
                         totalSessions = sessions.size,
                         totalMinutes = totalMinutes,
-                        adaptiveMessage = buildAdaptiveMessage(sessions)
+                        adaptiveMessage = buildAdaptiveMessage(sessions),
+                        recommendedExercise = recommended
                     )
                 }
             }
@@ -231,6 +236,43 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 imageUrl = null
             )
         )
+    }
+
+    /**
+     * Based on the users most recent session feedback an exercise is picked for the user to do.
+     *
+     * @param exercises list of exercises from the room db.
+     * @param recent the most recently saved session.
+     * @return the recommended exercise.
+     */
+    private fun getRecommendedExercise(exercises: List<Exercise>, recent: Session?) : Exercise?
+    {
+        if (exercises.isEmpty()) return null
+
+        // a local helper fun to classify each category string to an intensity score.
+        fun intensityScore(category: String): Int = when (category.lowercase())
+        {
+            "stretch" -> 1
+            "mobility" -> 2
+            "core" -> 3
+            "strength" -> 4
+            else -> 2  // for a category not defined
+        }
+
+        // according to the users last session feedback, deciding on the new intensity to be recommended
+        val targetIntensity = when {
+            // when no session history available
+            recent == null -> 2
+            recent.fatigueLevel == "Fatigued" || recent.discomfort == "Severe" -> 1
+            recent.fatigueLevel == "Energized" && recent.discomfort == "None" -> 1
+            else -> 2
+        }
+
+        // gets the exercise whose category intensity is closest to the target intensity.
+        // minByOrNull - ensures the return of the first match (if multiple options exist)
+        return exercises.minByOrNull {
+            kotlin.math.abs(intensityScore(it.category) - targetIntensity)
+        }
     }
 
     private fun buildAdaptiveMessage(sessions: List<Session>): String {
