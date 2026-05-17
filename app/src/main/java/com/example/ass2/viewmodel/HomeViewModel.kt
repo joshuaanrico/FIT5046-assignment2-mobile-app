@@ -99,10 +99,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (cachedExercises.isNotEmpty()) {
                     _uiState.update {
-                        it.copy(
-                            recommendedExercise = cachedExercises.first(),
-                            isLoadingExercise = false
-                        )
+                        it.copy(isLoadingExercise= false)
                     }
                     return@launch
                 }
@@ -128,7 +125,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
                 _uiState.update {
                     it.copy(
-                        recommendedExercise = finalExercises.firstOrNull(),
                         isLoadingExercise = false,
                         errorMessage = null
                     )
@@ -138,7 +134,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
                 _uiState.update {
                     it.copy(
-                        recommendedExercise = fallback.firstOrNull(),
                         isLoadingExercise = false,
                         errorMessage = null
                     )
