@@ -84,3 +84,7 @@ In plain terms:
 - Every frame, `PoseViewModel` sends landmarks to both the active exercise (for rep counting) and `PoseOverlayView` (for drawing)
 - The exercise packages its results into an `ExerciseUpdate` which the UI observes
 - `UpperBodyExercises` (the registry) is only used at startup to populate the exercise picker and look up the selected exercise by name
+
+Github used as reference:
+- https://github.com/nicknochnack/MediaPipePoseEstimation/blob/main/Media%20Pipe%20Pose%20Tutorial.ipynb
+- https://github.com/yakupzengin/fitness-trainer-pose-estimation 
