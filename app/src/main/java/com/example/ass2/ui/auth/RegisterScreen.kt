@@ -225,12 +225,12 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Column(modifier = Modifier.fillMaxWidth()) {
-                PasswordCriterionRow("At least 8 characters",     password.length >= 8)
-                PasswordCriterionRow("1 uppercase letter",         password.any { it.isUpperCase() })
-                PasswordCriterionRow("1 number",                   password.any { it.isDigit() })
-                PasswordCriterionRow("1 special character",        password.any { !it.isLetterOrDigit() })
-            }
+            Text(
+                text = "✓ At least 8 characters, 1 uppercase letter, 1 number, and 1 special character.",
+                fontSize = 12.sp,
+                color = if (passwordStrength >= 4) BrandTeal else Color(0xFF9E9E9E),
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(Modifier.height(28.dp))
 
@@ -336,12 +336,6 @@ fun RegisterScreen(
                         modifier = Modifier.clickable { onNavigateToLegal("privacy") }
                     )
                 }
-                Text(
-                    text = "Wellness is a commitment to yourself.",
-                    fontSize = 12.sp,
-                    color = Color(0xFF6B6B6B),
-                    textAlign = TextAlign.Center
-                )
             }
         }
         SnackbarHost(
@@ -434,27 +428,6 @@ private fun PasswordStrengthBar(strength: Int) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun PasswordCriterionRow(label: String, met: Boolean) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 2.dp)
-    ) {
-        Text(
-            text = if (met) "✓" else "✗",
-            fontSize = 12.sp,
-            color = if (met) BrandTeal else Color(0xFFCC0000),
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = if (met) BrandTeal else Color(0xFF9E9E9E)
-        )
     }
 }
 
