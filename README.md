@@ -1,56 +1,55 @@
 # FIT5046 Assignment 4
 
-## How to run
-1. Open Android Studio
-2. Clone the repository in Android Studio
-3. Complete Firebase setup below (required once per machine)
-4. Run the project on an emulator or physical device
+## How to run — step by step
 
----
+Follow these steps in order. The Firebase steps are required once per machine.
 
-## Firebase Setup (required for new developers)
+1. **Open Android Studio.**
 
-Firebase authentication needs your machine's debug SHA-1 fingerprint registered. Do this once per machine.
+2. **Clone the repository** in Android Studio.
 
-### Step 1 — Get your SHA-1 fingerprint
+3. **Get added to the Firebase project.** Firebase setup (steps 5–9) can only be done if you have access to the **sitandfit** Firebase project. Ask the project owner to invite your Google account:
+   - In the [Firebase Console](https://console.firebase.google.com) → **sitandfit** project → gear icon → **Users and permissions** → **Add member** → enter your email.
+   - Role: ask to be added as **Owner**. (Editor *may* be enough to add SHA-1 fingerprints and download `google-services.json`, but Owner avoids permission errors — use Owner unless told otherwise.)
+   - Wait for the invite email and accept it before continuing.
 
-**Windows (PowerShell):**
-```powershell
-& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
-```
+4. **Get your SHA-1 fingerprint.** Firebase authentication needs your machine's debug SHA-1 registered.
 
-**Mac/Linux (Terminal):**
-```bash
-keytool -list -v \
-  -keystore ~/.android/debug.keystore \
-  -alias androiddebugkey \
-  -storepass android \
-  -keypass android
-```
+   Windows (PowerShell):
+   ```powershell
+   & "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+   ```
 
-If you get `keytool: command not found` on Mac, use Android Studio's bundled keytool:
-```bash
-/Applications/Android\ Studio.app/Contents/jbr/Contents/Home/bin/keytool -list -v \
-  -keystore ~/.android/debug.keystore \
-  -alias androiddebugkey \
-  -storepass android \
-  -keypass android
-```
+   Mac/Linux (Terminal):
+   ```bash
+   keytool -list -v \
+     -keystore ~/.android/debug.keystore \
+     -alias androiddebugkey \
+     -storepass android \
+     -keypass android
+   ```
 
-Copy the value next to `SHA1:` in the output (looks like `AB:CD:12:34:...`).
+   If you get `keytool: command not found` on Mac, use Android Studio's bundled keytool:
+   ```bash
+   /Applications/Android\ Studio.app/Contents/jbr/Contents/Home/bin/keytool -list -v \
+     -keystore ~/.android/debug.keystore \
+     -alias androiddebugkey \
+     -storepass android \
+     -keypass android
+   ```
 
-### Step 2 — Register your SHA-1 in Firebase
+   Copy the value next to `SHA1:` in the output (looks like `AB:CD:12:34:...`).
 
-1. Go to [Firebase Console](https://console.firebase.google.com) → open the **sitandfit** project
-2. Click the gear icon (top-left) → **Project Settings**
-3. Scroll down to **Your apps** → click **com.example.ass2**
-4. Under **SHA certificate fingerprints**, click **Add fingerprint**
-5. Paste your SHA-1 value → click **Save**
+5. **Register your SHA-1 in Firebase.**
+   - Go to the [Firebase Console](https://console.firebase.google.com) → open the **sitandfit** project.
+   - Click the gear icon (top-left) → **Project Settings**.
+   - Scroll down to **Your apps** → click **com.example.ass2**.
+   - Under **SHA certificate fingerprints**, click **Add fingerprint**.
+   - Paste your SHA-1 value → click **Save**.
 
-### Step 3 — Download and place google-services.json
+6. **Download `google-services.json`.** On the same Project Settings page, click **Download google-services.json**.
 
-1. On the same Project Settings page, click **Download google-services.json**
-2. Place the file at **`app/google-services.json`** — that is, inside the `app/` folder at the root of this repo, alongside `build.gradle.kts`
+7. **Place `google-services.json`** at `app/google-services.json` — inside the `app/` folder at the root of this repo, alongside `build.gradle.kts`:
    ```
    A24-Lab07-G01/
    ├── app/
@@ -59,36 +58,14 @@ Copy the value next to `SHA1:` in the output (looks like `AB:CD:12:34:...`).
    │   └── src/
    └── build.gradle.kts
    ```
-3. Do **not** commit this file — it is already in `.gitignore`
+   Do **not** commit this file — it is already in `.gitignore`. Other developers are unaffected; their existing SHA-1 entries stay registered.
 
+8. **Set up the emulator camera (use your laptop webcam).** The app needs camera access for pose estimation. By default the emulator uses a virtual camera — switch it to your webcam:
+   - In Android Studio, open **Device Manager** in the right sidebar (or **View → Tool Windows → Device Manager**).
+   - Find your emulator → click the **three-dot menu (⋮)** → select **Edit**.
+   - Click **Show Advanced Settings** at the bottom of the configuration window.
+   - Scroll to the **Camera** section → set **Front** and/or **Back** to **Webcam0**.
+   - Click **Finish**.
+   - Back in Device Manager, click the **three-dot menu (⋮)** → **Cold Boot Now** (the camera setting only takes effect on a fresh start).
 
-> Other developers are unaffected — their existing SHA-1 entries stay registered.
-
-
-## Emulator Camera Setup (use laptop webcam)
-
-The app requires camera access for pose estimation. By default the emulator uses a virtual camera. Follow these steps to use your laptop's webcam instead.
-
-### Step 1 — Open AVD Manager
-
-In Android Studio, click **Device Manager** in the right sidebar (or go to **View → Tool Windows → Device Manager**).
-
-### Step 2 — Edit your emulator
-
-Find your emulator in the list → click the **three-dot menu (⋮)** next to it → select **Edit**.
-
-### Step 3 — Change the camera setting
-
-1. Click **Show Advanced Settings** at the bottom of the configuration window
-2. Scroll down to the **Camera** section
-3. Set **Front** and/or **Back** to **Webcam0** (your laptop's webcam)
-4. Click **Finish**
-
-### Step 4 — Cold boot the emulator
-
-The camera setting only takes effect on a fresh start:
-
-1. In Device Manager, click the **three-dot menu (⋮)** next to your emulator
-2. Select **Cold Boot Now**
-
-Your laptop webcam will now be used when the app requests camera access.
+9. **Run the project** on the emulator (or a physical device).
