@@ -96,12 +96,13 @@ fun SessionDetailScreen(
         val total = it.durationSec
         "%d:%02d".format(total / 60, total % 60)
     } ?: "-"
+    // poseQuality is stored on a 0-100 scale (see UpperBodyExercise.symmetryQuality / estimateQuality)
     val poseQ = session?.poseQuality ?: 0f
     val poseLabel = when {
         session?.poseQuality == null -> "Not recorded"
-        poseQ >= 0.85f -> "Good Form - ${(poseQ * 100).toInt()}%"
-        poseQ >= 0.6f -> "Fair Form - ${(poseQ * 100).toInt()}%"
-        else -> "Needs Work - ${(poseQ * 100).toInt()}%"
+        poseQ >= 85f -> "Good Form - ${poseQ.toInt()}%"
+        poseQ >= 60f -> "Fair Form - ${poseQ.toInt()}%"
+        else -> "Needs Work - ${poseQ.toInt()}%"
     }
     val hrLabel = session?.avgHr?.let { "Avg $it BPM" } ?: "Not recorded"
     val fatigueLabel = session?.fatigueLevel?.takeIf { it.isNotBlank() } ?: "Not recorded"
@@ -205,7 +206,7 @@ fun SessionDetailScreen(
                     Spacer(modifier = Modifier.height(18.dp))
 
                     LinearProgressIndicator(
-                        progress = { poseQ.coerceIn(0f, 1f) },
+                        progress = { (poseQ / 100f).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(12.dp)
