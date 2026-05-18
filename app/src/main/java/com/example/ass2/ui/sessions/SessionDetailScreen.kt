@@ -104,6 +104,8 @@ fun SessionDetailScreen(
         else -> "Needs Work - ${(poseQ * 100).toInt()}%"
     }
     val hrLabel = session?.avgHr?.let { "Avg $it BPM" } ?: "Not recorded"
+    val fatigueLabel = session?.fatigueLevel?.takeIf { it.isNotBlank() } ?: "Not recorded"
+    val discomfortLabel = session?.discomfort?.takeIf { it.isNotBlank() } ?: "Not recorded"
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -244,6 +246,67 @@ fun SessionDetailScreen(
                             text = hrLabel,
                             fontSize = 15.sp,
                             color = textGray
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = cardColor)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircleIcon(
+                            bgColor = teal,
+                            icon = Icons.Outlined.Psychology,
+                            iconTint = Color.White
+                        )
+
+                        Spacer(modifier = Modifier.size(14.dp))
+
+                        Text(
+                            text = "How You Felt",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = teal
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Fatigue Level",
+                            fontSize = 15.sp,
+                            color = textGray,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = fatigueLabel,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textDark
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Discomfort",
+                            fontSize = 15.sp,
+                            color = textGray,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = discomfortLabel,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textDark
                         )
                     }
                 }

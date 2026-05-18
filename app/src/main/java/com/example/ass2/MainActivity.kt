@@ -325,7 +325,6 @@ fun AppNavGraph() {
             SessionResultScreen(
                 liveSessionViewModel = liveSessionViewModel,
                 sessionViewModel = sessionViewModel,
-                onCancel = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
                 onSaveSession = { navController.navigate("sessions") { popUpTo("home") { inclusive = false } } },
                 onRepeatLater = { navController.navigate("exercises") { popUpTo("home") { inclusive = false } } },
                 onHome = { navController.navigate("home") { popUpTo("home") { inclusive = false } } }

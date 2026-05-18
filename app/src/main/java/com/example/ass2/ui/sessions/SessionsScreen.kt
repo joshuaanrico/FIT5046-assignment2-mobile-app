@@ -3,7 +3,6 @@ import com.example.ass2.ui.navigation.BottomNavBar
 import com.example.ass2.ui.navigation.NavTab
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -348,29 +347,6 @@ fun SessionsScreen(
                         item { SectionHeader("Earlier", darkText) }
                         items(earlier, key = { it.id }) { item ->
                             SessionCard(item, BrandTeal, darkText, lightText) { onSessionClick(item.id) }
-                        }
-                    }
-                }
-
-                if (rows.isNotEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 20.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .border(1.dp, Color.LightGray, RoundedCornerShape(24.dp))
-                                    .padding(horizontal = 24.dp, vertical = 12.dp)
-                            ) {
-                                Text(
-                                    text = "Load More History",
-                                    color = BrandTeal,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
                         }
                     }
                 }

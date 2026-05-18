@@ -145,12 +145,19 @@ fun LiveSessionScreen(
         }
     }
 
-    // watches the rep count and ends session once the taget is met.
+    // Auto-ends the session once the rep target is reached: lock first so pose updates stop
+    // bumping the count, then finalize + navigate (same path as the End Session button).
     LaunchedEffect(update.repCount)
     {
        if (update.repCount >= targetReps)
        {
            poseViewModel.lockExercise()
+           liveSessionViewModel.finalizeSession(
+               exerciseName = selectedExerciseName,
+               reps = update.repCount,
+               poseQuality = update.poseQuality
+           )
+           onEndSession()
        }
     }
 

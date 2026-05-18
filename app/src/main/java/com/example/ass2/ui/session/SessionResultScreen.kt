@@ -21,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Save
@@ -61,7 +60,6 @@ import com.example.ass2.viewmodel.SessionViewModel
 fun SessionResultScreen(
     liveSessionViewModel: LiveSessionViewModel,
     sessionViewModel: SessionViewModel,
-    onCancel: () -> Unit,
     onSaveSession: () -> Unit,
     onRepeatLater: () -> Unit,
     onHome: () -> Unit
@@ -104,15 +102,6 @@ fun SessionResultScreen(
                 .background(BrandTealDark)
                 .padding(horizontal = 18.dp, vertical = 18.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "directed home",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(28.dp)
-                    .align(Alignment.CenterStart)
-                    .clickable { onCancel() }
-            )
             Text(
                 text = "Session Summary",
                 color = Color.White,
