@@ -39,11 +39,13 @@ fun ForgotPasswordScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val isLoading = authState is AuthState.Loading
 
+    var showSuccessPopup by remember { mutableStateOf(false) }
+
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
+                showSuccessPopup = true
                 viewModel.resetState()
-                snackbarHostState.showSnackbar("Reset email sent! Check your inbox.")
             }
             is AuthState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
@@ -58,10 +60,37 @@ fun ForgotPasswordScreen(
             .fillMaxSize()
             .background(BrandBackground)
     ) {
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        if (showSuccessPopup) {
+            AlertDialog(
+                onDismissRequest = { showSuccessPopup = false },
+                title = {
+                    Text(
+                        text = "Reset email sent",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text("Check your inbox or spam folder for the password reset link.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showSuccessPopup = false
+                            onBackToLogin()
+                        }
+                    ) {
+                        Text("Back to Login", color = BrandTeal)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showSuccessPopup = false }
+                    ) {
+                        Text("Stay here")
+                    }
+                }
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
