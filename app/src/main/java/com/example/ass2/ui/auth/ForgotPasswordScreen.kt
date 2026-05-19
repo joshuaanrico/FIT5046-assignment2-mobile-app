@@ -25,7 +25,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.ui.theme.*
 import com.example.ass2.viewmodel.AuthState
 import com.example.ass2.viewmodel.AuthViewModel
-import android.util.Patterns
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ForgotPasswordScreen(
@@ -34,23 +35,28 @@ fun ForgotPasswordScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val isLoading = authState is AuthState.Loading
 
-    var showSuccessPopup by remember { mutableStateOf(false) }
 
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
-                showSuccessPopup = true
+                Toast.makeText(
+                    context,
+                    "Reset email sent! Check your inbox.",
+                    Toast.LENGTH_LONG
+                ).show()
                 viewModel.resetState()
             }
+
             is AuthState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetState()
             }
+
             else -> {}
         }
     }
@@ -60,37 +66,6 @@ fun ForgotPasswordScreen(
             .fillMaxSize()
             .background(BrandBackground)
     ) {
-        if (showSuccessPopup) {
-            AlertDialog(
-                onDismissRequest = { showSuccessPopup = false },
-                title = {
-                    Text(
-                        text = "Reset email sent",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Text("Check your inbox or spam folder for the password reset link.")
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showSuccessPopup = false
-                            onBackToLogin()
-                        }
-                    ) {
-                        Text("Back to Login", color = BrandTeal)
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showSuccessPopup = false }
-                    ) {
-                        Text("Stay here")
-                    }
-                }
-            )
-        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
