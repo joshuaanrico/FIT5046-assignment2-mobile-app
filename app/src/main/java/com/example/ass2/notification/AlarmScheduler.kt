@@ -26,6 +26,13 @@ class AlarmScheduler(private val context: Context) {
 
     // Registers an exact one-shot alarm with the system for the next matching day/time
     fun schedule(reminder: Reminder) {
+        val prefs = context.getSharedPreferences("sitfit_settings", Context.MODE_PRIVATE)
+        val pushEnabled = prefs.getBoolean("push_notifications", true)
+
+        if (!pushEnabled) {
+            Log.d(TAG, "push notifications disabled - skip schedule for ${reminder.id}")
+            return
+        }
         val am = am ?: return
         // Android 12+ requires exact alarm permission - silently skip if user revoked it
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {

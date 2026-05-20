@@ -2,12 +2,14 @@ package com.example.ass2.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.example.ass2.data.local.Exercise
 import com.example.ass2.data.local.Session
 import com.example.ass2.data.remote.ApiExerciseInfo
 import com.example.ass2.data.remote.RetrofitClient
 import com.example.ass2.data.repository.ExerciseRepository
+import com.example.ass2.data.repository.ProfileRepository
 import com.example.ass2.data.repository.SessionRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 
 data class HomeUiState(
     val greetingName: String = "there",
@@ -37,6 +40,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private val profileRepository = ProfileRepository(application)
+
+
     private val supportedExerciseMap = mapOf(
         1192 to "Bicep Curl",
         1650 to "Side Stretch",
@@ -49,16 +55,30 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         observeSessions()
         loadRecommendedExercise()
     }
-
     private fun loadGreetingName() {
         val user = FirebaseAuth.getInstance().currentUser
 
-        val name = user?.displayName
-            ?: user?.email?.substringBefore("@")
+        if (user == null) {
+            _uiState.update {
+                it.copy(greetingName = "there")
+            }
+            return
+        }
+
+        val fallbackName = user.displayName
+            ?: user.email?.substringBefore("@")
             ?: "there"
 
-        _uiState.update {
-            it.copy(greetingName = name)
+        viewModelScope.launch {
+            profileRepository.observe(user.uid).collect { profile ->
+                val name = profile?.displayName
+                    ?.takeIf { it.isNotBlank() }
+                    ?: fallbackName
+
+                _uiState.update {
+                    it.copy(greetingName = name)
+                }
+            }
         }
     }
 

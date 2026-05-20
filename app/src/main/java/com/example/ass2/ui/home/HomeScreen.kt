@@ -77,7 +77,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
 
                 Text(
-                    text = "Good morning,\n${uiState.greetingName}",
+                    text = "Hello,\n${uiState.greetingName}",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A),
@@ -103,29 +103,29 @@ fun HomeScreen(
                     }
                 )
 
-                Spacer(Modifier.height(16.dp))
-
-                SectionCard(icon = Icons.Default.Mood, title = "Daily Check-in") {
-                    Text(
-                        text = "How is your body feeling right now?",
-                        fontSize = 13.sp,
-                        color = Color(0xFF6B6B6B),
-                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        moods.forEach { (icon, label) ->
-                            MoodChip(
-                                icon = icon,
-                                label = label,
-                                selected = selectedMood == label,
-                                onClick = { selectedMood = label }
-                            )
-                        }
-                    }
-                }
+//                Spacer(Modifier.height(16.dp))
+//
+//                SectionCard(icon = Icons.Default.Mood, title = "Daily Check-in") {
+//                    Text(
+//                        text = "How is your body feeling right now?",
+//                        fontSize = 13.sp,
+//                        color = Color(0xFF6B6B6B),
+//                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+//                    )
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.SpaceEvenly
+//                    ) {
+//                        moods.forEach { (icon, label) ->
+//                            MoodChip(
+//                                icon = icon,
+//                                label = label,
+//                                selected = selectedMood == label,
+//                                onClick = { selectedMood = label }
+//                            )
+//                        }
+//                    }
+//                }
 
                 Spacer(Modifier.height(16.dp))
 

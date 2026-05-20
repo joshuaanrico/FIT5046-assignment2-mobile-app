@@ -42,6 +42,7 @@ fun ProfileSetupScreen(
     val whiteCard = Color(0xFFFCFCFC)
     // below code error because overwrite profile page with talent code
 //    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val profile by viewModel.profile.collectAsState()
 
     var displayName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
@@ -50,6 +51,22 @@ fun ProfileSetupScreen(
     var conditions by remember { mutableStateOf("") }
     var painLevel by remember { mutableFloatStateOf(4f) }
     var restingHeartRate by remember { mutableStateOf("") }
+
+    var hasLoadedExistingProfile by remember { mutableStateOf(false) }
+
+    LaunchedEffect(profile) {
+        if (profile != null && !hasLoadedExistingProfile) {
+            displayName = profile?.displayName.orEmpty()
+            age = profile?.age?.toString().orEmpty()
+            mobilitySupport = profile?.mobilitySupport.orEmpty()
+            activityLevel = profile?.activityLevel.orEmpty()
+            conditions = profile?.conditions.orEmpty()
+            painLevel = profile?.painBaseline?.toFloat() ?: 4f
+            restingHeartRate = profile?.restingHeartRate?.toString().orEmpty()
+
+            hasLoadedExistingProfile = true
+        }
+    }
     val mobilityOptions = listOf("Wheelchair", "Cane / Walker", "Independent", "Other")
     val activityOptions = listOf("Sedentary", "Lightly Active", "Moderately Active", "Very Active")
 

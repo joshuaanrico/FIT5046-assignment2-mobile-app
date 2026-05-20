@@ -25,7 +25,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ass2.ui.theme.*
 import com.example.ass2.viewmodel.AuthState
 import com.example.ass2.viewmodel.AuthViewModel
-import android.util.Patterns
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ForgotPasswordScreen(
@@ -34,21 +35,28 @@ fun ForgotPasswordScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val isLoading = authState is AuthState.Loading
 
+
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
+                Toast.makeText(
+                    context,
+                    "Reset email sent! Check your inbox.",
+                    Toast.LENGTH_LONG
+                ).show()
                 viewModel.resetState()
-                snackbarHostState.showSnackbar("Reset email sent! Check your inbox.")
             }
+
             is AuthState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetState()
             }
+
             else -> {}
         }
     }
@@ -58,10 +66,6 @@ fun ForgotPasswordScreen(
             .fillMaxSize()
             .background(BrandBackground)
     ) {
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()

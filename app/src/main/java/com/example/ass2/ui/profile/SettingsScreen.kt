@@ -40,19 +40,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ass2.viewmodel.SettingsViewModel
 
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    viewModel: SettingsViewModel = viewModel()
+) {
     val bgColor = Color(0xFFF4F5F4)
     val teal = Color(0xFF0D7377)
     val darkText = Color(0xFF1F1F1F)
     val grayText = Color(0xFF5F6368)
     val cardColor = Color(0xFFF8F8F8)
 
-    val pushNotifications = remember { mutableStateOf(true) }
-    val soundVibration = remember { mutableStateOf(true) }
-    val highContrastMode = remember { mutableStateOf(false) }
-    val largerText = remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Surface(modifier = Modifier.fillMaxSize(), color = bgColor) {
         Column(
@@ -92,12 +96,13 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = teal,
                         title = "Push Notifications",
                         subtitle = "Stay updated on your daily goals",
-                        checked = pushNotifications.value,
-                        onCheckedChange = { pushNotifications.value = it },
+                        checked = uiState.pushNotifications,
+                        onCheckedChange = viewModel::setPushNotifications,
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = true
+                        showDivider = true,
+
                     )
                     SettingsToggleRow(
                         icon = Icons.Outlined.Vibration,
@@ -105,12 +110,13 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = teal,
                         title = "Sound & Vibration",
                         subtitle = "Haptic feedback during exercises",
-                        checked = soundVibration.value,
-                        onCheckedChange = { soundVibration.value = it },
+                        checked = uiState.soundVibration,
+                        onCheckedChange = viewModel::setSoundVibration,
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = false
+                        showDivider = false,
+
                     )
                 }
 
@@ -125,12 +131,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = Color(0xFF3D4A8A),
                         title = "High Contrast Mode",
                         subtitle = "Increases visual clarity",
-                        checked = highContrastMode.value,
-                        onCheckedChange = { highContrastMode.value = it },
+                        checked = uiState.highContrastMode,
+                        onCheckedChange = viewModel::setHighContrastMode,
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = true
+                        showDivider = true,
+                        enabled = false
+
                     )
                     SettingsToggleRow(
                         icon = Icons.Outlined.FormatSize,
@@ -138,12 +146,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = Color(0xFF3D4A8A),
                         title = "Larger Text",
                         subtitle = "Increases font size throughout the app",
-                        checked = largerText.value,
-                        onCheckedChange = { largerText.value = it },
+                        checked = uiState.largerText,
+                        onCheckedChange = viewModel::setLargerText,
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = false
+                        showDivider = false,
+                        enabled = false
+
                     )
                 }
 
@@ -235,13 +245,15 @@ private fun SettingsToggleRow(
     teal: Color,
     darkText: Color,
     grayText: Color,
-    showDivider: Boolean
+    showDivider: Boolean,
+    enabled: Boolean = true
+
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
+                .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         androidx.compose.foundation.layout.Box(
@@ -263,7 +275,8 @@ private fun SettingsToggleRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = if (enabled) onCheckedChange else null,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = teal,
@@ -279,3 +292,4 @@ private fun SettingsToggleRow(
         )
     }
 }
+

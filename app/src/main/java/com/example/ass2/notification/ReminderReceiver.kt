@@ -36,6 +36,12 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 
     private fun showNotification(context: Context, id: Long, label: String) {
+        val prefs = context.getSharedPreferences("sitfit_settings", Context.MODE_PRIVATE)
+
+        val pushEnabled = prefs.getBoolean("push_notifications", true)
+        val soundVibrationEnabled = prefs.getBoolean("sound_vibration", true)
+
+        if (!pushEnabled) return
         // Android 13+ requires runtime permission - silently skip if user denied notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
@@ -57,9 +63,17 @@ class ReminderReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(tapPi)
-            .build()
 
-        NotificationManagerCompat.from(context).notify(id.toInt(), notif)
+
+        if (soundVibrationEnabled) {
+            notif.setDefaults(
+                NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE
+            )
+        } else {
+            notif.setSilent(true)
+        }
+
+        NotificationManagerCompat.from(context).notify(id.toInt(), notif.build())
     }
 
     // Reschedules the alarm for the next matching day.
