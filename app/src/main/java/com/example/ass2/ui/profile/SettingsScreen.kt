@@ -101,7 +101,8 @@ fun SettingsScreen(
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = true
+                        showDivider = true,
+
                     )
                     SettingsToggleRow(
                         icon = Icons.Outlined.Vibration,
@@ -114,7 +115,8 @@ fun SettingsScreen(
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = false
+                        showDivider = false,
+
                     )
                 }
 
@@ -134,7 +136,9 @@ fun SettingsScreen(
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = true
+                        showDivider = true,
+                        enabled = false
+
                     )
                     SettingsToggleRow(
                         icon = Icons.Outlined.FormatSize,
@@ -147,7 +151,9 @@ fun SettingsScreen(
                         teal = teal,
                         darkText = darkText,
                         grayText = grayText,
-                        showDivider = false
+                        showDivider = false,
+                        enabled = false
+
                     )
                 }
 
@@ -239,13 +245,15 @@ private fun SettingsToggleRow(
     teal: Color,
     darkText: Color,
     grayText: Color,
-    showDivider: Boolean
+    showDivider: Boolean,
+    enabled: Boolean = true
+
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
+                .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         androidx.compose.foundation.layout.Box(
@@ -267,7 +275,8 @@ private fun SettingsToggleRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = if (enabled) onCheckedChange else null,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = teal,
