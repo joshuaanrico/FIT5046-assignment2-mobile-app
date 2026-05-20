@@ -40,6 +40,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private val profileRepository = ProfileRepository(application)
+
+
     private val supportedExerciseMap = mapOf(
         1192 to "Bicep Curl",
         1650 to "Side Stretch",
@@ -52,7 +55,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         observeSessions()
         loadRecommendedExercise()
     }
-    private val profileRepository = ProfileRepository(application)
     private fun loadGreetingName() {
         val user = FirebaseAuth.getInstance().currentUser
 

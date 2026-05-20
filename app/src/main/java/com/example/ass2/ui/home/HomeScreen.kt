@@ -77,7 +77,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
 
                 Text(
-                    text = "Good morning,\n${uiState.greetingName}",
+                    text = "Hello,\n${uiState.greetingName}",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A),

@@ -30,6 +30,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         )
     )
 
+
+
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun setPushNotifications(value: Boolean) {
