@@ -126,7 +126,7 @@ class HeartRateSimulator(private val context: Context) {
         while (true)
         {
             // how far into the 3 mins we've gone (3 mins = 180 sec)
-            val asFraction = (secondsPassed/180f).coerceIn(0f,1f)
+            val asFraction = (secondsPassed/20f).coerceIn(0f,1f)
             // when halfway through the 3 mins - * 0.5 | full way through 3 mins - * 1 = targetHR
             val currentTargetHR = restingHR + (targetHR - restingHR) * asFraction
 
