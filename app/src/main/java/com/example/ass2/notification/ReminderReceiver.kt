@@ -84,7 +84,7 @@ class ReminderReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val dao = AppDatabase.getDatabase(context).reminderDao()
-                val current: Reminder? = dao.getById(id).firstOrNull()
+                val current: Reminder? = dao.getByIdAny(id).firstOrNull()
                 // Fallback to intent data if DB row is missing (edge case: user deleted between fire + rearm)
                 val source = current ?: Reminder(
                     id = id,

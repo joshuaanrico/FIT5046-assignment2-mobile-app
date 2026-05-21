@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "reminders")
 data class Reminder(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    val userId: String = "",     // Firebase Auth uid - isolates rows per user (stamped by ReminderViewModel.upsert)
     val label: String,
     val hour: Int,               // 0..23
     val minute: Int,             // 0..59

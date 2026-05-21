@@ -10,10 +10,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.example.ass2.data.repository.ReminderRepository
+import com.example.ass2.notification.AlarmScheduler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import android.util.Patterns
 
 // OAuth 2.0 Web Client ID from the Firebase project, used to authenticate Google Sign-In tokens
@@ -151,9 +155,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Signs the current user out of Firebase
+    // Signs the current user out of Firebase.
+    // Cancels any AlarmManager alarms belonging to this user first - otherwise the system would
+    // keep firing notifications for someone who is no longer signed in (or for the next account).
     fun signOut() {
-        auth.signOut()
+        val uid = auth.currentUser?.uid
+        if (uid.isNullOrEmpty()) {
+            auth.signOut()
+            return
+        }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val repo = ReminderRepository(getApplication())
+                val scheduler = AlarmScheduler(getApplication())
+                repo.listForUser(uid).forEach { scheduler.cancel(it.id) }
+            }
+            auth.signOut()
+        }
     }
 
     // Resets auth state back to Idle — called after the UI has handled a Success or Error
