@@ -83,8 +83,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun observeSessions() {
+        // HomeViewModel is scoped to the "home" nav entry, which is popped on sign-out
+        // (popUpTo("home") inclusive = true in MainActivity), so reading uid once is enough.
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
-            sessionRepository.all.collect { sessions ->
+            sessionRepository.all(uid).collect { sessions ->
                 val recent = sessions.maxByOrNull { it.startTime }
                 val totalMinutes = sessions.sumOf { it.durationSec } / 60
 
