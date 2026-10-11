@@ -1,6 +1,49 @@
-# FIT5046 Assignment 4
+# Sit&Fit
 
-## How to run — step by step
+An Android app that helps people with disabilities exercise at home. It uses the phone camera to track body movement, count repetitions and give live feedback on form.
+
+Built for Monash FIT5046 (Mobile and Distributed Computing Systems), Semester 1 2026, by a team of four. This is the Assignment 4 version. The earlier UI-only version of the app is on the `main` branch.
+
+## What it does
+
+- **Camera-based sessions.** MediaPipe pose detection reads body landmarks from the camera. The app works out joint angles, counts reps and shows feedback such as "Lower with control" while you move.
+- **Four seated, upper-body exercises:** Bicep Curl, Side Stretch, Forward Fold and Seated Twist. Each one is a small state machine over joint angles, with a movement-symmetry quality score.
+- **Pre-session check-in and heart-rate warning.** The warning threshold is based on the user's age. Heart rate is simulated from a dataset, not read from a sensor.
+- **Exercise library** loaded from the public [wger](https://wger.de) API and cached locally with Room.
+- **Session results, history and progress tracking.**
+- **Reminders** scheduled with the Android alarm manager, restored after a reboot.
+- **Accounts:** email sign-up and login, password reset, and Google sign-in.
+
+## Tech stack
+
+- Kotlin, Jetpack Compose (Material 3), Navigation Compose, MVVM with ViewModels
+- Room for local storage
+- Firebase Authentication and Google sign-in (Credential Manager)
+- CameraX and MediaPipe Tasks Vision (pose landmarker)
+- Retrofit with Gson for the wger API
+- Min SDK 24, target SDK 36
+
+## My contribution
+
+Lead contributor, with 73 of 155 commits. I built:
+
+- the app screens in Jetpack Compose
+- the Room database layer for sessions, reminders, profile and exercises
+- the reminder alarms and notifications
+- session history, session detail and progress tracking
+- most of the live session screen, integrated with the team's pose detection
+
+Teammates built most of the MediaPipe pose detection, overlay and rep counting (Talent Lim, Yapa Jayasinghe), the wger API integration (Yashaswi), and the heart-rate simulation (Yapa Jayasinghe).
+
+## Running it locally
+
+The app uses Firebase Authentication, so you need your own Firebase project. `google-services.json` is not included in this repository.
+
+The steps below are the original team setup guide. They refer to the team's own Firebase project, so create your own project and register your SHA-1 there instead.
+
+---
+
+## How to run: step by step
 
 Follow these steps in order. The Firebase steps are required once per machine.
 
@@ -8,10 +51,7 @@ Follow these steps in order. The Firebase steps are required once per machine.
 
 2. **Clone the repository** in Android Studio.
 
-3. **Get added to the Firebase project.** Firebase setup (steps 5–9) can only be done if you have access to the **sitandfit** Firebase project. Ask the project owner to invite your Google account:
-   - In the [Firebase Console](https://console.firebase.google.com) → **sitandfit** project → gear icon → **Users and permissions** → **Add member** → enter your email.
-   - Role: ask to be added as **Owner**. (Editor *may* be enough to add SHA-1 fingerprints and download `google-services.json`, but Owner avoids permission errors — use Owner unless told otherwise.)
-   - Wait for the invite email and accept it before continuing.
+3. **Create or get access to a Firebase project** with an Android app whose package name is `com.example.ass2`. Enable Email/Password and Google sign-in under Authentication.
 
 4. **Get your SHA-1 fingerprint.** Firebase authentication needs your machine's debug SHA-1 registered.
 
@@ -29,43 +69,14 @@ Follow these steps in order. The Firebase steps are required once per machine.
      -keypass android
    ```
 
-   If you get `keytool: command not found` on Mac, use Android Studio's bundled keytool:
-   ```bash
-   /Applications/Android\ Studio.app/Contents/jbr/Contents/Home/bin/keytool -list -v \
-     -keystore ~/.android/debug.keystore \
-     -alias androiddebugkey \
-     -storepass android \
-     -keypass android
-   ```
-
    Copy the value next to `SHA1:` in the output (looks like `AB:CD:12:34:...`).
 
-5. **Register your SHA-1 in Firebase.**
-   - Go to the [Firebase Console](https://console.firebase.google.com) → open the **sitandfit** project.
-   - Click the gear icon (top-left) → **Project Settings**.
-   - Scroll down to **Your apps** → click **com.example.ass2**.
-   - Under **SHA certificate fingerprints**, click **Add fingerprint**.
-   - Paste your SHA-1 value → click **Save**.
+5. **Register your SHA-1 in Firebase.** Firebase Console, then Project Settings, then **Your apps**, then `com.example.ass2`, then **Add fingerprint**.
 
-6. **Download `google-services.json`.** On the same Project Settings page, click **Download google-services.json**.
+6. **Download `google-services.json`** from the same Project Settings page.
 
-7. **Place `google-services.json`** at `app/google-services.json` — inside the `app/` folder at the root of this repo, alongside `build.gradle.kts`:
-   ```
-   A24-Lab07-G01/
-   ├── app/
-   │   ├── google-services.json   ← goes here
-   │   ├── build.gradle.kts
-   │   └── src/
-   └── build.gradle.kts
-   ```
-   Do **not** commit this file — it is already in `.gitignore`. Other developers are unaffected; their existing SHA-1 entries stay registered.
+7. **Place it at `app/google-services.json`**, next to `app/build.gradle.kts`. Do not commit this file (it is in `.gitignore`).
 
-8. **Set up the emulator camera (use your laptop webcam).** The app needs camera access for pose estimation. By default the emulator uses a virtual camera — switch it to your webcam:
-   - In Android Studio, open **Device Manager** in the right sidebar (or **View → Tool Windows → Device Manager**).
-   - Find your emulator → click the **three-dot menu (⋮)** → select **Edit**.
-   - Click **Show Advanced Settings** at the bottom of the configuration window.
-   - Scroll to the **Camera** section → set **Front** and/or **Back** to **Webcam0**.
-   - Click **Finish**.
-   - Back in Device Manager, click the **three-dot menu (⋮)** → **Cold Boot Now** (the camera setting only takes effect on a fresh start).
+8. **Set up the emulator camera.** The app needs camera access for pose estimation. In Android Studio, open Device Manager, then Edit your emulator, then Show Advanced Settings, and set **Front** and **Back** camera to **Webcam0**. Then use **Cold Boot Now**, because the camera setting only applies on a fresh start.
 
-9. **Run the project** on the emulator (or a physical device).
+9. **Run the project** on the emulator or a physical device.
